@@ -32,7 +32,7 @@ const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
 
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 const SCHEMA_DIR = path.join(ROOT, "schema");
 
 // schema/base.schema.yaml and schema/shared.schema.yaml sit at the schema

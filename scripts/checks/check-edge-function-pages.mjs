@@ -26,10 +26,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { TOP_LINKS, FOOTER_LINKS } from "./nav.js";
+import { TOP_LINKS, FOOTER_LINKS } from "../site/nav.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 const EDGE_FN_PATH = path.join(ROOT, "netlify", "edge-functions", "markdown-negotiation.js");
 
 let ok = true;

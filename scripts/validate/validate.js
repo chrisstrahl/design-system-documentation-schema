@@ -28,7 +28,7 @@ const fs = require("fs");
 const path = require("path");
 const Ajv = require("ajv/dist/2020");
 const addFormats = require("ajv-formats");
-const { rootDir, schemaDir, loadYaml, walkYamlFiles, defaultTargets, findRefs, entriesIn } = require("./lib");
+const { rootDir, schemaDir, loadYaml, walkYamlFiles, defaultTargets, findRefs, entriesIn } = require("../lib");
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);
@@ -48,7 +48,7 @@ addFormats(ajv);
 // rule list are generated from, so the two can't drift apart.
 // enforcement: semantic only - the catalog also carries structural
 // (enforced by the schema itself, no code here) and advisory (checked by
-// scripts/lint-docs.js instead, never blocking) entries, neither of which
+// scripts/validate/lint-docs.js instead, never blocking) entries, neither of which
 // this map's own callers below (tagging a hand-written check via err())
 // have any business referencing.
 const RULES = Object.fromEntries(
@@ -271,7 +271,7 @@ function validateFileRefs(entity, warnings, opts) {
 
 // The current spec version, read back out of any loaded schema's own
 // $id (they all encode the same version) rather than hardcoded — so this
-// file never needs touching on a version bump. See scripts/bump-version.js,
+// file never needs touching on a version bump. See scripts/tools/bump-version.js,
 // which rewrites every schema file's own $id but has no reason to know
 // this file exists.
 const SPEC_VERSION = (() => {

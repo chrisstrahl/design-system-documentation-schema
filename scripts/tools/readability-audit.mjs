@@ -29,10 +29,10 @@ import { execFileSync } from "node:child_process";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadSchemaYaml } from "./render-prop-table.js";
+import { loadSchemaYaml } from "../site/render-prop-table.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 
 // ---------------------------------------------------------------------------
 // Discover content

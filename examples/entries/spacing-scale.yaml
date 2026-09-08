@@ -22,11 +22,6 @@ metadata:
   since: 1.0.0
   tags: [layout]
 
-refs:
-  - to: space-4
-    rel: composes
-    note: "One step on the `space` scale - every token with `metadata.group` set to \"space\" is a step on this same scale. Step order, resolved values, and per-step usage notes are documented on the tokens, not duplicated here."
-
 sections:
   - kind: guidelines
     for: all
@@ -36,3 +31,8 @@ sections:
         body: Every spacing value is a multiple of the 4px base unit.
       - title: Steps over arbitrary values
         body: Prefer scale steps over arbitrary pixel values in component styles.
+
+refs:
+  - to: space-4
+    rel: composes
+    note: "One step on the `space` scale - every token with `metadata.group` set to \"space\" is a step on this same scale. Step order, resolved values, and per-step usage notes are documented on the tokens, not duplicated here."

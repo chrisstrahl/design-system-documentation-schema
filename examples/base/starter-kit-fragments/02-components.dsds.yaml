@@ -5,9 +5,6 @@ entries:
     description: An interactive element that triggers an action when activated.
     metadata:
       status: {status: stable}
-    refs:
-      - to: color.action.primary
-        rel: depends-on
     sections:
       - kind: guidelines
         for: human
@@ -25,6 +22,9 @@ entries:
             refs:
               - to: shared-a11y#touch-target
                 rel: same-as
+    refs:
+      - to: color.action.primary
+        rel: depends-on
 
 # Reusable content that isn't a design-system artifact - not an entry, so
 # it lives in this array instead of `entries` above (see entry.schema.yaml's

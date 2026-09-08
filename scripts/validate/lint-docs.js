@@ -2,7 +2,7 @@
 /**
  * lint-docs.js — Editorial lint for DSDS documents (the advisory tier).
  *
- * Schema validation answers "is this document allowed?" scripts/validate.js's
+ * Schema validation answers "is this document allowed?" scripts/validate/validate.js's
  * DSDS-01–DSDS-10 answer "is this document internally consistent?" This lint
  * answers "is this documentation good?" It runs on documents that already
  * validate, reports quality gaps, and NEVER fails the build for a
@@ -14,7 +14,7 @@
  * (keyed by rule `name`, below). Removing a rule from the catalog disables
  * it here with no code change. The one way this script exits non-zero is
  * catalog/code drift — a bidirectional check, same shape as
- * scripts/check-rule-catalog.js's own semantic-tier check: an advisory
+ * scripts/checks/check-rule-catalog.js's own semantic-tier check: an advisory
  * catalog entry with no implementation, or an implementation with no
  * catalog entry. That's a tooling bug, not a documentation finding, and it
  * should fail loudly.
@@ -27,14 +27,14 @@
  * carried over verbatim; see each check below for what changed and why.
  *
  * Usage:
- *   node scripts/lint-docs.js [paths…]   # files or directories
+ *   node scripts/validate/lint-docs.js [paths…]   # files or directories
  *   npm run lint                    # defaults to the same corpus validate.js does
  */
 "use strict";
 
 const fs = require("fs");
 const path = require("path");
-const { rootDir, loadYaml, defaultTargets, entriesIn } = require("./lib");
+const { rootDir, loadYaml, defaultTargets, entriesIn } = require("../lib");
 
 const CATALOG_PATH = path.join(rootDir, "schema/conformance-rules.yaml");
 
@@ -46,26 +46,39 @@ function loadCatalog() {
  * Build the active rule set: catalog rules with `enforcement: advisory`,
  * joined to their check implementations. Exits non-zero on drift in either
  * direction — the catalog and this file must agree exactly.
+ *
+ * Two implementation maps, not one: IMPLEMENTATIONS runs once per entity
+ * (entry/shared item) via entriesIn(doc); DOCUMENT_IMPLEMENTATIONS runs
+ * once per file, against the raw parsed document, for a rule that's about
+ * the document's own top-level shape (DSDS-19's field order) rather than
+ * anything inside one entry. A rule name is expected in exactly one map -
+ * drift-checked the same way as the single-map case, just unioned first.
  */
 function activeRules() {
   const catalog = loadCatalog();
   const advisoryRules = catalog.filter((r) => r.enforcement === "advisory");
 
-  const missingImpl = advisoryRules.filter((r) => !(r.name in IMPLEMENTATIONS));
+  const allImplNames = new Set([...Object.keys(IMPLEMENTATIONS), ...Object.keys(DOCUMENT_IMPLEMENTATIONS)]);
+  const missingImpl = advisoryRules.filter((r) => !allImplNames.has(r.name));
   const catalogNames = new Set(advisoryRules.map((r) => r.name));
-  const orphanImpl = Object.keys(IMPLEMENTATIONS).filter((name) => !catalogNames.has(name));
+  const orphanImpl = [...allImplNames].filter((name) => !catalogNames.has(name));
 
   if (missingImpl.length || orphanImpl.length) {
     for (const r of missingImpl) {
-      console.error(`✗ catalog drift: ${r.id} '${r.name}' is enforcement: advisory in schema/conformance-rules.yaml but has no implementation in scripts/lint-docs.js`);
+      console.error(`✗ catalog drift: ${r.id} '${r.name}' is enforcement: advisory in schema/conformance-rules.yaml but has no implementation in scripts/validate/lint-docs.js`);
     }
     for (const name of orphanImpl) {
-      console.error(`✗ catalog drift: '${name}' is implemented in scripts/lint-docs.js but has no enforcement: advisory entry in schema/conformance-rules.yaml`);
+      console.error(`✗ catalog drift: '${name}' is implemented in scripts/validate/lint-docs.js but has no enforcement: advisory entry in schema/conformance-rules.yaml`);
     }
     process.exit(1);
   }
 
-  return advisoryRules.map((r) => ({ id: r.id, name: r.name, check: IMPLEMENTATIONS[r.name] }));
+  return advisoryRules.map((r) => ({
+    id: r.id,
+    name: r.name,
+    scope: r.name in DOCUMENT_IMPLEMENTATIONS ? "document" : "entity",
+    check: IMPLEMENTATIONS[r.name] || DOCUMENT_IMPLEMENTATIONS[r.name],
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -100,6 +113,37 @@ function eachGuidelineItem(entry, fn) {
 }
 
 const LOWERCASE_RFC_REGEX = /(?<![A-Za-z])(must|should)(?: not)?(?![A-Za-z])/g;
+
+// ---------------------------------------------------------------------------
+// STYLE_GUIDE.md's canonical orders (DSDS-16/17/18/19). Kept here, not
+// derived from the schema files - the schema imposes no order at all (see
+// STYLE_GUIDE.md's own opening paragraph), so there is no single source to
+// read this back out of; STYLE_GUIDE.md and this list have to be kept in
+// sync by hand when one changes.
+// ---------------------------------------------------------------------------
+
+const ENTRY_FIELD_ORDER = {
+  component: ["id", "kind", "name", "description", "purpose", "metadata", "sourceFiles", "sections", "specs", "imports", "traits", "combos", "related", "extends", "refs", "$extensions"],
+  token: ["id", "kind", "name", "description", "purpose", "tokenType", "source", "metadata", "sections", "combos", "related", "extends", "refs", "$extensions"],
+  theme: ["id", "kind", "name", "description", "purpose", "colorScheme", "source", "metadata", "sections", "related", "extends", "refs", "$extensions"],
+  system: ["id", "kind", "name", "description", "purpose", "metadata", "sections", "related", "extends", "refs", "$extensions"],
+  entry: ["id", "kind", "name", "description", "purpose", "metadata", "sections", "related", "extends", "refs", "$extensions"],
+};
+const SHARED_FIELD_ORDER = ["id", "name", "description", "metadata", "sections", "refs", "$extensions"];
+const DOCUMENT_FIELD_ORDER = ["schemaVersion", "$schema", "name", "entries", "shared", "refs", "$extensions"];
+const SECTION_KIND_RANK = { guidelines: 0, definitions: 1, steps: 2, section: 3 };
+const GUIDELINE_LEVEL_RANK = { must: 0, should: 1, may: 2, "should-not": 3, "must-not": 4 };
+
+// Returns the out-of-order pair, or null if `actual` (filtered to keys that
+// also appear in `canonical`) is already non-decreasing by canonical rank -
+// the general "is this sequence sorted per this canonical list" check
+// DSDS-16/17/18/19 all reduce to, just over different kinds of items.
+function firstInversion(actual, rankOf) {
+  for (let i = 1; i < actual.length; i++) {
+    if (rankOf(actual[i]) < rankOf(actual[i - 1])) return [actual[i - 1], actual[i]];
+  }
+  return null;
+}
 
 const IMPLEMENTATIONS = {
   // Direct port of 0.16.0's check of the same name - only the walk changed
@@ -219,6 +263,82 @@ const IMPLEMENTATIONS = {
       );
     }
   },
+
+  // STYLE_GUIDE.md §1 - only checks the relative order of fields actually
+  // present (firstInversion filters `actual` to keys in `order` first), so
+  // an entry that leaves a field out is never flagged for its absence.
+  "entry-field-order": (entry, emit) => {
+    const order = entry.kind === undefined ? SHARED_FIELD_ORDER : (ENTRY_FIELD_ORDER[entry.kind] || ENTRY_FIELD_ORDER.entry);
+    const actual = Object.keys(entry).filter((k) => order.includes(k));
+    const inversion = firstInversion(actual, (k) => order.indexOf(k));
+    if (inversion) {
+      emit(
+        "",
+        `"${entry.id}" has \`${inversion[0]}\` before \`${inversion[1]}\` — STYLE_GUIDE.md orders a ${entry.kind || "shared"} entry's fields as [${order.join(", ")}]. Actual order here: [${actual.join(", ")}].`,
+      );
+    }
+  },
+
+  // STYLE_GUIDE.md §2 - same-kind sections must stay contiguous and
+  // general-to-specific (guidelines, definitions, steps, section); among
+  // guidelines sections specifically, framing: when-to-use comes first.
+  // Doesn't attempt the tag-scoped-guidelines sub-tier (see this rule's
+  // own catalog note) - not mechanically checkable the same way.
+  "section-order": (entry, emit) => {
+    const sections = entry.sections;
+    if (!Array.isArray(sections) || sections.length < 2) return;
+    const kindInversion = firstInversion(sections, (s) => SECTION_KIND_RANK[s.kind] ?? 99);
+    if (kindInversion) {
+      emit(
+        "/sections",
+        `"${entry.id}" has a "${kindInversion[0].kind}" section before a "${kindInversion[1].kind}" section, out of STYLE_GUIDE.md's grouping — same-kind sections stay contiguous, ordered guidelines, definitions, steps, section (general to specific).`,
+      );
+      return; // fix grouping first - the framing check below assumes the guidelines sections are already one contiguous run
+    }
+    const guidelinesRun = sections.filter((s) => s.kind === "guidelines");
+    const framingInversion = firstInversion(guidelinesRun, (s) => (s.framing === "when-to-use" ? 0 : 1));
+    if (framingInversion) {
+      emit(
+        "/sections",
+        `"${entry.id}" has a how-to-use guidelines section before a when-to-use one — STYLE_GUIDE.md orders \`framing: when-to-use\` first.`,
+      );
+    }
+  },
+
+  // STYLE_GUIDE.md §3 - must, should, may, should-not, must-not. Items
+  // sharing a level keep their relative order (firstInversion only flags a
+  // strict level-to-level inversion, not a tie).
+  "guideline-item-level-order": (entry, emit) => {
+    (entry.sections || []).forEach((section, si) => {
+      if (!section || section.kind !== "guidelines" || !Array.isArray(section.items)) return;
+      const inversion = firstInversion(section.items, (it) => GUIDELINE_LEVEL_RANK[it.level] ?? 99);
+      if (inversion) {
+        emit(
+          `/sections/${si}/items`,
+          `"${entry.id}" has a level: ${inversion[0].level} item before a level: ${inversion[1].level} one — STYLE_GUIDE.md orders guideline items must, should, may, should-not, must-not.`,
+        );
+      }
+    });
+  },
+};
+
+// Document-scoped rules run once per file, against the raw parsed
+// document, instead of once per entity - see activeRules()'s own comment.
+const DOCUMENT_IMPLEMENTATIONS = {
+  // STYLE_GUIDE.md's "Base documents" order. Only applies to a base
+  // document (has schemaVersion) - a standalone entry file has no
+  // document-level fields of its own to order.
+  "document-field-order": (doc, emit) => {
+    if (typeof doc.schemaVersion === "undefined") return;
+    const actual = Object.keys(doc).filter((k) => DOCUMENT_FIELD_ORDER.includes(k));
+    const inversion = firstInversion(actual, (k) => DOCUMENT_FIELD_ORDER.indexOf(k));
+    if (inversion) {
+      emit(
+        "",
+        `document has \`${inversion[0]}\` before \`${inversion[1]}\` — STYLE_GUIDE.md orders a base document's fields as [${DOCUMENT_FIELD_ORDER.join(", ")}]. Actual order here: [${actual.join(", ")}].`,
+      );
+    }
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -256,8 +376,13 @@ function main() {
     }
     const rel = path.relative(process.cwd(), target);
     const findings = [];
+    for (const rule of rules) {
+      if (rule.scope !== "document") continue;
+      rule.check(doc, (p, message) => findings.push({ id: rule.id, rule: rule.name, path: p, message }));
+    }
     for (const entry of entriesIn(doc)) {
       for (const rule of rules) {
+        if (rule.scope === "document") continue;
         rule.check(entry, (p, message) => findings.push({ id: rule.id, rule: rule.name, path: p, message }));
       }
     }

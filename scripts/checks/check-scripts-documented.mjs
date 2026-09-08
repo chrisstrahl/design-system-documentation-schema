@@ -8,7 +8,7 @@
  * reference anywhere, and the real explanations one level down in each
  * script file's own header. That's how six scripts ended up referenced
  * nowhere at all, and how nobody noticed that `bundle` and
- * `sync-skill-versions` can't be renamed (scripts/bump-version.js shells out
+ * `sync-skill-versions` can't be renamed (scripts/tools/bump-version.js shells out
  * to them by name).
  *
  * So the reference exists now — and this asserts it stays true, in both
@@ -32,7 +32,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 
 const scripts = new Set(
   Object.keys(JSON.parse(fs.readFileSync(path.join(ROOT, "package.json"), "utf-8")).scripts),

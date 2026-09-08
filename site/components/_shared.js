@@ -83,7 +83,7 @@ const _iconCache = new Map();
  * Returns a Promise<string> — always resolves, with "" on failure so a
  * missing/renamed file degrades to no icon rather than a thrown error.
  *
- * In the built site, scripts/build-site.js's bundler inlines every icon
+ * In the built site, scripts/site/build-site.js's bundler inlines every icon
  * file's contents at build time via seedIcons() below, so this fetch never
  * actually runs there — only in dev mode (served, never file://), where a
  * live fetch means editing an .svg under site/assets/ shows up on refresh
@@ -107,7 +107,7 @@ export function loadIcon(name) {
 /**
  * Pre-populate the icon cache with already-known markup, so loadIcon()
  * resolves instantly without a network request. Called once by the
- * bundled components.js (injected by scripts/build-site.js) with every
+ * bundled components.js (injected by scripts/site/build-site.js) with every
  * icon file's contents read at build time.
  */
 export function seedIcons(map) {

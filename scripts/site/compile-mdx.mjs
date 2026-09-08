@@ -48,7 +48,7 @@ const {
 // ---------------------------------------------------------------------------
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 const CONTENT_DIR = path.join(ROOT, "site", "content");
 const EXAMPLES_DIR = path.join(ROOT, "examples");
 const SCHEMA_DIR = path.join(ROOT, "schema");

@@ -8,10 +8,6 @@ metadata:
   since: 1.0.0
   tags: [onboarding]
 
-refs:
-  - to: button
-    rel: relates-to
-
 # `imports` is a component-only field (see entries/component.schema.yaml's
 # own $comment) - a manual like this one has nothing to put it on, so the
 # install instructions stay prose here instead.
@@ -43,3 +39,7 @@ sections:
     freeform:
       - title: Styles don't apply
         body: Confirm the base theme is imported before any component renders - a component's own CSS assumes the theme's custom properties already exist.
+
+refs:
+  - to: button
+    rel: relates-to

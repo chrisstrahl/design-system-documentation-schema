@@ -34,8 +34,8 @@
  *   <!-- /dsds:include -->
  *
  * Usage:
- *   node scripts/sync-examples.js           # update all markdown files
- *   node scripts/sync-examples.js --check   # check only, exit 1 if out of date
+ *   node scripts/generate/sync-examples.js           # update all markdown files
+ *   node scripts/generate/sync-examples.js --check   # check only, exit 1 if out of date
  */
 
 const fs = require("fs");
@@ -45,7 +45,7 @@ const path = require("path");
 // Paths
 // ---------------------------------------------------------------------------
 
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -400,7 +400,7 @@ function main() {
       console.log(
         `  ${filesWithChanges} file${filesWithChanges === 1 ? "" : "s"} out of date`,
       );
-      console.log("\n  Run `node scripts/sync-examples.js` to update.\n");
+      console.log("\n  Run `node scripts/generate/sync-examples.js` to update.\n");
       process.exit(1);
     } else if (totalErrors > 0) {
       console.log(`  ${totalErrors} error${totalErrors === 1 ? "" : "s"}`);

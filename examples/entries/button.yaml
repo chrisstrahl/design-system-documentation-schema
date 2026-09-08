@@ -9,26 +9,77 @@ metadata:
   tags: [actions, button, cta, form-control]
   aliases: [btn]
 
-refs:
-  - to: button-group
-    rel: part-of
-  - to: icon-button
-    rel: alternative-to
-  - to: link
-    rel: alternative-to
-  - to: color.action.primary
-    rel: depends-on
-  - href: https://github.com/org/ds/react/button
-    rel: source
-  - href: https://storybook.org/ds/button
-    rel: storybook
-    role: hosted docs
-  - href: ./stories/button.stories.tsx
-    rel: storybook
-    role: CSF story source
-    note: Component Story Format (CSF3) - the source the hosted docs above are built from.
-  - href: npm:@org/ds-react
-    rel: package
+# A tool extracts the full interface (variant/size/disabled/loading/
+# onClick/fullWidth) straight from this file - JSDoc/TSDoc in the code
+# itself, not hand-typed here.
+sourceFiles:
+  - platform: react
+    file: ./src/Button.tsx
+
+sections:
+  - kind: guidelines
+    for: agent
+    framing: when-to-use
+    items:
+      - statement: Do not use button when the action navigates to a new URL; use the link entry instead.
+        level: must-not
+        alternatives:
+          - to: link
+            rel: alternative-to
+
+  - kind: guidelines
+    for: human
+    items:
+      - statement: Use buttons only for in-page actions, never navigation.
+        level: must
+      # No statement here - this requirement is owned and tracked in the
+      # team's own requirements system, not restated in this document. See
+      # guidelines.schema.yaml's own $comment for why external-link
+      # exempts statement the same way same-as does.
+      - level: must
+        refs:
+          - href: https://example.atlassian.net/browse/DS-482
+            rel: external-link
+      - statement: Limit each surface to one primary button.
+        level: should
+        example:
+          title: One primary action per surface
+          showcase:
+            kind: image
+            url: https://cdn.acme.example/ds/showcase/button-primary-surface.png
+            alt: A toolbar with one filled primary button and two lower-emphasis secondary buttons.
+        # A guideline item's own shape is closed - not extensible the way
+        # an entry or a section is - so $extensions is the one way to
+        # attach org-specific data (here, a rationale and a failure mode)
+        # to a single rule without forking the guidelines kind itself.
+        $extensions:
+          com.acme:
+            rationale: Multiple primary buttons compete for attention and force the user to guess which action is actually the recommended one.
+            failureMode: A dialog ships with two primary-styled buttons (e.g. "Save" and "Save as draft"), and usability testing shows users default to the wrong one.
+
+  - kind: definitions
+    for: all
+    context: terms
+    items:
+      - term: OK
+        definition: To confirm an action.
+      - term: Cancel
+        definition: To cancel an action.
+
+  - kind: steps
+    for: agent
+    ordered: false
+    title: Pre-release checklist
+    items:
+      - title: Focus ring is visible in both light and dark themes.
+      - title: Loading state announces to screen readers.
+      - title: Works with a custom icon in the leading-icon slot.
+        optional: true
+
+specs:
+  - rel: contract
+    href: ./contracts/button.contract.json
+    role: DS Contracts
 
 # One field for every way the button varies: configuration the consumer
 # chooses (boolean, enum) and conditions that happen at runtime (also
@@ -82,77 +133,26 @@ combos:
     items: [variant.danger]
     note: Destructive actions need the full-size touch target; a small danger button invites mis-taps on the most costly action.
 
-# A tool extracts the full interface (variant/size/disabled/loading/
-# onClick/fullWidth) straight from this file - JSDoc/TSDoc in the code
-# itself, not hand-typed here.
-sourceFiles:
-  - platform: react
-    file: ./src/Button.tsx
-
-specs:
-  - rel: contract
-    href: ./contracts/button.contract.json
-    role: DS Contracts
-
-sections:
-  - kind: definitions
-    for: all
-    context: terms
-    items:
-      - term: OK
-        definition: To confirm an action.
-      - term: Cancel
-        definition: To cancel an action.
-
-  - kind: steps
-    for: agent
-    ordered: false
-    title: Pre-release checklist
-    items:
-      - title: Focus ring is visible in both light and dark themes.
-      - title: Loading state announces to screen readers.
-      - title: Works with a custom icon in the leading-icon slot.
-        optional: true
-
-  - kind: guidelines
-    for: human
-    items:
-      - statement: Limit each surface to one primary button.
-        level: should
-        example:
-          title: One primary action per surface
-          showcase:
-            kind: image
-            url: https://cdn.acme.example/ds/showcase/button-primary-surface.png
-            alt: A toolbar with one filled primary button and two lower-emphasis secondary buttons.
-        # A guideline item's own shape is closed - not extensible the way
-        # an entry or a section is - so $extensions is the one way to
-        # attach org-specific data (here, a rationale and a failure mode)
-        # to a single rule without forking the guidelines kind itself.
-        $extensions:
-          com.acme:
-            rationale: Multiple primary buttons compete for attention and force the user to guess which action is actually the recommended one.
-            failureMode: A dialog ships with two primary-styled buttons (e.g. "Save" and "Save as draft"), and usability testing shows users default to the wrong one.
-      - statement: Use buttons only for in-page actions, never navigation.
-        level: must
-      # No statement here - this requirement is owned and tracked in the
-      # team's own requirements system, not restated in this document. See
-      # guidelines.schema.yaml's own $comment for why external-link
-      # exempts statement the same way same-as does.
-      - level: must
-        refs:
-          - href: https://example.atlassian.net/browse/DS-482
-            rel: external-link
-
-  - kind: guidelines
-    for: agent
-    framing: when-to-use
-    items:
-      - statement: Do not use button when the action navigates to a new URL; use the link entry instead.
-        level: must-not
-        alternatives:
-          - to: link
-            rel: alternative-to
+refs:
+  - to: button-group
+    rel: part-of
+  - to: icon-button
+    rel: alternative-to
+  - to: link
+    rel: alternative-to
+  - to: color.action.primary
+    rel: depends-on
+  - href: https://github.com/org/ds/react/button
+    rel: source
+  - href: https://storybook.org/ds/button
+    rel: storybook
+    role: hosted docs
+  - href: ./stories/button.stories.tsx
+    rel: storybook
+    role: CSF story source
+    note: Component Story Format (CSF3) - the source the hosted docs above are built from.
+  - href: npm:@org/ds-react
+    rel: package
 
 $extensions:
   com.figma:

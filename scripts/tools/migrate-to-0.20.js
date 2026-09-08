@@ -32,7 +32,7 @@
  *     migration that claims to always produce something valid.
  *
  * Usage:
- *   node scripts/migrate-to-0.20.js <files-or-dirs…> [--dry-run]
+ *   node scripts/tools/migrate-to-0.20.js <files-or-dirs…> [--dry-run]
  *
  * Reads *.dsds.json (0.15.2), writes a sibling *.dsds.yaml (0.20.0) next
  * to it — never overwrites the input, so a bad migration costs nothing to
@@ -538,7 +538,7 @@ function main() {
   const dryRun = args.includes("--dry-run");
   const targets = args.filter((a) => !a.startsWith("--"));
   if (targets.length === 0) {
-    console.error("Usage: node scripts/migrate-to-0.20.js <files-or-dirs…> [--dry-run]");
+    console.error("Usage: node scripts/tools/migrate-to-0.20.js <files-or-dirs…> [--dry-run]");
     process.exit(1);
   }
 

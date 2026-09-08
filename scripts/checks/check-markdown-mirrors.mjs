@@ -32,10 +32,10 @@ import {
   buildDefIndex,
   ROOT_FILES,
   DEFAULT_SCHEMA_GROUPS,
-} from "./render-prop-table.js";
+} from "../site/render-prop-table.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 const SCHEMA_DIR = path.join(ROOT, "schema");
 const DIST_DIR = path.join(ROOT, "site", "dist");
 
@@ -118,7 +118,7 @@ if (missingNames.length) {
   console.error(
     "\n  This means an agent fetching the page without executing JS would " +
       "not see this data as text — check buildSchemaMarkdown()/" +
-      "renderDefinitionMarkdown() in scripts/build-site.js.\n",
+      "renderDefinitionMarkdown() in scripts/site/build-site.js.\n",
   );
   process.exit(1);
 }

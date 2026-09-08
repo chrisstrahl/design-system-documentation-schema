@@ -11,18 +11,7 @@ sourceFiles:
   - platform: web-component
     file: ../../../site/components/tag.js
 
-imports:
-  - platform: web-component
-    code: <ds-tag>color</ds-tag>
-
 sections:
-  - kind: guidelines
-    for: all
-    items:
-      - statement: Label text SHOULD stay short — the tag truncates with an ellipsis rather than wrapping once it exceeds its container's width.
-        level: should
-        checkedBy: manual
-
   - kind: guidelines
     for: agent
     framing: when-to-use
@@ -33,3 +22,15 @@ sections:
           - to: badge
             rel: alternative-to
         checkedBy: manual
+
+  - kind: guidelines
+    for: all
+    items:
+      - statement: Label text SHOULD stay short — the tag truncates with an ellipsis rather than wrapping once it exceeds its container's width.
+        level: should
+        checkedBy: manual
+
+imports:
+  - platform: web-component
+    code: <ds-tag>color</ds-tag>
+

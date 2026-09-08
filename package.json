@@ -25,23 +25,23 @@
     }
   ],
   "scripts": {
-    "dev": "node scripts/serve.js",
-    "build": "npm run generate && node scripts/build-site.js",
+    "dev": "node scripts/site/serve.js",
+    "build": "npm run generate && node scripts/site/build-site.js",
     "check:all": "npm run check && npm run build && npm run check:docs",
-    "check": "node scripts/bundle.js && node scripts/check-schema-ids.js && node scripts/check-rule-catalog.js && node scripts/sync-examples.js --check && node scripts/validate.js && node scripts/conformance-test.js && node scripts/validate.js test/site-components/index.dsds.yaml test/site-components/components/*.dsds.yaml && node scripts/validate.js examples/interop/color-action-primary.dsds.yaml examples/interop/my-element.dsds.yaml && node scripts/validate.js examples/interop/nested-color.dsds.yaml && node scripts/sync-skill-versions.js --check && npm run generate:check",
-    "check:docs": "node scripts/check-markdown-mirrors.mjs && node scripts/check-internal-links.mjs && node scripts/check-docs-coverage.mjs && node scripts/check-scripts-documented.mjs && node scripts/check-edge-function-pages.mjs && stylelint \"site/**/*.css\"",
-    "lint": "node scripts/lint-docs.js",
-    "validate": "node scripts/validate.js",
-    "generate": "node scripts/sync-examples.js && node scripts/bundle.js && node scripts/extract-normative.mjs && node scripts/generate-rule-catalog.mjs && node scripts/generate-examples-index.mjs && node scripts/generate-conformance-suite.mjs",
-    "generate:check": "node scripts/extract-normative.mjs --check && node scripts/generate-rule-catalog.mjs --check && node scripts/generate-examples-index.mjs --check && node scripts/generate-conformance-suite.mjs --check",
-    "migrate": "node scripts/migrate-to-0.20.js",
-    "compose": "node scripts/compose.js",
-    "bump-version": "node scripts/bump-version.js",
-    "og:generate": "node scripts/generate-og-image.mjs",
-    "readability": "node scripts/readability-audit.mjs",
-    "test:a11y": "npx playwright install chromium && node scripts/axe-audit.mjs",
-    "bundle": "node scripts/bundle.js",
-    "sync-skill-versions": "node scripts/sync-skill-versions.js"
+    "check": "node scripts/generate/bundle.js && node scripts/checks/check-schema-ids.js && node scripts/checks/check-rule-catalog.js && node scripts/generate/sync-examples.js --check && node scripts/validate/validate.js && node scripts/validate/conformance-test.js && node scripts/validate/validate.js test/site-components/index.dsds.yaml test/site-components/components/*.dsds.yaml && node scripts/validate/validate.js examples/interop/color-action-primary.dsds.yaml examples/interop/my-element.dsds.yaml && node scripts/validate/validate.js examples/interop/nested-color.dsds.yaml && node scripts/generate/sync-skill-versions.js --check && npm run generate:check",
+    "check:docs": "node scripts/checks/check-markdown-mirrors.mjs && node scripts/checks/check-internal-links.mjs && node scripts/checks/check-docs-coverage.mjs && node scripts/checks/check-scripts-documented.mjs && node scripts/checks/check-edge-function-pages.mjs && stylelint \"site/**/*.css\"",
+    "lint": "node scripts/validate/lint-docs.js",
+    "validate": "node scripts/validate/validate.js",
+    "generate": "node scripts/generate/sync-examples.js && node scripts/generate/bundle.js && node scripts/generate/extract-normative.mjs && node scripts/generate/generate-rule-catalog.mjs && node scripts/generate/generate-examples-index.mjs && node scripts/generate/generate-conformance-suite.mjs",
+    "generate:check": "node scripts/generate/extract-normative.mjs --check && node scripts/generate/generate-rule-catalog.mjs --check && node scripts/generate/generate-examples-index.mjs --check && node scripts/generate/generate-conformance-suite.mjs --check",
+    "migrate": "node scripts/tools/migrate-to-0.20.js",
+    "compose": "node scripts/tools/compose.js",
+    "bump-version": "node scripts/tools/bump-version.js",
+    "og:generate": "node scripts/generate/generate-og-image.mjs",
+    "readability": "node scripts/tools/readability-audit.mjs",
+    "test:a11y": "npx playwright install chromium && node scripts/checks/axe-audit.mjs",
+    "bundle": "node scripts/generate/bundle.js",
+    "sync-skill-versions": "node scripts/generate/sync-skill-versions.js"
   },
   "repository": {
     "type": "git",
@@ -65,13 +65,13 @@
   },
   "homepage": "https://github.com/somerandomdude/design-system-documentation-schema#readme",
   "bin": {
-    "dsds-validate": "scripts/validate.js"
+    "dsds-validate": "scripts/validate/validate.js"
   },
   "files": [
     "schema",
-    "scripts/validate.js",
+    "scripts/validate/validate.js",
     "scripts/lib.js",
-    "scripts/bundle.js",
+    "scripts/generate/bundle.js",
     "README.md",
     "LICENSE",
     "CHANGELOG"

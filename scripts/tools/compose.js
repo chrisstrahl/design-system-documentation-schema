@@ -29,7 +29,7 @@
 const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
-const { loadYaml } = require("./lib");
+const { loadYaml } = require("../lib");
 
 function parseArgs(argv) {
   const args = { dir: null, out: null };

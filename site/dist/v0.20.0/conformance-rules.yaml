@@ -193,3 +193,80 @@
     checked for a `documentBlocks` entry of `kind: use-cases`) - 0.20.0
     folds that content into a `guidelines` section instead of a separate
     block kind, so this checks for that section's presence instead.
+
+- id: DSDS-16
+  name: token-description-restates-scale-position
+  enforcement: advisory
+  title: A token `description`, when present, shouldn't just restate its position on a scale.
+  description: >-
+    A token entry's optional `description` should add what the id can't -
+    the token's role, or when to use it. One that only restates the token's
+    position on a scale ("Shade 900", "Step 500", "Level 6 of the neutral
+    scale") reads as documented intent while carrying none: that ordinal is
+    already in the id and in the token's place among its `metadata.group`
+    siblings. The companion case to DSDS-13 - the scale step, rather than the
+    id or the raw value.
+  note: >-
+    Ported from PR #37 (by Cody Clark), originally proposed as DSDS-012
+    against the pre-0.20.0 entity model - same algorithm (flag a description
+    that reduces to a single leading scale word plus a number, optionally
+    "<word> <n> of the <family> scale"/"ramp"), re-hosted on a token entry's
+    own id/name/description like DSDS-13 was. 0.20.0 has no separate
+    token-group kind, so it checks `kind: token` only. Deliberately
+    conservative: the scale word must lead and be singular, so number-first
+    and plural forms ("Nine weights", "Twelve steps") and a bare
+    family-plus-number ("Neutral 700") are left alone, and any role or usage
+    word stops the match. A description that also restates the id or name is
+    left to DSDS-13, so it is reported once.
+
+- id: DSDS-17
+  name: entry-field-order
+  enforcement: advisory
+  title: An entry's own top-level fields don't follow STYLE_GUIDE.md's field order.
+  description: >-
+    STYLE_GUIDE.md defines one canonical top-level field order per entry
+    kind (identity, then metadata, then primary content pointer, then
+    sections, then structured facts, then relationships, then
+    $extensions last). Order has no effect on validity - this is purely
+    a readability/diff-noise convention - so a violation is advisory, not
+    a schema rule.
+  note: >-
+    Checks only the relative order of fields actually present; an entry
+    that omits a field is never flagged for that field's absence.
+
+- id: DSDS-18
+  name: section-order
+  enforcement: advisory
+  title: An entry's `sections[]` doesn't follow STYLE_GUIDE.md's grouping and ordering.
+  description: >-
+    Per STYLE_GUIDE.md §2, sections of the same `kind` must stay
+    contiguous, kinds are ordered general-to-specific (guidelines,
+    definitions, steps, then the generic `section`), and multiple
+    `guidelines` sections order `framing: when-to-use` before
+    `how-to-use`/unset.
+  note: >-
+    Doesn't attempt to verify the tag-scoped-guidelines sub-ordering
+    STYLE_GUIDE.md describes as a third guidelines tier - identifying
+    "this section is really about one tag" isn't mechanically checkable
+    the way framing is.
+
+- id: DSDS-19
+  name: guideline-item-level-order
+  enforcement: advisory
+  title: A `guidelines` section's items aren't ordered must, should, may, should-not, must-not.
+  description: >-
+    Per STYLE_GUIDE.md §3, items within one guidelines section should be
+    ordered by `level` in that exact sequence - strongest positive to
+    strongest negative, with the two conditional levels in the middle.
+    Items sharing a level keep their relative order; only a level-to-level
+    inversion is flagged.
+
+- id: DSDS-20
+  name: document-field-order
+  enforcement: advisory
+  title: A base document's own top-level fields don't follow STYLE_GUIDE.md's field order.
+  description: >-
+    STYLE_GUIDE.md's base-document order is `schemaVersion`, `$schema`,
+    `name`, `entries`, `shared`, `refs`, `$extensions`. Checked once per
+    base document (a file with a `schemaVersion`), separately from
+    DSDS-17's per-entry check.

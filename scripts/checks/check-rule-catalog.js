@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // The rule catalog (schema/conformance-rules.yaml) is the single source of
-// truth scripts/validate.js's own RULES map is built from (see validate.js's
+// truth scripts/validate/validate.js's own RULES map is built from (see validate.js's
 // own comment on why: so a fixture, a bug report, or an independent
 // validator can cite a stable id). Nothing before this asserted the reverse
 // direction: a catalog entry with a typo'd or renamed `name` produces
@@ -11,8 +11,8 @@
 // Every catalog entry also now declares `enforcement`
 // (structural|semantic|advisory|none), matching the three tiers README.md's
 // own "Enforcement tiers" table already documents (structural = the schema
-// itself; semantic = scripts/validate.js's hand-written DSDS-XX checks;
-// advisory = scripts/lint-docs.js's warnings-only tier) plus `none` for a
+// itself; semantic = scripts/validate/validate.js's hand-written DSDS-XX checks;
+// advisory = scripts/validate/lint-docs.js's warnings-only tier) plus `none` for a
 // documented-but-unenforced entry. `semantic` is the only tier checked for
 // drift here - `advisory` entries are checked the same way, but by
 // lint-docs.js's own startup self-check (activeRules()), since that file
@@ -22,10 +22,10 @@
 
 const fs = require("fs");
 const path = require("path");
-const { rootDir, loadYaml } = require("./lib");
+const { rootDir, loadYaml } = require("../lib");
 
 const CATALOG_PATH = path.join(rootDir, "schema/conformance-rules.yaml");
-const VALIDATE_PATH = path.join(rootDir, "scripts/validate.js");
+const VALIDATE_PATH = path.join(rootDir, "scripts/validate/validate.js");
 
 const ENFORCEMENT_VALUES = new Set(["structural", "semantic", "advisory", "none"]);
 
@@ -52,13 +52,13 @@ const semanticNames = new Set(catalog.filter((r) => r.enforcement === "semantic"
 
 for (const name of semanticNames) {
   if (!referencedNames.has(name)) {
-    console.error(`✗ ${name}: enforcement: semantic in the catalog, but scripts/validate.js never references RULES.${name}`);
+    console.error(`✗ ${name}: enforcement: semantic in the catalog, but scripts/validate/validate.js never references RULES.${name}`);
     ok = false;
   }
 }
 for (const name of referencedNames) {
   if (!semanticNames.has(name)) {
-    console.error(`✗ RULES.${name}: referenced in scripts/validate.js but has no enforcement: semantic entry (or no entry at all) in the catalog`);
+    console.error(`✗ RULES.${name}: referenced in scripts/validate/validate.js but has no enforcement: semantic entry (or no entry at all) in the catalog`);
     ok = false;
   }
 }
@@ -117,6 +117,6 @@ for (const rel of PROSE_FILES) {
 }
 
 if (ok) {
-  console.log(`✓ ${catalog.length} rule(s) (${lowestId}–${highestId}) all declare a valid enforcement tier, every semantic one matches scripts/validate.js exactly, and README.md/AGENTS.md describe the catalog's real range.`);
+  console.log(`✓ ${catalog.length} rule(s) (${lowestId}–${highestId}) all declare a valid enforcement tier, every semantic one matches scripts/validate/validate.js exactly, and README.md/AGENTS.md describe the catalog's real range.`);
 }
 process.exit(ok ? 0 : 1);

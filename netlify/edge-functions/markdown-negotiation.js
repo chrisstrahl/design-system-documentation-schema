@@ -27,7 +27,7 @@
 // hand-written list rather than generated at build time, because an edge
 // function is committed source Netlify's own deploy step discovers - it
 // isn't produced by `npm run build` the way site/dist/ is, so it can't read
-// nav.js's exports at request time. scripts/check-edge-function-pages.mjs
+// nav.js's exports at request time. scripts/checks/check-edge-function-pages.mjs
 // (part of `npm run check`) asserts this list can't silently drift from
 // nav.js's TOP_LINKS/FOOTER_LINKS - the same guard shape
 // check-docs-coverage.mjs already uses for the nav itself.

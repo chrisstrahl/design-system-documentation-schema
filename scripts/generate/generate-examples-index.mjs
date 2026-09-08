@@ -13,8 +13,8 @@
  * verbatim so each file in the list below actually resolves.
  *
  * Usage:
- *   node scripts/generate-examples-index.mjs           # regenerate the list
- *   node scripts/generate-examples-index.mjs --check   # exit 1 if out of date
+ *   node scripts/generate/generate-examples-index.mjs           # regenerate the list
+ *   node scripts/generate/generate-examples-index.mjs --check   # exit 1 if out of date
  */
 
 import fs from "node:fs";
@@ -22,7 +22,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 const EXAMPLES_DIR = path.join(ROOT, "examples");
 const PAGE = path.join(ROOT, "site", "content", "examples.mdx");
 
@@ -36,7 +36,7 @@ const GROUP_BLURBS = {
   entries: "Standalone entry files, one per kind, plus the source/manifest/story files a couple of them point at.",
   quickstart: "The Quick Start guide's own snippets, one per step, building up from a bare base document to a described, related entry.",
   interop: "Worked pairs showing a DSDS entry pointing at a real DTCG token file or CEM manifest, instead of restating it.",
-  invalid: "One broken example per semantic rule (`DSDS-XX-*.yaml`) plus schema-shape fixtures (`schema-*.yaml`) — the negative-test corpus `scripts/conformance-test.js` runs against.",
+  invalid: "One broken example per semantic rule (`DSDS-XX-*.yaml`) plus schema-shape fixtures (`schema-*.yaml`) — the negative-test corpus `scripts/validate/conformance-test.js` runs against.",
   "anti-patterns": "Documents that validate cleanly and are still worth avoiding — the schema checks structure, not judgment. See each file's own leading comment.",
 };
 
@@ -76,7 +76,7 @@ function renderIndex() {
     }
     lines.push("");
   }
-  lines.push(`*${total} files across ${groups.length} categories, generated from the \`examples/\` directory by \`scripts/generate-examples-index.mjs\` — do not edit by hand.*`);
+  lines.push(`*${total} files across ${groups.length} categories, generated from the \`examples/\` directory by \`scripts/generate/generate-examples-index.mjs\` — do not edit by hand.*`);
   lines.push("");
   lines.push(END);
   return lines.join("\n");

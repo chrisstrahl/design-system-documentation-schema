@@ -25,7 +25,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { rootDir, loadYaml } = require("./lib");
+const { rootDir, loadYaml } = require("../lib");
 const { validateDoc, RULES } = require("./validate");
 
 const FIXTURES_DIR = path.join(rootDir, "examples/invalid");

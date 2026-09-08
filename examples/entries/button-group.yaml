@@ -8,10 +8,6 @@ metadata:
   since: 1.1.0
   tags: [actions, layout]
 
-refs:
-  - to: button
-    rel: composes
-
 sections:
   - kind: guidelines
     for: all
@@ -20,3 +16,7 @@ sections:
         level: should
       - statement: Order buttons by how often each action is taken, most frequent first, unless a platform convention dictates otherwise.
         level: may
+
+refs:
+  - to: button
+    rel: composes

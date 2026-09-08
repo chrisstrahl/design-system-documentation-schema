@@ -31,7 +31,7 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fs from "node:fs";
 
-const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const ROOT = path.dirname(path.dirname(path.dirname(fileURLToPath(import.meta.url))));
 const SITE_DIR = path.join(ROOT, "site");
 const LOGO_PATH = path.join(SITE_DIR, "assets", "dsds.svg");
 const OUTPUT_PATH = path.join(SITE_DIR, "assets", "og-image.png");

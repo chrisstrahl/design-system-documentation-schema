@@ -9,12 +9,6 @@ metadata:
   since: 1.3.0
   tags: [feedback]
 
-refs:
-  - to: button
-    rel: composes
-  - to: empty-state
-    rel: alternative-to
-
 sections:
   - kind: guidelines
     for: all
@@ -35,3 +29,9 @@ sections:
     items:
       - statement: Always include a retry action, since the underlying condition is often transient.
         level: must
+
+refs:
+  - to: button
+    rel: composes
+  - to: empty-state
+    rel: alternative-to

@@ -27,9 +27,10 @@ entries:
     colorScheme: dark
     metadata:
       status: {status: stable}
-    refs:
+    extends:
       - to: light
         rel: extends
+    refs:
       - href: tokens/dark.tokens.json
         rel: file
         note: DTCG source for this theme's token overrides - the specific tokens that differ from `light` are whichever this file redeclares.

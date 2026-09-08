@@ -9,8 +9,8 @@
  *
  * Usage:
  *   npm run test:a11y
- *   node scripts/axe-audit.mjs                  # all pages in site/dist/
- *   node scripts/axe-audit.mjs index.html        # a single page
+ *   node scripts/checks/axe-audit.mjs                  # all pages in site/dist/
+ *   node scripts/checks/axe-audit.mjs index.html        # a single page
  */
 
 import { chromium } from "playwright";
@@ -20,7 +20,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { spawn } from "node:child_process";
 
-const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const ROOT = path.dirname(path.dirname(path.dirname(fileURLToPath(import.meta.url))));
 const DIST_DIR = path.join(ROOT, "site", "dist");
 const PORT = 4310;
 const BASE_URL = `http://localhost:${PORT}`;

@@ -27,7 +27,7 @@
 # source file now, copied into site/dist/assets/ by build-site.js like
 # every other asset, and regenerated only when someone explicitly runs
 # `npm run og:generate` after changing its design. Playwright remains a
-# devDependency solely for `npm run test:a11y` (scripts/axe-audit.mjs),
+# devDependency solely for `npm run test:a11y` (scripts/checks/axe-audit.mjs),
 # which runs in its own CI job and installs Chromium itself.
 #
 # `npm run check` runs before `npm run build`, not after: it's the whole
@@ -61,7 +61,7 @@
 # The bundled schema lives under /v<version>/…; glob covers every version dir.
 # Versions through v0.15.2 published a JSON bundle and stay JSON, frozen -
 # this rule still applies to them. v0.20.0 onward publishes YAML instead
-# (see scripts/bundle.js's own comment for why); the second rule below
+# (see scripts/generate/bundle.js's own comment for why); the second rule below
 # covers those.
 [[headers]]
   for = "/v*/*.schema.json"

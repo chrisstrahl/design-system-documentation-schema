@@ -26,11 +26,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildDefIndex } from "./render-prop-table.js";
-import { TOP_LINKS, FOOTER_LINKS } from "./nav.js";
+import { buildDefIndex } from "../site/render-prop-table.js";
+import { TOP_LINKS, FOOTER_LINKS } from "../site/nav.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 const SCHEMA_DIR = path.join(ROOT, "schema");
 const DIST_DIR = path.join(ROOT, "site", "dist");
 

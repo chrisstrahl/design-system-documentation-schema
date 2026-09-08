@@ -2,12 +2,12 @@
 /**
  * generate-conformance-suite.mjs — Builds a versioned, language-agnostic
  * conformance-suite manifest from examples/invalid/*.yaml, so a validator
- * implementation that isn't this repo's own scripts/validate.js can prove
+ * implementation that isn't this repo's own scripts/validate/validate.js can prove
  * it enforces the same rules, the same way, without reading this repo's
  * JS at all.
  *
  * Every fixture already carries its own contract in a leading comment (see
- * scripts/conformance-test.js's own header comment for why: `# rejectedBy:
+ * scripts/validate/conformance-test.js's own header comment for why: `# rejectedBy:
  * schema|semantic`, `# expect: DSDS-XX[,DSDS-YY]`, optional `# errorAt:
  * /json/pointer`). This script is a second, independent reader of that same
  * contract — not a duplicate of the checking logic in conformance-test.js,
@@ -18,8 +18,8 @@
  * alongside the schema bundle and rule catalog.
  *
  * Usage:
- *   node scripts/generate-conformance-suite.mjs           # regenerate the manifest
- *   node scripts/generate-conformance-suite.mjs --check   # exit 1 if out of date
+ *   node scripts/generate/generate-conformance-suite.mjs           # regenerate the manifest
+ *   node scripts/generate/generate-conformance-suite.mjs --check   # exit 1 if out of date
  */
 
 import fs from "node:fs";
@@ -31,11 +31,11 @@ const require = createRequire(import.meta.url);
 const yaml = require("js-yaml");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 const FIXTURES_DIR = path.join(ROOT, "examples", "invalid");
 const MANIFEST_PATH = path.join(ROOT, "schema", "conformance-suite.json");
 
-// Mirrors scripts/conformance-test.js's own leadingComment()/expectedIds() —
+// Mirrors scripts/validate/conformance-test.js's own leadingComment()/expectedIds() —
 // see that file's header comment for the fixture-contract rationale. Kept
 // as an independent reader rather than importing conformance-test.js
 // itself: that file runs its checks as side effects at module load and
@@ -82,7 +82,7 @@ function buildManifest() {
 
   return {
     schemaVersion: version,
-    generatedBy: "scripts/generate-conformance-suite.mjs",
+    generatedBy: "scripts/generate/generate-conformance-suite.mjs",
     runnerContract:
       "For each fixture: load it as YAML, validate it against the bundled schema at " +
       `v${version}, and confirm it is REJECTED. If rejectedBy is \"schema\", at least one ` +

@@ -11,6 +11,25 @@ sourceFiles:
   - platform: web-component
     file: ../../../site/components/cross-refs.js
 
+sections:
+  - kind: guidelines
+    for: agent
+    framing: when-to-use
+    items:
+      - statement: Use once below a definition's description to list the other definitions it references. Not a general-purpose link list — for a link inline within running prose or a property's own type, use type-ref instead.
+        level: should
+        alternatives:
+          - to: type-ref
+            rel: alternative-to
+        checkedBy: manual
+
+  - kind: guidelines
+    for: all
+    items:
+      - statement: Slot plain anchor elements, not ds-type-ref — this component only styles the links it's given; it does not render its own link markup or resolve targets.
+        level: must
+        checkedBy: manual
+
 imports:
   - platform: web-component
     code: |
@@ -23,21 +42,3 @@ refs:
     rel: part-of
     note: Used below a definition's own description to list related definitions.
 
-sections:
-  - kind: guidelines
-    for: all
-    items:
-      - statement: Slot plain anchor elements, not ds-type-ref — this component only styles the links it's given; it does not render its own link markup or resolve targets.
-        level: must
-        checkedBy: manual
-
-  - kind: guidelines
-    for: agent
-    framing: when-to-use
-    items:
-      - statement: Use once below a definition's description to list the other definitions it references. Not a general-purpose link list — for a link inline within running prose or a property's own type, use type-ref instead.
-        level: should
-        alternatives:
-          - to: type-ref
-            rel: alternative-to
-        checkedBy: manual

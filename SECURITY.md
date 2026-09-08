@@ -5,7 +5,7 @@ handled differently:
 
 ## Reporting a vulnerability in this repo's own code
 
-That's the validator (`scripts/validate.js`), the build/site-generation
+That's the validator (`scripts/validate/validate.js`), the build/site-generation
 scripts, or the site itself (`site/components/*.js`) — for example, a path-
 traversal in the validator's file resolution, or an XSS in the rendered
 site.

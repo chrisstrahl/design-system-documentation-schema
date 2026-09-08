@@ -11,6 +11,25 @@ sourceFiles:
   - platform: web-component
     file: ../../../site/components/guide-section.js
 
+sections:
+  - kind: guidelines
+    for: agent
+    framing: when-to-use
+    items:
+      - statement: Use for a narrative guide step that pairs prose with a worked code example (e.g. Quick start). For a schema definition's own reference block, use def-section instead — it adds the eyebrow, type badge, and property list a guide step doesn't need.
+        level: should
+        alternatives:
+          - to: def-section
+            rel: alternative-to
+        checkedBy: manual
+
+  - kind: guidelines
+    for: agent
+    items:
+      - statement: Only slot content into "example" when the step actually has a code sample — the right column is checked once at connect time and simply omitted (not rendered empty) when nothing is assigned to that slot.
+        level: should
+        checkedBy: manual
+
 imports:
   - platform: web-component
     code: |
@@ -28,21 +47,3 @@ refs:
     rel: relates-to
     note: Same two-column visual language as ds-def-section's layout="split", minus the schema-specific heading it renders itself.
 
-sections:
-  - kind: guidelines
-    for: agent
-    items:
-      - statement: Only slot content into "example" when the step actually has a code sample — the right column is checked once at connect time and simply omitted (not rendered empty) when nothing is assigned to that slot.
-        level: should
-        checkedBy: manual
-
-  - kind: guidelines
-    for: agent
-    framing: when-to-use
-    items:
-      - statement: Use for a narrative guide step that pairs prose with a worked code example (e.g. Quick start). For a schema definition's own reference block, use def-section instead — it adds the eyebrow, type badge, and property list a guide step doesn't need.
-        level: should
-        alternatives:
-          - to: def-section
-            rel: alternative-to
-        checkedBy: manual

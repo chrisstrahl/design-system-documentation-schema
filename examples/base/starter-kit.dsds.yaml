@@ -54,9 +54,10 @@ entries:
     colorScheme: dark
     metadata:
       status: {status: stable}
-    refs:
+    extends:
       - to: light
         rel: extends
+    refs:
       - href: tokens/dark.tokens.json
         rel: file
         note: DTCG source for this theme's token overrides - the specific tokens that differ from `light` are whichever this file redeclares.
@@ -67,9 +68,6 @@ entries:
     description: An interactive element that triggers an action when activated.
     metadata:
       status: {status: stable}
-    refs:
-      - to: color.action.primary
-        rel: depends-on
     sections:
       - kind: guidelines
         for: human
@@ -87,6 +85,9 @@ entries:
             refs:
               - to: shared-a11y#touch-target
                 rel: same-as
+    refs:
+      - to: color.action.primary
+        rel: depends-on
 
 # Reusable content that isn't a design-system artifact - not an entry, so
 # it lives in this array instead of `entries` above (see entry.schema.yaml's
@@ -99,10 +100,6 @@ shared:
   - id: shared-a11y
     name: Shared Accessibility Rules
     description: Cross-cutting accessibility rules, stated once and referenced from every entry they apply to.
-    refs:
-      - href: https://www.w3.org/WAI/WCAG22/quickref/
-        rel: external-link
-        role: WCAG 2.2 quick reference
     sections:
       - kind: guidelines
         for: all
@@ -288,9 +285,14 @@ shared:
         for: agent
         title: Agent notes
         items:
+          - statement: When generating a component, emit the accessible name, keyboard handling, and focus indicator in the first pass. Do not defer them to a follow-up.
+            level: must
           - level: should
             refs:
               - to: shared-a11y#native-semantics-first
                 rel: same-as
-          - statement: When generating a component, emit the accessible name, keyboard handling, and focus indicator in the first pass. Do not defer them to a follow-up.
-            level: must
+
+    refs:
+      - href: https://www.w3.org/WAI/WCAG22/quickref/
+        rel: external-link
+        role: WCAG 2.2 quick reference

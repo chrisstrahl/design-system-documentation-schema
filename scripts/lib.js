@@ -25,7 +25,7 @@ const exampleDirs = [
 // one known, deliberately-special file from a directory walk is the same
 // pattern walkYamlFiles() uses for dsds.bundled.yaml (it doesn't end in
 // .schema.yaml, so the extension filter alone already keeps it out - see
-// scripts/bundle.js's own comment on why the bundle isn't named
+// scripts/generate/bundle.js's own comment on why the bundle isn't named
 // dsds.bundled.schema.yaml).
 const EXCLUDED_FROM_DEFAULT = new Set([path.join(rootDir, "examples/quickstart/01-base-document.yaml")]);
 // The live site's own content isn't ported to the new schema yet (that's a

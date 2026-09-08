@@ -7,6 +7,36 @@ metadata:
   status: {status: stable}
   tags: [content, navigation]
 
+sourceFiles:
+  - platform: web-component
+    file: ../../../site/components/heading.js
+
+sections:
+  - kind: guidelines
+    for: agent
+    framing: when-to-use
+    items:
+      - statement: Use for real document structure below the page's own h1. Not a font-size shortcut — if the goal is only larger or bolder text with no actual section boundary, that is a styling need, not a heading.
+        level: should
+        checkedBy: manual
+
+  - kind: guidelines
+    for: all
+    items:
+      - statement: Levels MUST NOT skip — e.g. an h2 section's first child heading MUST be h3, never h4, so the page's heading outline stays navigable by assistive-technology heading-jump commands.
+        level: must
+        checkedBy: automated
+        checks:
+          - href: ../../../scripts/checks/axe-audit.mjs
+            rel: test
+      - statement: Prefer the default anchor (derived from text content) — set anchor explicitly only when two headings on the same page would otherwise collide, or when a stable, pre-existing deep link needs to survive a heading text edit.
+        level: should
+        checkedBy: manual
+
+imports:
+  - platform: web-component
+    code: <ds-heading level="3">Conformance classes</ds-heading>
+
 traits:
   - kind: enum
     id: level
@@ -28,32 +58,3 @@ traits:
       - id: "6"
         description: Rarely used — most pages don't nest this deep.
 
-sourceFiles:
-  - platform: web-component
-    file: ../../../site/components/heading.js
-
-imports:
-  - platform: web-component
-    code: <ds-heading level="3">Conformance classes</ds-heading>
-
-sections:
-  - kind: guidelines
-    for: all
-    items:
-      - statement: Levels MUST NOT skip — e.g. an h2 section's first child heading MUST be h3, never h4, so the page's heading outline stays navigable by assistive-technology heading-jump commands.
-        level: must
-        checkedBy: automated
-        checks:
-          - href: ../../../scripts/axe-audit.mjs
-            rel: test
-      - statement: Prefer the default anchor (derived from text content) — set anchor explicitly only when two headings on the same page would otherwise collide, or when a stable, pre-existing deep link needs to survive a heading text edit.
-        level: should
-        checkedBy: manual
-
-  - kind: guidelines
-    for: agent
-    framing: when-to-use
-    items:
-      - statement: Use for real document structure below the page's own h1. Not a font-size shortcut — if the goal is only larger or bolder text with no actual section boundary, that is a styling need, not a heading.
-        level: should
-        checkedBy: manual

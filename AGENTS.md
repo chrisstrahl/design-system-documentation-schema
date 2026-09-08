@@ -57,7 +57,7 @@ binding.
   which is what made every earlier build reject every valid 0.20.0
   document. Run `npx dsds-mcp` (`minVersion: "0.4.0"`, per manifest.json's
   `mcp` field) — or validate directly against the bundled schema or
-  `scripts/validate.js` either way.
+  `scripts/validate/validate.js` either way.
 
 ## The entry envelope
 
@@ -75,7 +75,7 @@ theme's `colorScheme`, and so on — see `entries/<kind>.schema.yaml` for
 exactly which fields each kind adds). Learn this envelope once and you can
 generalize across every entry kind without re-deriving its shape from
 scratch each time. This is the schema's `ENTRY_ENVELOPE` constant
-(`scripts/render-prop-table.js`) — one source of truth, not a convention you
+(`scripts/site/render-prop-table.js`) — one source of truth, not a convention you
 have to infer from examples. `sections/section.schema.yaml` has the same
 role one level down: every section kind shares `kind`, `for`, `title`,
 `description`, `items`, `metadata`, `$extensions`.

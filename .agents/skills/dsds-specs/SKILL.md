@@ -70,7 +70,7 @@ refs:
     role: Checkbox component
 ```
 
-Splitting a system across many files uses `refs` (`rel: file`) pointing at sibling documents — not a `$ref`/JSON-Pointer include. There's also `scripts/compose.js` upstream, for concatenating many hand-authored fragment files into one document before validation.
+Splitting a system across many files uses `refs` (`rel: file`) pointing at sibling documents — not a `$ref`/JSON-Pointer include. There's also `scripts/tools/compose.js` upstream, for concatenating many hand-authored fragment files into one document before validation.
 
 ## Sections
 
@@ -104,7 +104,7 @@ The bundled schema is published at `https://designsystemdocspec.org/v0.20.0/dsds
 npx dsds-validate <files-or-globs>
 ```
 
-See the `dsds-validate` skill for the full rule catalog (`DSDS-01`–`DSDS-16`) and how to interpret failures.
+See the `dsds-validate` skill for the full rule catalog (`DSDS-01`–`DSDS-20`) and how to interpret failures.
 
 ## Deep-Dive References
 

@@ -61,7 +61,7 @@ Validated example pairs live in [`examples/interop/`](examples/interop/).
 ## Conformance
 
 What it means for a document to follow the DSDS spec — the four conformance
-classes, the three enforcement tiers, and the full `DSDS-01`–`DSDS-16` rule
+classes, the three enforcement tiers, and the full `DSDS-01`–`DSDS-20` rule
 catalog — is documented on the site:
 
 - **[Conformance](https://designsystemdocspec.org/conformance)** — the rule
@@ -73,7 +73,7 @@ catalog — is documented on the site:
 
 The machine-readable catalog is
 [`schema/conformance-rules.yaml`](schema/conformance-rules.yaml); `npm run
-check` asserts it matches `scripts/validate.js` in both directions.
+check` asserts it matches `scripts/validate/validate.js` in both directions.
 
 The words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY**
 carry their [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) meaning
@@ -97,9 +97,11 @@ You can also build the site locally with `npm run build` and open `site/dist/ind
 
 This README leaves out schema field listings and example payloads on purpose — those live on the documentation site as a single source of truth.
 
+Writing a DSDS document yourself? [STYLE_GUIDE.md](STYLE_GUIDE.md) covers field order — a consistent, non-normative convention every example in this repo follows, not something the schema enforces.
+
 ## Repository layout
 
-- **`schema/`** — The split JSON Schema source (`common/`, `metadata/`, `entries/`, `sections/`), plus the auto-generated `dsds.bundled.yaml` / `dsds.bundled.schema.json` and the `DSDS-01`–`DSDS-16` `conformance-rules.yaml` catalog.
+- **`schema/`** — The split JSON Schema source (`common/`, `metadata/`, `entries/`, `sections/`), plus the auto-generated `dsds.bundled.yaml` / `dsds.bundled.schema.json` and the `DSDS-01`–`DSDS-20` `conformance-rules.yaml` catalog.
 - **`examples/`** — Validated example documents: full base documents, standalone entries per kind, quickstart snippets, interop pairs, and one `invalid/` fixture per semantic rule.
 - **`test/site-components/`** — A regression corpus documenting this repo's own `site/components/` web components as DSDS entries (dogfooding), checked on every `npm run check`.
 - **`scripts/`** — Bundling, validation, composition, and the static site generator.
@@ -119,20 +121,20 @@ documents every npm script and what it's for.
 To validate just your own file:
 
 ```bash
-node scripts/validate.js my-system.dsds.yaml
+node scripts/validate/validate.js my-system.dsds.yaml
 ```
 
 If your system is split across files via `rel: file`, cross-file `to:` refs are resolved automatically, bounded to the directory of the file you validate (and its subdirectories — not a parent or cousin directory). An otherwise-unresolved target reports as a warning, not a hard failure — add `--strict` (`npm run validate -- --strict`) to promote those to failures once your project is clean.
 
 Reference `https://designsystemdocspec.org/v0.20.0/dsds.bundled.yaml` from your DSDS files via the `$schema` keyword for editor autocompletion and inline validation.
 
-For document structure, composing hand-split fragments (`scripts/compose.js`), and authoring narrative pages with schema-driven property tables, see the **[Quick Start docs page](https://designsystemdocspec.org/quickstart.html)** and [How the schema is organized](https://designsystemdocspec.org/schema.html#how-the-schema-is-organized).
+For document structure, composing hand-split fragments (`scripts/tools/compose.js`), and authoring narrative pages with schema-driven property tables, see the **[Quick Start docs page](https://designsystemdocspec.org/quickstart.html)** and [How the schema is organized](https://designsystemdocspec.org/schema.html#how-the-schema-is-organized).
 
 ## Cutting a release
 
 There's no single version field — every `schema/**/*.schema.yaml` file's own `$id` independently encodes the version (e.g. `.../v0.20.0/common/ref.schema.yaml`), and everything else (`nav.js`, `compile-mdx.mjs`'s `{{VERSION}}` substitution, the versioned `site/dist/v<n>/` directory) derives the current version by reading it back out of `schema/dsds.bundled.yaml`. MDX content must never hardcode a version — always use `{{VERSION}}`.
 
-`scripts/bump-version.js` automates the mechanical part — every schema file's `$id`, `bundle.js`'s hardcoded `$id`, every example/test fixture's `schemaVersion`, README's one hardcoded URL, and `package.json#version` — then regenerates the bundled schema and syncs `.agents/skills/dsds-*`'s version references. Pass `--tag` to have it run the rest of the sequence too — build, check, commit, and an annotated tag — in one go:
+`scripts/tools/bump-version.js` automates the mechanical part — every schema file's `$id`, `bundle.js`'s hardcoded `$id`, every example/test fixture's `schemaVersion`, README's one hardcoded URL, and `package.json#version` — then regenerates the bundled schema and syncs `.agents/skills/dsds-*`'s version references. Pass `--tag` to have it run the rest of the sequence too — build, check, commit, and an annotated tag — in one go:
 
 ```bash
 # 1. Make schema changes under schema/, add examples/ + examples/invalid/ fixtures as needed.
@@ -161,7 +163,7 @@ change. Playwright is a devDependency for `npm run test:a11y` alone.
 
 Use `npm run bump-version <version> -- --dry-run` to preview changes first, or `--help` for the rest of the flags.
 
-The versioned dist directories (`site/dist/v<n>/dsds.bundled.schema.json` and `dsds.bundled.yaml`) are **immutable public contracts** — older `v<n>/` directories must stay untouched, and they are the one part of `site/dist/` that is tracked in git. `scripts/build-site.js` preserves them across rebuilds and never regenerates an older one, so nothing else would put them back.
+The versioned dist directories (`site/dist/v<n>/dsds.bundled.schema.json` and `dsds.bundled.yaml`) are **immutable public contracts** — older `v<n>/` directories must stay untouched, and they are the one part of `site/dist/` that is tracked in git. `scripts/site/build-site.js` preserves them across rebuilds and never regenerates an older one, so nothing else would put them back.
 
 The rest of `site/dist/` is git-ignored generated output: Netlify runs `npm run check && npm run build` on every deploy, so the served site is always built from the source that produced it. Commit the schema changes, examples, README, CHANGELOG, `package.json`, and the new `site/dist/v<new-version>/` directory together — but not the regenerated HTML, markdown mirrors, or component bundle.
 
@@ -169,7 +171,7 @@ Tag every release (`vX.Y.Z`, pushed to the remote) once its commit is merged —
 
 ### Bundle format
 
-Both `dsds.bundled.yaml` (matching the hand-authored `schema/**/*.schema.yaml` source it's built from) and `dsds.bundled.schema.json` (the same document, as JSON) are published for every version, generated together by `scripts/bundle.js` from the one parsed schema tree. "JSON Schema" names the spec both formats conform to (a constraint language for a data model), not a file-syntax requirement — see `scripts/bundle.js`'s own comment for why YAML is the source format either way.
+Both `dsds.bundled.yaml` (matching the hand-authored `schema/**/*.schema.yaml` source it's built from) and `dsds.bundled.schema.json` (the same document, as JSON) are published for every version, generated together by `scripts/generate/bundle.js` from the one parsed schema tree. "JSON Schema" names the spec both formats conform to (a constraint language for a data model), not a file-syntax requirement — see `scripts/generate/bundle.js`'s own comment for why YAML is the source format either way.
 
 For a documentation-only edit (no schema/example changes), just commit the `site/content/` change — no version bump, no new `/v<n>/` artifact, and nothing to commit from `site/dist/`. Run `npm run build` locally when you want to check the result before pushing; the deploy rebuilds it either way.
 
@@ -197,7 +199,7 @@ Everyone who has landed a PR here, with what it added:
   and a stale version string in Contributing
   ([#20](https://github.com/somerandomdude/design-system-documentation-schema/pull/20)).
 - **[Mykhaylo Ryechkin](https://github.com/mryechkin)** — the agent skills
-  (`.agents/skills/`) and `scripts/sync-skill-versions.js`
+  (`.agents/skills/`) and `scripts/generate/sync-skill-versions.js`
   ([#29](https://github.com/somerandomdude/design-system-documentation-schema/pull/29)).
 
 And with thanks for contributions that didn't arrive as a PR:

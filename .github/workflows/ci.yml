@@ -45,7 +45,7 @@ jobs:
       - run: npm run check:all
 
       # Advisory tier: documentation-quality warnings
-      # (scripts/lint-docs.js). A judgment call, not a build-blocking one -
+      # (scripts/validate/lint-docs.js). A judgment call, not a build-blocking one -
       # it runs here so the warnings show up on every PR instead of only
       # when someone remembers, which is how the tier went missing in the
       # first place. continue-on-error also covers lint's own
@@ -53,7 +53,7 @@ jobs:
       # worth seeing, not worth blocking a schema change on.
       - run: npm run lint
         continue-on-error: true
-      # `npm run readability` (scripts/readability-audit.mjs) is
+      # `npm run readability` (scripts/tools/readability-audit.mjs) is
       # deliberately NOT run here. It shells out to a `readability` CLI
       # that is neither a declared dependency nor installable the same way
       # on every platform - it's a local-only authoring aid, not a CI

@@ -101,6 +101,10 @@ Versions through 0.15.2 used a three-digit catalog (`DSDS-001`–`DSDS-006` and 
 | `DSDS-14` | A hard-requirement guideline (must/must-not) with no `checkedBy` at all. |
 | `DSDS-15` | A component entry with no `guidelines` section framed `when-to-use`. |
 | `DSDS-16` | A token `description`, when present, shouldn't just restate its position on a scale. |
+| `DSDS-17` | An entry's own top-level fields don't follow STYLE_GUIDE.md's field order. |
+| `DSDS-18` | An entry's `sections[]` doesn't follow STYLE_GUIDE.md's grouping and ordering. |
+| `DSDS-19` | A `guidelines` section's items aren't ordered must, should, may, should-not, must-not. |
+| `DSDS-20` | A base document's own top-level fields don't follow STYLE_GUIDE.md's field order. |
 
 {/* /dsds:rule-catalog */}
 
@@ -181,7 +185,7 @@ Every RFC 2119 sentence (MUST, MUST NOT, SHOULD, SHOULD NOT, MAY) inside the sch
 
 {/* dsds:normative-index */}
 
-*Generated from the v{{VERSION}} schemas by `scripts/extract-normative.mjs` — do not edit by hand. 2 statements: 0 MUST, 1 MUST NOT, 1 SHOULD, 0 SHOULD NOT, 0 MAY.*
+*Generated from the v{{VERSION}} schemas by `scripts/generate/extract-normative.mjs` — do not edit by hand. 2 statements: 0 MUST, 1 MUST NOT, 1 SHOULD, 0 SHOULD NOT, 0 MAY.*
 
 ### metadata
 

@@ -11,23 +11,7 @@ sourceFiles:
   - platform: web-component
     file: ../../../site/components/type-ref.js
 
-imports:
-  - platform: web-component
-    code: <ds-type-ref href="#ref">Ref</ds-type-ref>
-
-refs:
-  - to: def-section
-    rel: part-of
-    note: Used inside a definition's property types and description text to link to another definition.
-
 sections:
-  - kind: guidelines
-    for: agent
-    items:
-      - statement: Rendering waits for DOMContentLoaded when the document is still loading, since the link text is read from this element's own light-DOM textContent — a single requestAnimationFrame tick is not a reliable guarantee that light-DOM children have finished parsing.
-        level: must
-        checkedBy: manual
-
   - kind: guidelines
     for: agent
     framing: when-to-use
@@ -38,3 +22,20 @@ sections:
           - to: cross-refs
             rel: alternative-to
         checkedBy: manual
+
+  - kind: guidelines
+    for: agent
+    items:
+      - statement: Rendering waits for DOMContentLoaded when the document is still loading, since the link text is read from this element's own light-DOM textContent — a single requestAnimationFrame tick is not a reliable guarantee that light-DOM children have finished parsing.
+        level: must
+        checkedBy: manual
+
+imports:
+  - platform: web-component
+    code: <ds-type-ref href="#ref">Ref</ds-type-ref>
+
+refs:
+  - to: def-section
+    rel: part-of
+    note: Used inside a definition's property types and description text to link to another definition.
+

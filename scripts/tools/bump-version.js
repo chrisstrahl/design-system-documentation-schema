@@ -9,7 +9,7 @@
  * rewrites them all in one pass:
  *
  *   - Every schema/**\/*.schema.yaml file's own $id/$ref URLs
- *   - scripts/bundle.js's two hardcoded literals ($id, title) — the
+ *   - scripts/generate/bundle.js's two hardcoded literals ($id, title) — the
  *     bundled schema's version comes from these, not from reading the
  *     split files, since bundle.js writes it fresh on every run
  *   - Every example/test .dsds.yaml base document's `schemaVersion` value
@@ -31,12 +31,12 @@
  * plus the commit and the annotated git tag, in one run (see below).
  *
  * Usage:
- *   node scripts/bump-version.js <new-version>          # bump, bundle, sync skills
- *   node scripts/bump-version.js <new-version> --dry-run # preview only
- *   node scripts/bump-version.js <new-version> --schemas-only
+ *   node scripts/tools/bump-version.js <new-version>          # bump, bundle, sync skills
+ *   node scripts/tools/bump-version.js <new-version> --dry-run # preview only
+ *   node scripts/tools/bump-version.js <new-version> --schemas-only
  *                                                       # only touch schema/ + bundle.js
- *   node scripts/bump-version.js <new-version> --tag    # also build, check, commit, tag
- *   node scripts/bump-version.js --help
+ *   node scripts/tools/bump-version.js <new-version> --tag    # also build, check, commit, tag
+ *   node scripts/tools/bump-version.js --help
  *
  * <new-version> is a bare version string (ex: 0.20.1, 0.21.0, 1.0.0).
  * The leading "v" is not included — every URL in this repo is
@@ -64,9 +64,9 @@
 const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
-const { readSpecVersion } = require("./nav");
+const { readSpecVersion } = require("../site/nav");
 
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 const SCHEMA_DIR = path.join(ROOT, "schema");
 const BUNDLE_SCRIPT = path.join(ROOT, "scripts", "bundle.js");
 const README = path.join(ROOT, "README.md");
@@ -85,7 +85,7 @@ function printHelp() {
 bump-version — cut a new versioned DSDS spec build
 
 Usage:
-  node scripts/bump-version.js <new-version> [options]
+  node scripts/tools/bump-version.js <new-version> [options]
 
 Arguments:
   <new-version>     Bare version string (ex: 0.20.1, 0.21.0, 1.0.0).
@@ -104,10 +104,10 @@ Options:
   --help, -h          Show this help.
 
 Examples:
-  node scripts/bump-version.js 0.20.1
-  node scripts/bump-version.js 0.20.1 --dry-run
-  node scripts/bump-version.js 1.0.0 --schemas-only --no-bundle
-  node scripts/bump-version.js 0.20.1 --tag
+  node scripts/tools/bump-version.js 0.20.1
+  node scripts/tools/bump-version.js 0.20.1 --dry-run
+  node scripts/tools/bump-version.js 1.0.0 --schemas-only --no-bundle
+  node scripts/tools/bump-version.js 0.20.1 --tag
 `);
 }
 

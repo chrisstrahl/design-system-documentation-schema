@@ -31,8 +31,8 @@
  * citations need re-checking.
  *
  * Usage:
- *   node scripts/extract-normative.mjs           # regenerate the index
- *   node scripts/extract-normative.mjs --check   # exit 1 if out of date
+ *   node scripts/generate/extract-normative.mjs           # regenerate the index
+ *   node scripts/generate/extract-normative.mjs --check   # exit 1 if out of date
  */
 
 import fs from "node:fs";
@@ -44,7 +44,7 @@ const require = createRequire(import.meta.url);
 const yaml = require("js-yaml");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 const SCHEMA_DIR = path.join(ROOT, "schema");
 const PAGE = path.join(ROOT, "site", "content", "conformance.mdx");
 
@@ -166,7 +166,7 @@ function renderIndex({ groups, counts }) {
   lines.push(BEGIN);
   lines.push("");
   lines.push(
-    `*Generated from the v{{VERSION}} schemas by \`scripts/extract-normative.mjs\` — do not edit by hand. ` +
+    `*Generated from the v{{VERSION}} schemas by \`scripts/generate/extract-normative.mjs\` — do not edit by hand. ` +
       `${total} statements: ${counts["MUST"]} MUST, ${counts["MUST NOT"]} MUST NOT, ` +
       `${counts["SHOULD"]} SHOULD, ${counts["SHOULD NOT"]} SHOULD NOT, ${counts["MAY"]} MAY.*`,
   );

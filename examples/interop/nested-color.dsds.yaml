@@ -36,16 +36,16 @@ entries:
     description: Background for the single primary action on a surface. Its value is a DTCG alias into the palette (`{color.palette.blue-500}`) — the primitive and the semantic meaning live in two different places on purpose, so the palette can be re-themed without touching what "primary action" means.
     tokenType: color
     source: ./nested-color.tokens.json
-    refs:
-      - to: color.palette.blue-500
-        rel: depends-on
-        note: Resolves its value from this primitive via the DTCG file's own alias syntax, not a separate DSDS-level indirection.
     sections:
       - kind: guidelines
         for: all
         items:
           - statement: Use for at most one action per surface — two competing primary actions split the user's attention and dilute the visual hierarchy the color exists to create.
             level: should
+    refs:
+      - to: color.palette.blue-500
+        rel: depends-on
+        note: Resolves its value from this primitive via the DTCG file's own alias syntax, not a separate DSDS-level indirection.
 
   - id: color.action.primary-hover
     kind: token

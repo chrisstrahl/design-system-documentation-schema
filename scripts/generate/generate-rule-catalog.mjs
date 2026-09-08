@@ -6,15 +6,15 @@
  *
  * Before this script existed, the ID/Rule table on the Conformance page was
  * typed out by hand and only checked for drift after the fact
- * (scripts/check-rule-catalog.js, scripts/conformance-test.js) — a real
+ * (scripts/checks/check-rule-catalog.js, scripts/validate/conformance-test.js) — a real
  * safety net, but one that still required a human to notice a failure and
  * fix the copy. This generates the table instead, the same
- * generate-into-markers pattern scripts/extract-normative.mjs and
- * scripts/sync-examples.js already use, so there is no copy left to drift.
+ * generate-into-markers pattern scripts/generate/extract-normative.mjs and
+ * scripts/generate/sync-examples.js already use, so there is no copy left to drift.
  *
  * Usage:
- *   node scripts/generate-rule-catalog.mjs           # regenerate the table
- *   node scripts/generate-rule-catalog.mjs --check   # exit 1 if out of date
+ *   node scripts/generate/generate-rule-catalog.mjs           # regenerate the table
+ *   node scripts/generate/generate-rule-catalog.mjs --check   # exit 1 if out of date
  */
 
 import fs from "node:fs";
@@ -26,7 +26,7 @@ const require = createRequire(import.meta.url);
 const yaml = require("js-yaml");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 const CATALOG_PATH = path.join(ROOT, "schema", "conformance-rules.yaml");
 const PAGE = path.join(ROOT, "site", "content", "conformance.mdx");
 

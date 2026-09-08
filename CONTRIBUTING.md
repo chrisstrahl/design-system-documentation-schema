@@ -16,16 +16,16 @@ a contribution needs to land and stay landed.
 
 ## What a contribution needs, by kind
 
-**A new or changed validator rule** (`scripts/validate.js`'s `DSDS-XX`
+**A new or changed validator rule** (`scripts/validate/validate.js`'s `DSDS-XX`
 catalog) needs all three of:
 
 1. A catalog entry in `schema/conformance-rules.yaml` — id, name,
    `enforcement` tier, title, description.
-2. An implementation in `scripts/validate.js` (semantic rules) or the schema
+2. An implementation in `scripts/validate/validate.js` (semantic rules) or the schema
    itself (JSON-Schema-enforced constraints).
 3. A fixture in `examples/invalid/` declaring what it expects: a leading
    `# rejectedBy: schema|semantic` comment, plus `# expect: DSDS-XX` or
-   `# errorAt: /json/pointer` as applicable. `scripts/conformance-test.js`
+   `# errorAt: /json/pointer` as applicable. `scripts/validate/conformance-test.js`
    asserts the fixture fails for that exact reason, at that exact layer —
    not just that it fails at all.
 
@@ -33,7 +33,7 @@ catalog) needs all three of:
 without the other two — a rule can't be silently half-removed the way
 [`DSDS-011` was during the 0.20.0 rewrite](https://github.com/somerandomdude/design-system-documentation-schema/pull/33).
 
-**A new advisory (documentation-quality) rule** goes in `scripts/lint-docs.js`
+**A new advisory (documentation-quality) rule** goes in `scripts/validate/lint-docs.js`
 plus the same `schema/conformance-rules.yaml` catalog, with `enforcement:
 advisory`. Advisory rules warn; they never fail `npm run check`.
 
@@ -152,7 +152,7 @@ a wrapper for its own sake — if a script isn't listed, it doesn't exist.
 
 ### Internal
 
-Called by `scripts/bump-version.js` by name. **Don't rename these without
+Called by `scripts/tools/bump-version.js` by name. **Don't rename these without
 updating its `runStep` calls** — it shells out to the string, so a rename
 fails at release time, not at review time.
 
@@ -174,6 +174,11 @@ something fails.
 - README stays brief and current; it is not a place to duplicate content
   that belongs on the site or in the schema's own descriptions.
 - MDX content must never hardcode the current version — use `{{VERSION}}`.
+- A DSDS *document* you write — an example, a fixture, your own project's
+  entries — follows [STYLE_GUIDE.md](STYLE_GUIDE.md): a consistent field
+  order per entry kind, how to group and order `sections`, and how to order
+  guideline items by `level`. Not schema-enforced (order doesn't affect
+  validity), but every example in this repo follows it.
 
 ## Credit
 

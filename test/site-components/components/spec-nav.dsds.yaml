@@ -7,15 +7,25 @@ metadata:
   status: {status: stable}
   tags: [navigation, layout]
 
-traits:
-  - kind: boolean
-    id: open
-    description: Whether the mobile links dropdown (a native popover, at ≤900px) is expanded. The bar itself never hides; only the links row changes presentation.
-    setBy: component
-
 sourceFiles:
   - platform: web-component
     file: ../../../site/components/spec-nav.js
+
+sections:
+  - kind: guidelines
+    for: agent
+    framing: when-to-use
+    items:
+      - statement: Use exactly once per page, as the top bar. It is deliberately flat rather than a sidebar — appropriate only while the site has a handful of top-level pages; a deeper page tree would need a different navigation shape entirely, not more nesting inside this component.
+        level: should
+        checkedBy: manual
+
+  - kind: guidelines
+    for: agent
+    items:
+      - statement: Every light-DOM `<a>` intended to highlight as active MUST carry a slug attribute — highlighting matches slug against the active attribute, not the href or link text.
+        level: must
+        checkedBy: manual
 
 imports:
   - platform: web-component
@@ -25,23 +35,14 @@ imports:
         <a href="/schema" slug="schema">Schema</a>
       </ds-spec-nav>
 
+traits:
+  - kind: boolean
+    id: open
+    description: Whether the mobile links dropdown (a native popover, at ≤900px) is expanded. The bar itself never hides; only the links row changes presentation.
+    setBy: component
+
 refs:
   - to: logo
     rel: composes
     note: Rendered at 2rem in the title area, replaced by the mobile menu toggle at narrow widths.
 
-sections:
-  - kind: guidelines
-    for: agent
-    items:
-      - statement: Every light-DOM `<a>` intended to highlight as active MUST carry a slug attribute — highlighting matches slug against the active attribute, not the href or link text.
-        level: must
-        checkedBy: manual
-
-  - kind: guidelines
-    for: agent
-    framing: when-to-use
-    items:
-      - statement: Use exactly once per page, as the top bar. It is deliberately flat rather than a sidebar — appropriate only while the site has a handful of top-level pages; a deeper page tree would need a different navigation shape entirely, not more nesting inside this component.
-        level: should
-        checkedBy: manual

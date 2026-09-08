@@ -15,7 +15,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 const SCHEMA_DIR = path.join(ROOT, "schema");
 
 // Root-level schema files (schema/base.schema.yaml, schema/shared.schema.yaml)
@@ -53,7 +53,7 @@ const TOP_LINKS = [
 // finish rarely - so they live in the footer rather than competing with the
 // four pages someone actually works through in order.
 //
-// Same shape as TOP_LINKS on purpose: scripts/check-docs-coverage.mjs
+// Same shape as TOP_LINKS on purpose: scripts/checks/check-docs-coverage.mjs
 // asserts every page in BOTH lists actually got built with real content, so
 // a footer link can't rot into a 404 any more than a nav link can.
 const FOOTER_LINKS = [
@@ -102,7 +102,7 @@ function buildNavChildren(activeSlug) {
  * `$id` (ex: "https://designsystemdocspec.org/v0.20.0/dsds.bundled.yaml")
  * so the nav title, page <title> tags, and footer text always reflect what
  * the working tree says is current. This is the single source of truth for
- * "what version is the site at" — scripts/bundle.js writes that same `$id`.
+ * "what version is the site at" — scripts/generate/bundle.js writes that same `$id`.
  * Matched directly against the raw file text (no parse) so this keeps
  * working regardless of which text format the bundle happens to be in.
  */

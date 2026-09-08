@@ -8,11 +8,11 @@
  * version.
  *
  * Usage:
- *   node scripts/sync-skill-versions.js              # use version from schema
- *   node scripts/sync-skill-versions.js <version>    # explicit target version
- *   node scripts/sync-skill-versions.js --dry-run    # preview only
- *   node scripts/sync-skill-versions.js --check      # exit 1 if stale (see below)
- *   node scripts/sync-skill-versions.js --help
+ *   node scripts/generate/sync-skill-versions.js              # use version from schema
+ *   node scripts/generate/sync-skill-versions.js <version>    # explicit target version
+ *   node scripts/generate/sync-skill-versions.js --dry-run    # preview only
+ *   node scripts/generate/sync-skill-versions.js --check      # exit 1 if stale (see below)
+ *   node scripts/generate/sync-skill-versions.js --help
  *
  * When run without a version argument, reads the target from
  * schema/dsds.bundled.yaml's own `$id` (ex:
@@ -29,7 +29,7 @@
  *   - the highest `DSDS-XX` id any skill mentions doesn't match the
  *     highest id actually in schema/conformance-rules.yaml, or
  *   - a skill references a bundled-schema filename that isn't one
- *     scripts/bundle.js actually writes.
+ *     scripts/generate/bundle.js actually writes.
  * Neither check can catch every way a skill can go stale — no automation
  * can — but it closes the specific failure mode that already happened
  * once: a version bump alone is no longer enough to look "in sync."
@@ -38,7 +38,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 const BUNDLED_SCHEMA = path.join(ROOT, "schema", "dsds.bundled.yaml");
 const SKILLS_DIR = path.join(ROOT, ".agents", "skills");
 
@@ -54,7 +54,7 @@ function printHelp() {
 sync-skill-versions — sync agent skill DSDS version references
 
 Usage:
-  node scripts/sync-skill-versions.js [<version>] [--dry-run]
+  node scripts/generate/sync-skill-versions.js [<version>] [--dry-run]
 
 Arguments:
   <version>    Target version string (ex: 0.20.1). If omitted, reads from
@@ -276,7 +276,7 @@ for (const file of skillFiles) {
       checkFailed = true;
       console.error(
         `✗ ${path.relative(ROOT, file)}: cites bundled-schema filename "${m[0]}", which ` +
-          `scripts/bundle.js doesn't write. Real filenames: ${REAL_BUNDLE_FILENAMES.join(", ")}`,
+          `scripts/generate/bundle.js doesn't write. Real filenames: ${REAL_BUNDLE_FILENAMES.join(", ")}`,
       );
     }
   }

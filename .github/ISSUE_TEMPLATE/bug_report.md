@@ -11,8 +11,8 @@ A clear description of the incorrect behavior.
 
 **Where**
 - [ ] Schema (`schema/**/*.schema.yaml`)
-- [ ] Validator (`scripts/validate.js` / a `DSDS-XX` rule)
-- [ ] Advisory lint (`scripts/lint-docs.js`)
+- [ ] Validator (`scripts/validate/validate.js` / a `DSDS-XX` rule)
+- [ ] Advisory lint (`scripts/validate/lint-docs.js`)
 - [ ] Site (a rendered page, `site/components/*.js`)
 - [ ] Documentation (README, AGENTS.md, a site page's content)
 - [ ] Something else:

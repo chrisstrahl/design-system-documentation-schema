@@ -7,6 +7,33 @@ metadata:
   status: {status: stable}
   tags: [content, feedback]
 
+sourceFiles:
+  - platform: web-component
+    file: ../../../site/components/callout.js
+
+sections:
+  - kind: guidelines
+    for: agent
+    framing: when-to-use
+    items:
+      - statement: Use to interrupt normal reading flow for something worth a reader's full attention — a key idea, a tip, or a warning about a real footgun. For routine supplementary detail that fits the surrounding prose, write it as a plain paragraph instead.
+        level: should
+        checkedBy: manual
+
+  - kind: guidelines
+    for: all
+    items:
+      - statement: Content SHOULD stay short — the host is capped at 65ch, matching this site's prose measure, so a callout never becomes a second column of body text.
+        level: should
+        checkedBy: manual
+
+imports:
+  - platform: web-component
+    code: |
+      <ds-callout variant="tip" title="Tip:">
+        A helpful suggestion.
+      </ds-callout>
+
 traits:
   - kind: enum
     id: variant
@@ -24,29 +51,3 @@ traits:
     description: Whether a title attribute was set. With no title, the title bar collapses entirely (display:none) and only the content box renders.
     setBy: consumer
 
-sourceFiles:
-  - platform: web-component
-    file: ../../../site/components/callout.js
-
-imports:
-  - platform: web-component
-    code: |
-      <ds-callout variant="tip" title="Tip:">
-        A helpful suggestion.
-      </ds-callout>
-
-sections:
-  - kind: guidelines
-    for: all
-    items:
-      - statement: Content SHOULD stay short — the host is capped at 65ch, matching this site's prose measure, so a callout never becomes a second column of body text.
-        level: should
-        checkedBy: manual
-
-  - kind: guidelines
-    for: agent
-    framing: when-to-use
-    items:
-      - statement: Use to interrupt normal reading flow for something worth a reader's full attention — a key idea, a tip, or a warning about a real footgun. For routine supplementary detail that fits the surrounding prose, write it as a plain paragraph instead.
-        level: should
-        checkedBy: manual

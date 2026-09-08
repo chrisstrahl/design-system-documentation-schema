@@ -8,14 +8,6 @@ metadata:
   since: 1.3.0
   tags: [feedback]
 
-refs:
-  - to: icon
-    rel: composes
-  - to: button
-    rel: composes
-  - to: spacing-scale
-    rel: depends-on
-
 sections:
   # A "when to use" guidelines section - "recommended" is level: should,
   # "discouraged" is should-not, and the better choice is an ordinary
@@ -34,6 +26,12 @@ sections:
             rel: alternative-to
             note: A load failure is a system error, not an empty result - it needs a retry action, not an empty-state message.
 
+  - kind: guidelines
+    for: human
+    items:
+      - statement: Always pair the message with a next action when one exists.
+        level: should
+
   - kind: steps
     for: all
     title: Recovery flow
@@ -47,8 +45,10 @@ sections:
       - title: User resolves the empty state
         description: When the user selects the primary action, the triggering condition is resolved and the list re-renders with content.
 
-  - kind: guidelines
-    for: human
-    items:
-      - statement: Always pair the message with a next action when one exists.
-        level: should
+refs:
+  - to: icon
+    rel: composes
+  - to: button
+    rel: composes
+  - to: spacing-scale
+    rel: depends-on

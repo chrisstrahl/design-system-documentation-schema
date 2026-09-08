@@ -14,16 +14,6 @@ description: A pre-composed destructive-action confirmation, built from Dialog, 
 
 metadata:
   status: {status: stable}
-refs:
-  - to: dialog
-    rel: composes
-  - to: button
-    rel: composes
-  - to: icon
-    rel: composes
-  - href: ./chunks/confirmation-dialog.tsx
-    rel: file
-    role: React implementation
 
 sections:
   - kind: guidelines
@@ -39,3 +29,14 @@ sections:
           - to: button
             rel: alternative-to
             note: A routine action doesn't need an interruption; a plain button keeps the flow moving.
+
+refs:
+  - to: dialog
+    rel: composes
+  - to: button
+    rel: composes
+  - to: icon
+    rel: composes
+  - href: ./chunks/confirmation-dialog.tsx
+    rel: file
+    role: React implementation

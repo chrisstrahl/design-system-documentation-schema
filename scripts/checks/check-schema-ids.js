@@ -10,8 +10,8 @@
 "use strict";
 
 const path = require("path");
-const { schemaDir, loadYaml, walkYamlFiles } = require("./lib");
-const { readSpecVersion } = require("./nav");
+const { schemaDir, loadYaml, walkYamlFiles } = require("../lib");
+const { readSpecVersion } = require("../site/nav");
 
 const version = readSpecVersion();
 if (!version) {
