@@ -1,16 +1,8 @@
 #!/usr/bin/env node
 /**
- * generate-rule-catalog.mjs — Generates the `/conformance` page's rule
- * catalog table directly from schema/conformance-rules.yaml, so the two
- * can't drift the way a hand-maintained copy can.
- *
- * Before this script existed, the ID/Rule table on the Conformance page was
- * typed out by hand and only checked for drift after the fact
- * (scripts/checks/check-rule-catalog.js, scripts/validate/conformance-test.js) — a real
- * safety net, but one that still required a human to notice a failure and
- * fix the copy. This generates the table instead, the same
- * generate-into-markers pattern scripts/generate/extract-normative.mjs and
- * scripts/generate/sync-examples.js already use, so there is no copy left to drift.
+ * Generates the `/conformance` page's rule catalog table directly from
+ * schema/conformance-rules.yaml, so the two can't drift the way a hand-maintained copy can -
+ * the same generate-into-markers pattern extract-normative.mjs and sync-examples.js use.
  *
  * Usage:
  *   node scripts/generate/generate-rule-catalog.mjs           # regenerate the table
@@ -30,9 +22,7 @@ const ROOT = path.resolve(__dirname, "..", "..");
 const CATALOG_PATH = path.join(ROOT, "schema", "conformance-rules.yaml");
 const PAGE = path.join(ROOT, "site", "content", "conformance.mdx");
 
-// MDX comment syntax, not `<!-- -->` — this is substituted straight into
-// conformance.mdx source before MDX compilation, and a plain HTML comment
-// isn't valid MDX (see compile-mdx.mjs's own note on the same point).
+// MDX comment syntax, not `<!-- -->` - a plain HTML comment isn't valid MDX.
 const BEGIN = "{/* dsds:rule-catalog */}";
 const END = "{/* /dsds:rule-catalog */}";
 

@@ -1,27 +1,17 @@
 #!/usr/bin/env node
-// Composes many hand-authored *.dsds.yaml fragment files in one directory
-// into a single, in-memory base document - the same "concatenate many
-// files, then validate the merged result" pattern bundle.js already uses
-// on the schema itself (see
-// notes/2026-08-17-graph-rigor-and-composition-prd.md, Design D). No
-// $ref/JSON Pointer resolution step exists here by design: flat
-// concatenation structurally can't cycle or dangle the way a
-// pointer-resolution mechanism could.
+// Composes many hand-authored *.dsds.yaml fragment files in one directory into a single,
+// in-memory base document - the same "concatenate many files, then validate the merged
+// result" pattern bundle.js uses on the schema itself. No $ref/JSON Pointer resolution step
+// exists here by design: flat concatenation structurally can't cycle or dangle.
 //
-// Directory convention (this tool's own answer to the PRD's Open Question
-// #1): every *.dsds.yaml file directly inside the given directory
-// contributes - no separate manifest file to keep in sync, and no
-// recursion into subdirectories. Exactly one of those fragments must
-// declare `schemaVersion` - that's the composition root, and its `name`
-// (and `$extensions`, if present) become the composed document's own.
-// Every fragment (root included) may contribute `entries`, `shared`,
-// and/or `refs`, concatenated onto the composed document in filename sort
-// order. This keeps the rule simple and explicit (name a file so it sorts
-// where it belongs) without a second file whose only job is listing the
-// first file's contents.
+// Every *.dsds.yaml file directly inside the given directory contributes, no separate
+// manifest and no recursion into subdirectories. Exactly one fragment must declare
+// `schemaVersion` (the composition root; its `name`/`$extensions` become the composed
+// document's own). Every fragment may contribute `entries`/`shared`/`refs`, concatenated in
+// filename sort order.
 //
 // Usage:
-//   node scripts/v0.20/compose.js <dir> [--out <file>]
+//   node scripts/tools/compose.js <dir> [--out <file>]
 //
 // With no --out, the composed document is written to stdout as YAML.
 "use strict";
@@ -94,7 +84,7 @@ function compose(dir) {
 function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.dir) {
-    console.error("Usage: node scripts/v0.20/compose.js <dir> [--out <file>]");
+    console.error("Usage: node scripts/tools/compose.js <dir> [--out <file>]");
     process.exit(1);
   }
 

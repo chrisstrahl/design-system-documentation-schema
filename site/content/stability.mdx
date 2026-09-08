@@ -15,7 +15,7 @@ A change is breaking if a document, tool, or workflow that worked before it ship
 - Renaming, removing, or restructuring a field.
 - Adding a new required field to an existing shape.
 - Narrowing an existing constraint — an enum losing a value, a pattern getting stricter, a type narrowing.
-- **Adding a new validator rule to `scripts/validate.js`'s `DSDS-01`–`DSDS-11` catalog.** A document that validated cleanly yesterday can fail today with no schema change at all, because the new rule now runs against it. This is easy to overlook precisely because no field moved — treat a new conformance rule with the same weight as a schema change, because it has the same effect on existing documents.
+- **Adding a new validator rule to `scripts/validate/validate.js`'s `DSDS-01`–`DSDS-11` catalog.** A document that validated cleanly yesterday can fail today with no schema change at all, because the new rule now runs against it. This is easy to overlook precisely because no field moved — treat a new conformance rule with the same weight as a schema change, because it has the same effect on existing documents.
 - Any change to what `npm run check` accepts that a previously-passing document, run today, would fail.
 
 **Not** breaking: new optional fields, new union members, relaxed constraints, new advisory (`lint-docs.js`) rules — a warning never blocks a build — and documentation-only edits.
@@ -44,7 +44,7 @@ This is a process commitment, not yet a schema-level machine-readable one — a 
 
 ## Breaking-change windows
 
-Pre-1.0 breaking changes land batched into a named release, not trickled one field at a time across several minors — a single CHANGELOG entry and migration script to read, not several. When a breaking window is being prepared, it's announced on this page (what's changing, and the release it lands in) before that release ships, the same practice earlier 0.15.x releases followed. Each window ships with its own migration script, following `scripts/migrate-to-0.20.js`'s shape: convert what can be converted automatically, preserve anything else under `$extensions["com.dsds.migration"]`, and print a warning for every case that needed a manual call.
+Pre-1.0 breaking changes land batched into a named release, not trickled one field at a time across several minors — a single CHANGELOG entry and migration script to read, not several. When a breaking window is being prepared, it's announced on this page (what's changing, and the release it lands in) before that release ships, the same practice earlier 0.15.x releases followed. Each window ships with its own migration script, following `scripts/tools/migrate-to-0.20.js`'s shape: convert what can be converted automatically, preserve anything else under `$extensions["com.dsds.migration"]`, and print a warning for every case that needed a manual call.
 
 **No breaking window is currently open.** 0.20.0 was itself the last one — the entity/`documentBlocks` model's replacement — and the plan from here is additive releases (new optional fields, new fixtures, restored tooling) until the 1.0 criteria below are met.
 
@@ -54,7 +54,7 @@ Every schema file under `schema/` has comments explaining *why* it's shaped the 
 
 ## Migrating a 0.15.2 document
 
-`scripts/migrate-to-0.20.js <files-or-dirs…> [--dry-run]` converts a 0.15.2 `.dsds.json` document (the entity/`documentBlocks` model) to a 0.20.0 `.dsds.yaml` one, following the CHANGELOG's own field-by-field mapping. It writes a new sibling file rather than overwriting the input, and it's best-effort, not a guarantee: a few 0.15.2 shapes (most notably the `api` block's inline property/event documentation) have no 0.20.0 equivalent to convert *to* — 0.20.0 points `sourceFiles` at real source instead of inlining an extracted API.
+`scripts/tools/migrate-to-0.20.js <files-or-dirs…> [--dry-run]` converts a 0.15.2 `.dsds.json` document (the entity/`documentBlocks` model) to a 0.20.0 `.dsds.yaml` one, following the CHANGELOG's own field-by-field mapping. It writes a new sibling file rather than overwriting the input, and it's best-effort, not a guarantee: a few 0.15.2 shapes (most notably the `api` block's inline property/event documentation) have no 0.20.0 equivalent to convert *to* — 0.20.0 points `sourceFiles` at real source instead of inlining an extracted API.
 
 Anything the script can't place in a typed field is preserved under the migrated item's own `$extensions["com.dsds.migration"]` rather than dropped, and every such case — plus every genuinely manual decision, like an `alternatives` pointer that wasn't really id-shaped in the source, or a ref that pointed at a token-group's own id before its children flattened to top-level entries — prints as a `⚠` line in the script's own output. Run `npm run validate` on the result afterward.
 
@@ -82,7 +82,7 @@ A few fields are locked to a fixed list of values, because the number of possibl
 
 1. **The kind lists stop changing** — across at least one real pass of merging or splitting them, with no further changes needed.
 2. **A second independent tool exists** — at least one tool the spec authors don't maintain reads or writes DSDS documents for real.
-3. **The validator's extra rules stop changing** — `scripts/validate.js`'s `DSDS-01`–`DSDS-11` (see the [rule catalog](conformance.html#rule-catalog)) stop being added or renamed release to release.
+3. **The validator's extra rules stop changing** — `scripts/validate/validate.js`'s `DSDS-01`–`DSDS-11` (see the [rule catalog](conformance.html#rule-catalog)) stop being added or renamed release to release.
 
 Until then, the fixed lists above are the most stable part of the schema. Everything else can still change between minor versions, including the exact shape of any one `sections/*.schema.yaml` file.
 
@@ -90,6 +90,6 @@ Until then, the fixed lists above are the most stable part of the schema. Everyt
 
 Whatever else moves, a *released* version directory doesn't. Every version DSDS has shipped stays served at its own URL — `/v0.15.2/dsds.bundled.schema.json`, and every earlier version at its own path — frozen at the bytes it shipped with. A document that pins `schemaVersion` and a `$schema` URL keeps validating against exactly what it was written against, indefinitely.
 
-Released means tagged. A version is frozen from the moment its `vX.Y.Z` git tag exists, and `scripts/bump-version.js` refuses to re-cut a version whose tag it already finds. Before that tag, the version currently in development is a different case: its directory is rebuilt from source on every build, so it tracks the schema it's generated from rather than lagging behind it. `{{VERSION}}` is that version today — treat `/v{{VERSION}}/` as still settling, and pin an older, tagged version if you need bytes that cannot move under you.
+Released means tagged. A version is frozen from the moment its `vX.Y.Z` git tag exists, and `scripts/tools/bump-version.js` refuses to re-cut a version whose tag it already finds. Before that tag, the version currently in development is a different case: its directory is rebuilt from source on every build, so it tracks the schema it's generated from rather than lagging behind it. `{{VERSION}}` is that version today — treat `/v{{VERSION}}/` as still settling, and pin an older, tagged version if you need bytes that cannot move under you.
 
-Three mechanisms keep this honest, and none of them is a promise you have to take on faith. `scripts/build-site.js` only ever writes the *current* version's directory, so no build can reach an older one. `bump-version.js`'s tag check is what turns "current" into "released" — it refuses to re-cut a tagged version. And the build compares what it just wrote against the bytes the tag actually published, reporting any that moved; `npm run build -- --strict-versions` turns that report into a failed build, which is what a release job should use.
+Three mechanisms keep this honest, and none of them is a promise you have to take on faith. `scripts/site/build-site.js` only ever writes the *current* version's directory, so no build can reach an older one. `bump-version.js`'s tag check is what turns "current" into "released" — it refuses to re-cut a tagged version. And the build compares what it just wrote against the bytes the tag actually published, reporting any that moved; `npm run build -- --strict-versions` turns that report into a failed build, which is what a release job should use.

@@ -43,7 +43,7 @@ A tool, renderer, or AI agent that reads DSDS documents. A conforming consumer:
 
 ### Conforming validator
 
-A tool that checks documents. A conforming validator MUST enforce both the schema itself (with format checks on) and the extra rules below (`DSDS-01`–`DSDS-11`). `scripts/validate.js` is the reference implementation. Its [`examples/invalid/`](examples.html#invalid) folder holds one broken example per semantic rule (`DSDS-XX-*.yaml`) plus a set of schema-shape fixtures (`schema-*.yaml`, no rule id — a pure JSON Schema rejection) pinning constraints like enum casing, empty arrays, and `$extensions` namespacing. Every fixture declares its own contract in a leading comment — `# rejectedBy: schema|semantic`, plus `# expect: DSDS-XX` or `# errorAt: /json/pointer` as applicable — and `scripts/conformance-test.js` confirms each one fails for the exact reason and at the exact layer it claims to, not just that it fails at all.
+A tool that checks documents. A conforming validator MUST enforce both the schema itself (with format checks on) and the extra rules below (`DSDS-01`–`DSDS-11`). `scripts/validate/validate.js` is the reference implementation. Its [`examples/invalid/`](examples.html#invalid) folder holds one broken example per semantic rule (`DSDS-XX-*.yaml`) plus a set of schema-shape fixtures (`schema-*.yaml`, no rule id — a pure JSON Schema rejection) pinning constraints like enum casing, empty arrays, and `$extensions` namespacing. Every fixture declares its own contract in a leading comment — `# rejectedBy: schema|semantic`, plus `# expect: DSDS-XX` or `# errorAt: /json/pointer` as applicable — and `scripts/validate/conformance-test.js` confirms each one fails for the exact reason and at the exact layer it claims to, not just that it fails at all.
 
 ## Enforcement tiers
 
@@ -52,24 +52,24 @@ Every rule is enforced one of three ways:
 | Tier | How it's checked | What happens if it fails |
 |---|---|---|
 | Structural | Directly by the schema file (required fields, patterns, and similar built-in checks) | Blocks — validation fails |
-| Semantic | By `scripts/validate.js`'s own code (`DSDS-01`–`DSDS-11`: do references resolve, are ids unique, and so on) | Blocks — validation fails |
-| Advisory | By `scripts/lint-docs.js` (`npm run lint`, `DSDS-12`+: RFC 2119 casing, a token description that just restates its id, and similar documentation-quality checks) where a check exists — otherwise a judgment call | Never blocks — always exits 0, warnings only |
+| Semantic | By `scripts/validate/validate.js`'s own code (`DSDS-01`–`DSDS-11`: do references resolve, are ids unique, and so on) | Blocks — validation fails |
+| Advisory | By `scripts/validate/lint-docs.js` (`npm run lint`, `DSDS-12`+: RFC 2119 casing, a token description that just restates its id, and similar documentation-quality checks) where a check exists — otherwise a judgment call | Never blocks — always exits 0, warnings only |
 
 Advisory is the newest tier and doesn't cover every SHOULD/MAY in this spec yet — it's additive, so a gap here is a missing check, not a passing one.
 
 `DSDS-05`, `DSDS-08`, `DSDS-09`, and `DSDS-11` are the exception: they report a warning, not a blocking error, unless the validator runs with `--strict`. Every other rule always blocks.
 
-Every catalog entry declares its own tier explicitly, as `enforcement: structural|semantic|advisory|none` — not just implied by which row of this table it's listed in. `scripts/check-rule-catalog.js` (run on every `npm run check`) enforces two things: every entry's `enforcement` is one of those four values, and — for the semantic tier specifically — that the catalog and `scripts/validate.js` agree exactly on which rules exist in both directions. A catalog entry with no matching `RULES.<NAME>` reference in validate.js, or a `RULES.<NAME>` reference with no catalog entry, fails the build instead of silently producing an untraceable `[undefined]` finding.
+Every catalog entry declares its own tier explicitly, as `enforcement: structural|semantic|advisory|none` — not just implied by which row of this table it's listed in. `scripts/checks/check-rule-catalog.js` (run on every `npm run check`) enforces two things: every entry's `enforcement` is one of those four values, and — for the semantic tier specifically — that the catalog and `scripts/validate/validate.js` agree exactly on which rules exist in both directions. A catalog entry with no matching `RULES.<NAME>` reference in validate.js, or a `RULES.<NAME>` reference with no catalog entry, fails the build instead of silently producing an untraceable `[undefined]` finding.
 
 ## Rule catalog
 
 The table below is generated directly from
 [`schema/conformance-rules.yaml`](https://github.com/somerandomdude/design-system-documentation-schema/blob/main/schema/conformance-rules.yaml)
-by `scripts/generate-rule-catalog.mjs` — not a hand-kept copy — so it cannot
+by `scripts/generate/generate-rule-catalog.mjs` — not a hand-kept copy — so it cannot
 drift from the machine-readable catalog the validator actually reads.
-`scripts/conformance-test.js` and `scripts/check-rule-catalog.js` (both run
+`scripts/validate/conformance-test.js` and `scripts/checks/check-rule-catalog.js` (both run
 on every `npm run check`) additionally confirm the catalog and
-`scripts/validate.js`'s own implementation agree. The catalog itself is also
+`scripts/validate/validate.js`'s own implementation agree. The catalog itself is also
 published as a versioned artifact at
 [`/v{{VERSION}}/conformance-rules.yaml`](/v{{VERSION}}/conformance-rules.yaml)
 alongside the schema bundle, for a tool that wants to read the rule
@@ -124,11 +124,11 @@ Whether a `to:` value even *looks like* a valid id is checked separately, direct
 
 ## Conformance suite
 
-`scripts/validate.js` is the reference implementation, but nothing about DSDS requires it to be the only one — a second, independent implementation is one of this spec's own [1.0 criteria](stability.html#criteria-for-declaring-10). The conformance suite is what that second implementation checks itself against, without reading this repo's JavaScript at all.
+`scripts/validate/validate.js` is the reference implementation, but nothing about DSDS requires it to be the only one — a second, independent implementation is one of this spec's own [1.0 criteria](stability.html#criteria-for-declaring-10). The conformance suite is what that second implementation checks itself against, without reading this repo's JavaScript at all.
 
 Published as one versioned artifact per release, at
 [`/v{{VERSION}}/conformance-suite/manifest.json`](/v{{VERSION}}/conformance-suite/manifest.json),
-alongside a copy of every fixture it references (`/v{{VERSION}}/conformance-suite/examples/invalid/`). Generated by `scripts/generate-conformance-suite.mjs` directly from each fixture's own leading-comment contract (the same `rejectedBy`/`expect`/`errorAt` fields [Conformance validator](#conforming-validator) describes above) — not hand-maintained, so it can't drift from the fixtures themselves.
+alongside a copy of every fixture it references (`/v{{VERSION}}/conformance-suite/examples/invalid/`). Generated by `scripts/generate/generate-conformance-suite.mjs` directly from each fixture's own leading-comment contract (the same `rejectedBy`/`expect`/`errorAt` fields [Conformance validator](#conforming-validator) describes above) — not hand-maintained, so it can't drift from the fixtures themselves.
 
 **The runner contract** — what implementing conformance against this artifact means, for a validator in any language:
 
@@ -139,7 +139,7 @@ alongside a copy of every fixture it references (`/v{{VERSION}}/conformance-suit
    - `rejectedBy: "semantic"` — every id listed in `expect` must appear among the resulting errors *or* warnings tagged with that id (a semantic rule may report as either, depending on whether the validator runs in a `--strict`-equivalent mode).
 4. A fixture that validates cleanly, or fails for a different reason than it declares, is a **conformance failure for the validator under test** — passing "some validators reject it" isn't the bar; rejecting it for the right, stated reason is.
 
-This is exactly what `scripts/conformance-test.js` already does against `scripts/validate.js` on every `npm run check` — the manifest just makes the same check runnable by something that isn't that script.
+This is exactly what `scripts/validate/conformance-test.js` already does against `scripts/validate/validate.js` on every `npm run check` — the manifest just makes the same check runnable by something that isn't that script.
 
 ## Open conventions
 
@@ -181,7 +181,7 @@ A document with zero errors and zero warnings can still be bad documentation —
 
 ## Index of every normative statement
 
-Every RFC 2119 sentence (MUST, MUST NOT, SHOULD, SHOULD NOT, MAY) inside the schema's own `description` text, extracted and indexed by `scripts/extract-normative.mjs` directly from `schema/**/*.schema.yaml` — not hand-copied, and regenerated on every build (`npm run generate`, checked via `--check` in `postvalidate`). Each statement's id is location-based (`<dir>/<file>§<jsonPath>.<n>`), so citing one and having the schema move underneath it is a visible, checkable break rather than a silent one.
+Every RFC 2119 sentence (MUST, MUST NOT, SHOULD, SHOULD NOT, MAY) inside the schema's own `description` text, extracted and indexed by `scripts/generate/extract-normative.mjs` directly from `schema/**/*.schema.yaml` — not hand-copied, and regenerated on every build (`npm run generate`, checked via `--check` in `postvalidate`). Each statement's id is location-based (`<dir>/<file>§<jsonPath>.<n>`), so citing one and having the schema move underneath it is a visible, checkable break rather than a silent one.
 
 {/* dsds:normative-index */}
 

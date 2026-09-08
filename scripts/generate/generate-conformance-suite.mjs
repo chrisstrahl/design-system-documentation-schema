@@ -1,21 +1,13 @@
 #!/usr/bin/env node
 /**
- * generate-conformance-suite.mjs — Builds a versioned, language-agnostic
- * conformance-suite manifest from examples/invalid/*.yaml, so a validator
- * implementation that isn't this repo's own scripts/validate/validate.js can prove
- * it enforces the same rules, the same way, without reading this repo's
- * JS at all.
- *
- * Every fixture already carries its own contract in a leading comment (see
- * scripts/validate/conformance-test.js's own header comment for why: `# rejectedBy:
- * schema|semantic`, `# expect: DSDS-XX[,DSDS-YY]`, optional `# errorAt:
- * /json/pointer`). This script is a second, independent reader of that same
- * contract — not a duplicate of the checking logic in conformance-test.js,
- * which stays the one thing that actually runs validateDoc() against each
- * fixture. This just serializes what conformance-test.js already parses
- * into a portable manifest.json + a copy of the fixtures themselves,
- * published at a versioned URL (site/dist/v<version>/conformance-suite/)
- * alongside the schema bundle and rule catalog.
+ * Builds a versioned, language-agnostic conformance-suite manifest from
+ * examples/invalid/*.yaml, so a validator implementation that isn't this repo's own
+ * validate.js can prove it enforces the same rules without reading this repo's JS. Every
+ * fixture carries its own contract in a leading comment (`# rejectedBy: schema|semantic`, `#
+ * expect: DSDS-XX[,DSDS-YY]`, optional `# errorAt: /json/pointer`); this is a second,
+ * independent reader of that contract, not a duplicate of conformance-test.js's checking
+ * logic. Serializes it into a portable manifest.json plus a copy of the fixtures, published
+ * at a versioned URL alongside the schema bundle and rule catalog.
  *
  * Usage:
  *   node scripts/generate/generate-conformance-suite.mjs           # regenerate the manifest
@@ -35,11 +27,9 @@ const ROOT = path.resolve(__dirname, "..", "..");
 const FIXTURES_DIR = path.join(ROOT, "examples", "invalid");
 const MANIFEST_PATH = path.join(ROOT, "schema", "conformance-suite.json");
 
-// Mirrors scripts/validate/conformance-test.js's own leadingComment()/expectedIds() —
-// see that file's header comment for the fixture-contract rationale. Kept
-// as an independent reader rather than importing conformance-test.js
-// itself: that file runs its checks as side effects at module load and
-// calls process.exit(), so it isn't safe to require() as a library.
+// Mirrors conformance-test.js's own leadingComment()/expectedIds(). Kept as an independent
+// reader rather than importing that file, since it runs its checks as side effects at module
+// load and calls process.exit(), so it isn't safe to require() as a library.
 function leadingComment(raw, key) {
   const match = raw.match(new RegExp(`^#\\s*${key}:\\s*(.+)$`, "m"));
   return match ? match[1].trim() : null;
@@ -73,9 +63,8 @@ function buildManifest() {
       rejectedBy: leadingComment(raw, "rejectedBy"),
       expect: expectedIds(raw),
       errorAt: leadingComment(raw, "errorAt"),
-      // The document's own declared kind, when it has a single entry at
-      // the root — a runner in another language can use this to decide
-      // whether it even needs to parse the whole file before validating.
+      // The document's own declared kind, when it has a single entry at the root - lets a
+      // runner in another language decide whether to parse the whole file before validating.
       kind: parsed && typeof parsed === "object" ? parsed.kind ?? null : null,
     };
   });

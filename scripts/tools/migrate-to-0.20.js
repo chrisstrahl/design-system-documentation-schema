@@ -1,42 +1,16 @@
 #!/usr/bin/env node
 /**
- * migrate-to-0.20.js — Migrate DSDS 0.15.2 (`.dsds.json`, entity/
- * documentBlocks model) documents to 0.20.0 (`.dsds.yaml`, entry/sections
- * model).
+ * Migrates DSDS 0.15.2 (`.dsds.json`, entity/documentBlocks model) documents to 0.20.0
+ * (`.dsds.yaml`, entry/sections model). Since 0.20.0 is a different document model, not
+ * compatible in-place renames, this builds a brand-new document rather than mutating the old
+ * one, following the CHANGELOG's "Breaking changes" mapping. Anything without a clean new home
+ * (e.g. the `api` block's inline interface docs, which have no 0.20.0 equivalent at all) is
+ * stashed under `$extensions["com.dsds.migration"]` and flagged in the report - never silently
+ * dropped. Doesn't follow `$ref`-based entities inside `entityGroups` (migrate those files
+ * separately), and doesn't guarantee a schema-valid result - run `npm run validate` afterward.
  *
- * Unlike scripts/migrate-to-0.14.js (the template this borrows its CLI
- * shape and report convention from), 0.20.0 isn't a set of compatible
- * in-place renames — it's a different document model, so this transform
- * builds a brand-new document rather than mutating the old one. The
- * mapping is the CHANGELOG's own 0.20.0 "Breaking changes" list, applied
- * mechanically wherever a field has one clear new home, and reported via
- * `report.manual` wherever it doesn't (a few old shapes — most notably the
- * `api` block's inline property/event/slot documentation — have no 0.20.0
- * equivalent at all: 0.20.0 points `sourceFiles` at real source instead of
- * inlining an extracted API, and this script has no way to invent that
- * path from nothing).
- *
- * Never silently drops data it can't place: anything without a clean new
- * home is stashed under the migrated item's own `$extensions["com.dsds.
- * migration"]` (section items gained their own `$extensions` in 0.20.0
- * specifically so this kind of per-item escape hatch is possible) and
- * flagged in the report, instead of just vanishing.
- *
- * What this does NOT attempt:
- *   - `$ref`-based entities inside `entityGroups` (not resolved/followed —
- *     migrate the referenced file separately).
- *   - The `api` block's inline interface documentation (see above).
- *   - Re-deriving a schema-valid document on its own: run `npm run
- *     validate` on the output afterward. A best-effort migration plus a
- *     real validator catching what's still wrong is more honest than a
- *     migration that claims to always produce something valid.
- *
- * Usage:
- *   node scripts/tools/migrate-to-0.20.js <files-or-dirs…> [--dry-run]
- *
- * Reads *.dsds.json (0.15.2), writes a sibling *.dsds.yaml (0.20.0) next
- * to it — never overwrites the input, so a bad migration costs nothing to
- * throw away and retry.
+ * Usage: node scripts/tools/migrate-to-0.20.js <files-or-dirs…> [--dry-run]. Reads
+ * *.dsds.json, writes a sibling *.dsds.yaml, never overwrites the input.
  */
 "use strict";
 
@@ -45,26 +19,20 @@ const path = require("path");
 const yaml = require("js-yaml");
 
 const TARGET_VERSION = "0.20.0";
-// common/id.schema.yaml's own base pattern - used to sanity-check a value
-// that's *supposed* to be an id before emitting a `to:` ref from it. A few
-// 0.15.2 fields (use-case alternative.identifier in particular) were
-// occasionally authored as free text instead of a real machine id.
+// common/id.schema.yaml's own base pattern, used to sanity-check a value that's supposed to
+// be an id before emitting a `to:` ref from it - some 0.15.2 fields were authored as free text.
 const ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)*$/;
-// Reset per migrateDoc() call (see there) - a token-group's own identifier
-// stops existing once its children flatten to top-level entries, so a
-// relationship/ref that pointed at the *group* (not one of its members) is
-// now genuinely dangling. Tracked so that specific case gets its own
-// clearer report line instead of an unexplained "unknown entry" warning
-// from `npm run validate` afterward.
+// Reset per migrateDoc() call. A token-group's own id stops existing once its children
+// flatten to top-level entries, so a ref that pointed at the group is now dangling - tracked
+// for a clearer report line instead of an unexplained "unknown entry" warning later.
 let DISSOLVED_GROUP_IDS = new Set();
 
 // ---------------------------------------------------------------------------
 // Relationship / link → ref
 // ---------------------------------------------------------------------------
 
-// Old link `kind` values with a direct 0.20.0 `rel` equivalent; anything
-// else becomes `external-link` with the original kind preserved as `role`
-// so it isn't lost, just no longer load-bearing.
+// Old link `kind` values with a direct 0.20.0 `rel` equivalent; anything else becomes
+// `external-link` with the original kind preserved as `role`.
 const LINK_KIND_TO_REL = { source: "source", design: "design", storybook: "storybook", package: "package" };
 
 function migrateRefs(old, report, label) {
@@ -99,24 +67,15 @@ function migrateMetadata(old, report, label) {
   if (!m || typeof m !== "object") return undefined;
   const out = {};
 
-  // status/since/deprecationNotice/note/platform - already a compatible
-  // shape, except 0.20.0 always requires the object form (no bare-string
-  // shorthand the way 0.15.2 allowed for the common case), and except the
-  // per-platform form handled below.
+  // status/since/deprecationNotice/note/platform are already a compatible shape, except
+  // 0.20.0 always requires the object form (no bare-string shorthand), and the per-platform
+  // form handled below.
   if (typeof m.status === "string") {
     out.status = { status: m.status };
   } else if (m.status && (m.status.overall !== undefined || m.status.platforms !== undefined)) {
-    // 0.15.2 modelled status as { overall, platforms: { react: {...}, … } }
-    // - a map keyed by platform, plus a separately authored overall.
-    // 0.20.0 keeps the per-platform facts and drops the authored overall:
-    // `status` takes either one object or a list of them, each naming its
-    // own `platform`, and a consumer derives the overall status from the
-    // aggregate (see entry-metadata.schema.yaml's own $comment and the
-    // Conformance page's "Status across platforms").
-    //
-    // So the map becomes a list, and `overall` is dropped rather than
-    // carried across - it's derivable now, and keeping it would reintroduce
-    // the second source of truth the list form exists to remove.
+    // 0.15.2 modelled status as { overall, platforms: { react: {...}, … } }; 0.20.0 keeps the
+    // per-platform facts as a list (each naming its own `platform`) and drops the authored
+    // `overall`, since a consumer now derives it from the aggregate instead.
     const platforms = m.status.platforms;
     const platformNames = platforms && typeof platforms === "object" ? Object.keys(platforms) : [];
 
@@ -135,8 +94,6 @@ function migrateMetadata(old, report, label) {
   } else if (m.status) {
     out.status = m.status;
   }
-  // 0.20.0 keeps metadata.since (the version an entry was introduced),
-  // unchanged from 0.15.2. It was silently dropped here.
   if (m.since !== undefined) out.since = m.since;
   if (Array.isArray(m.tags) && m.tags.length) out.tags = m.tags.slice();
   if (Array.isArray(m.aliases) && m.aliases.length) out.aliases = m.aliases.slice();
@@ -145,9 +102,8 @@ function migrateMetadata(old, report, label) {
     const owner = m.governance.owner;
     if (typeof owner === "string") out.owner = owner;
     else if (owner && typeof owner === "object") {
-      // {name, contact} -> one mailbox-ish string, per the CHANGELOG's own
-      // stated mapping. Prefer contact (usually the actual reachable
-      // address/channel); fall back to name.
+      // {name, contact} -> one plain-string owner; prefer contact (the reachable
+      // address/channel), fall back to name.
       out.owner = owner.contact || owner.name;
       if (owner.contact && owner.name && owner.contact !== owner.name) {
         report.manual.push(`${label}: governance.owner had both name ("${owner.name}") and contact ("${owner.contact}") - kept contact as the new plain-string owner, name dropped`);
@@ -173,11 +129,8 @@ function migrateMetadata(old, report, label) {
     out.updated = typeof m.lastUpdated === "string" ? { date: m.lastUpdated } : { date: m.lastUpdated.date, note: m.lastUpdated.note };
   }
 
-  // No clean 0.20.0 home: category (folded into tags[0]-as-category
-  // convention instead - prepend it as the first tag), summary/thumbnail/
-  // preview (compact-display fields with no equivalent), extends (entity
-  // inheritance - 0.20.0's `extends` lives on the entry itself, not
-  // metadata; not auto-migrated since it needs the *new* target id).
+  // No clean 0.20.0 home: category folds into tags[0]-as-category convention (prepended as
+  // the first tag); summary/thumbnail/preview/extends have no equivalent and are flagged below.
   if (m.category && !(out.tags || []).includes(m.category)) {
     out.tags = [m.category, ...(out.tags || [])];
   }
@@ -323,9 +276,8 @@ function migrateBlock(block, sections, traits, entry, report, label, forAudience
       return;
     }
     default: {
-      // content / sections (nested) / motion / principles / design-specifications
-      // / anything else with no structural mapping - preserved as freeform
-      // prose rather than dropped, flagged for a human to re-type properly.
+      // Any block kind with no structural mapping - preserved as freeform prose rather than
+      // dropped, flagged for a human to re-type properly.
       const freeformItems = [];
       const rawItems = block.entries || block.items || [];
       for (const it of rawItems) {
@@ -382,9 +334,8 @@ function migrateEntity(old, report) {
   }
   const label = `"${old.identifier}"`;
 
-  // chunk's own top-level guidelines/useCases shorthand, same fold the
-  // 0.14 migration already did - do it here too, before this entity's
-  // documentBlocks get walked, so shorthand content isn't lost.
+  // chunk's own top-level guidelines/useCases shorthand - fold into documentBlocks before
+  // this entity's blocks get walked, so shorthand content isn't lost.
   if (old.kind === "chunk") {
     for (const [prop, blockKind] of [["guidelines", "guidelines"], ["useCases", "use-cases"]]) {
       if (Array.isArray(old[prop]) && old[prop].length) {
@@ -403,13 +354,9 @@ function migrateEntity(old, report) {
   if (metaResult) {
     entry.metadata = metaResult.clean;
     if (Object.keys(entry.metadata).length === 0) delete entry.metadata;
-    // migrateMetadata() computes a `dropped` bucket for the metadata fields
-    // with no typed 0.20.0 home (summary/thumbnail/preview/extends) and its
-    // report line promises they were "kept in $extensions" — but nothing
-    // ever read the bucket, so they were silently lost. Stash them for real,
-    // under the same namespace every other unplaceable value in this script
-    // uses (see the header comment and the Stability page's own statement
-    // that nothing is dropped).
+    // migrateMetadata()'s `dropped` bucket (summary/thumbnail/preview/extends) has no typed
+    // 0.20.0 home, so stash it under the same $extensions namespace every other unplaceable
+    // value in this script uses.
     const carried = Object.fromEntries(
       Object.entries(metaResult.dropped || {}).filter(([, v]) => v !== undefined),
     );
@@ -462,12 +409,9 @@ function migrateDoc(old, report) {
   DISSOLVED_GROUP_IDS = new Set();
   const entries = [];
 
-  // Root-level documentBlocks/agentDocumentBlocks (system-wide docs, not
-  // tied to any one entity - an "Overview" sections block, system-wide
-  // use-cases/guidelines) have nowhere to live at the 0.20.0 document root
-  // at all (base.schema.yaml has no sections field of its own) - they
-  // become the synthesized system entry's own `sections`, same as
-  // systemInfo's own facts became that entry's `metadata`.
+  // Root-level documentBlocks/agentDocumentBlocks have nowhere to live at the 0.20.0 document
+  // root (base.schema.yaml has no sections field), so they become the synthesized system
+  // entry's own `sections`, same as systemInfo's facts became that entry's `metadata`.
   const hasRootBlocks = (old.documentBlocks || []).length || (old.agentDocumentBlocks || []).length;
   let systemEntry = old.systemInfo ? systemEntryFrom(old.systemInfo, report) : null;
   if (hasRootBlocks) {

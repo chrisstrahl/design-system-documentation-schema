@@ -1,30 +1,11 @@
 #!/usr/bin/env node
 /**
- * check-scripts-documented.mjs — Drift guard for CONTRIBUTING.md's
- * "Every script" reference.
+ * Drift guard for CONTRIBUTING.md's "Every script" reference: asserts, in both directions,
+ * that every script in package.json appears in CONTRIBUTING.md, and every `npm run <name>` in
+ * CONTRIBUTING.md is a script that still exists. Checks presence, not prose quality - a
+ * one-line description nobody maintains still beats an entry that silently disappears.
  *
- * package.json's `scripts` block is the index of what this repo can do, and
- * for a long time it was the ONLY description of it: 33 entries, no
- * reference anywhere, and the real explanations one level down in each
- * script file's own header. That's how six scripts ended up referenced
- * nowhere at all, and how nobody noticed that `bundle` and
- * `sync-skill-versions` can't be renamed (scripts/tools/bump-version.js shells out
- * to them by name).
- *
- * So the reference exists now — and this asserts it stays true, in both
- * directions:
- *
- *   - Every script in package.json appears in CONTRIBUTING.md. Add a script,
- *     say what it's for.
- *   - Every `npm run <name>` in CONTRIBUTING.md is a script that exists. A
- *     rename can't leave the table pointing at nothing.
- *
- * Deliberately checks presence, not prose quality: a one-line description
- * nobody maintains is still better than an entry that silently disappears.
- *
- * Run via `npm run check:docs`.
- *
- * Exits non-zero on drift in either direction.
+ * Run via `npm run check:docs`. Exits non-zero on drift in either direction.
  */
 
 import fs from "node:fs";
@@ -39,8 +20,8 @@ const scripts = new Set(
 );
 
 const contributing = fs.readFileSync(path.join(ROOT, "CONTRIBUTING.md"), "utf-8");
-// Only count a name inside backticks: prose like "run npm run check first"
-// shouldn't satisfy the reference, and a fenced example shouldn't either.
+// Only count a name inside backticks - prose like "run npm run check first" shouldn't satisfy
+// the reference.
 const documented = new Set([...contributing.matchAll(/`npm run ([\w:.-]+)/g)].map((m) => m[1]));
 
 let ok = true;

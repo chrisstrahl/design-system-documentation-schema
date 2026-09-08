@@ -1,24 +1,11 @@
 #!/usr/bin/env node
 /**
- * check-docs-coverage.mjs — Asserts every page the site's own nav declares,
- * and every schema definition the schema itself declares, actually made it
- * into the built output as a real element - not just as text somewhere
- * (check-markdown-mirrors.mjs already covers that, for schema.md
- * specifically). This is the guard class that would have caught an earlier
- * incident where a narrative page (the old standalone Conformance page)
- * went missing from a build without any script noticing - "it's linked
- * from the nav" and "it actually got built" were never checked against
- * each other.
- *
- * Two checks:
- *   1. Every page in nav.js's TOP_LINKS has a real, non-trivial file at
- *      site/dist/<slug>.html.
- *   2. Every schema definition (root file + local $defs) has a real
- *      <ds-def-section anchor="..."> element in site/dist/schema.html -
- *      not just its name appearing as text somewhere on the page.
- *
- * Reads the already-built site/dist/ (run `npm run build` first), same as
- * check-markdown-mirrors.mjs and check-internal-links.mjs.
+ * Asserts every page the site's nav declares, and every schema definition the schema itself
+ * declares, actually made it into the built output as a real element - not just as text
+ * somewhere. Checks: (1) every page in nav.js's TOP_LINKS/FOOTER_LINKS has a real, non-trivial
+ * file at site/dist/<slug>.html; (2) every schema definition has a real <ds-def-section
+ * anchor="..."> element in site/dist/schema.html; (3) the 404 page's recovery list covers
+ * every linked page. Reads the already-built site/dist/ (run `npm run build` first).
  *
  * Run via `npm run check:docs`.
  */
@@ -37,9 +24,8 @@ const DIST_DIR = path.join(ROOT, "site", "dist");
 let ok = true;
 
 // ── 1. Every nav page actually built, with real content ────────────────
-// Footer links are checked exactly like nav links: a footer link to a page
-// that never got built is the same bug, and Conformance/Stability live only
-// in the footer, so nothing else would catch it.
+// Footer links are checked exactly like nav links: Conformance/Stability live only in the
+// footer, so nothing else would catch a footer link to a page that never got built.
 const LINKED_PAGES = [
   ...TOP_LINKS.map((l) => ({ ...l, where: "nav.js's TOP_LINKS" })),
   ...FOOTER_LINKS.map((l) => ({ ...l, where: "nav.js's FOOTER_LINKS" })),
@@ -53,10 +39,8 @@ for (const { label, slug, where } of LINKED_PAGES) {
     continue;
   }
   const size = fs.statSync(filePath).size;
-  // A real page here runs from tens to hundreds of KB (Schema alone is
-  // over 100KB); a few hundred bytes means the shell rendered with
-  // nothing meaningful inside it - the exact failure mode a page quietly
-  // missing its main content would produce.
+  // A real page runs from tens to hundreds of KB; a few hundred bytes means the shell
+  // rendered with nothing meaningful inside it.
   if (size < 2000) {
     console.error(`✗ site/dist/${slug}.html exists but is only ${size} bytes - looks like an empty shell, not a real page`);
     ok = false;
@@ -86,12 +70,9 @@ if (!fs.existsSync(schemaHtmlPath)) {
 }
 
 // ── 3. The 404 page's recovery list covers every linked page ────────────
-// check-internal-links.mjs verifies that the links 404.mdx *does* carry
-// resolve; nothing verified the set was complete. That gap already bit
-// once: Conformance/Stability/Security/Examples were added to FOOTER_LINKS
-// while the recovery list — the one thing a lost reader sees — kept
-// pointing at the original four. Additions are exactly the drift a
-// resolve-only check can't see, so assert the set here instead.
+// check-internal-links.mjs verifies that the links 404.mdx does carry resolve, but not that
+// the set is complete - a page added to FOOTER_LINKS could still be missing from the recovery
+// list, which is the one thing a lost reader sees.
 const notFoundMdxPath = path.join(ROOT, "site", "content", "fragments", "404.mdx");
 if (!fs.existsSync(notFoundMdxPath)) {
   console.error(`✗ ${path.relative(ROOT, notFoundMdxPath)} doesn't exist`);

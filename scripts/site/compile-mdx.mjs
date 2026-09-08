@@ -1,32 +1,11 @@
 #!/usr/bin/env node
 /**
- * compile-mdx.mjs — Compiles .mdx content files to HTML for the DSDS spec site.
- *
- * Transforms MDX source → HTML string using a lightweight, string-based JSX
- * runtime (no React dependency). Web components like <ds-callout>, <ds-table>,
- * <ds-badge> etc. pass through as custom elements.
- *
- * Pipeline per file:
- *   1. Parse YAML frontmatter
- *   2. Preprocess: escape stray {} outside code fences
- *   3. Preprocess: convert <ds-code>…</ds-code> blocks → fenced code blocks
- *   4. Preprocess: expand <ds-example file="…" /> → inline JSON code blocks
- *   5. Preprocess: replace <ds-prop-table schema="…" def="…" /> with a
- *      placeholder; render the table from the schema via
- *      ./render-prop-table; substitute the rendered HTML after MDX compiles.
- *   6. Compile MDX via @mdx-js/mdx
- *   7. Evaluate with string-based JSX runtime → HTML string
- *   8. Post-process: map markdown HTML elements → web components AND
- *      substitute the ds-prop-table placeholders with their rendered HTML.
- *
- * Dependencies:
- *   @mdx-js/mdx   — MDX compiler (required)
- *   remark-gfm     — GFM table/autolink/strikethrough support (optional but
- *                    strongly recommended; install with `npm i -D remark-gfm`)
- *
- * Exports:
- *   compileMdxFile(filePath)  → Promise<{ meta, html }>
- *   compileAllMdx()           → Promise<Array<{ file, meta, html }>>
+ * Compiles .mdx content files to HTML for the DSDS spec site, using a lightweight
+ * string-based JSX runtime (no React) so web components like <ds-callout>/<ds-table>
+ * pass through as plain custom elements. Pipeline: parse frontmatter, preprocess
+ * (escape stray {}, expand <ds-code>/<ds-example>/<ds-prop-table> shortcodes), compile
+ * via @mdx-js/mdx, evaluate, then post-process markdown HTML into web components.
+ * remark-gfm is optional but recommended for table/autolink/strikethrough support.
  */
 
 import { compile, run } from "@mdx-js/mdx";
@@ -35,8 +14,8 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 
-// Load the shared CommonJS schema-to-HTML renderer so this ESM module
-// can call the same primitives build-site.js uses for per-schema pages.
+// Load the shared CommonJS schema-to-HTML renderer so this ESM module can call the same
+// primitives build-site.js uses for per-schema pages.
 const require = createRequire(import.meta.url);
 const {
   renderPropertyTableForRef,
@@ -54,16 +33,9 @@ const EXAMPLES_DIR = path.join(ROOT, "examples");
 const SCHEMA_DIR = path.join(ROOT, "schema");
 
 // ---------------------------------------------------------------------------
-// Canonical spec version (single source of truth)
-//
-// The DSDS version lives in schema/dsds.bundled.yaml's own `$id`
-// (ex: "https://.../v0.20.0/dsds.bundled.yaml") — see nav.js's
-// readSpecVersion() for the same extraction (matched against raw file text,
-// no parse, so it doesn't care which text format the bundle is in).
-// Content pages NEVER hardcode a version — they reference it through the
-// {{VERSION}} token, which is substituted here at build time. The bundle
-// script, nav, and footer read the same source, so one `npm run bundle`
-// propagates to every rendered page.
+// Canonical spec version: read from schema/dsds.bundled.yaml's own `$id` (see nav.js's
+// matching readSpecVersion()). Content pages never hardcode a version - they use the
+// {{VERSION}} token, substituted here at build time.
 // ---------------------------------------------------------------------------
 
 let CACHED_VERSION = null;
@@ -80,18 +52,9 @@ function readSpecVersion() {
 }
 
 /**
- * Replace the {{VERSION}} token (with optional inner whitespace) with the
- * canonical spec version. Run before any other processing so no downstream
- * step — frontmatter parsing, code-fence handling, MDX compilation — ever
- * sees the token.
- *
- * Exported because the HTML path is not the only consumer: build-site.js
- * also builds each page's `.md` mirror (and llms-full.txt) by re-reading the
- * raw .mdx and stripping frontmatter, which bypasses compileMdxFile()
- * entirely. Without applying this there too, the mirrors shipped a literal
- * `/v{{VERSION}}/…` while the HTML resolved it correctly — the two
- * representations of one page disagreeing, on exactly the artifact AGENTS.md
- * points machines at.
+ * Replace the {{VERSION}} token with the canonical spec version, before any other
+ * processing sees it. Exported because build-site.js also re-reads the raw .mdx directly
+ * for the `.md` mirror and llms-full.txt, bypassing compileMdxFile() entirely.
  */
 export function substituteVersion(source) {
   return source.replace(/\{\{\s*VERSION\s*\}\}/g, readSpecVersion());
@@ -105,8 +68,7 @@ let remarkGfm = null;
 try {
   remarkGfm = (await import("remark-gfm")).default;
 } catch {
-  // Tables authored as pipe-separated markdown will not render without
-  // remark-gfm. Install it: npm i -D remark-gfm
+  // Pipe-separated markdown tables will not render without remark-gfm.
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -145,14 +107,9 @@ function esc(s) {
 // Preprocessing — runs BEFORE MDX compilation
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * Strip MDX/JSX comment nodes (curly-brace + slash-star … star-slash +
- * curly-brace) outside fenced code blocks. These are authoring notes meant to
- * be invisible. MDX would normally drop them, but because escapeCurlyBraces()
- * escapes the leading brace, MDX never recognizes them as comments and they
- * leak into the rendered HTML as literal text — so we remove them here first.
- * Inside code fences they are left untouched.
- */
+// Strip JSX comment nodes ({/* ... */}) outside fenced code blocks. MDX would normally drop
+// these, but escapeCurlyBraces() escapes the leading brace first, so they'd otherwise leak
+// into the rendered HTML as literal text.
 function stripJsxComments(source) {
   const parts = source.split(/(```[\s\S]*?```)/g);
   return parts
@@ -160,53 +117,25 @@ function stripJsxComments(source) {
     .join("");
 }
 
-/**
- * Escape `{` and `}` outside fenced code blocks and HTML/JSX tags so MDX
- * does not try to interpret them as JSX expressions.
- *
- * Fenced code blocks (``` … ```) are left untouched because MDX already
- * treats their content as raw text.
- */
+// Escape bare `{`/`}` outside fenced code blocks so MDX doesn't try to interpret them as JSX
+// expressions - safe because the only `{}` occurrences in prose here are stray literals.
 function escapeCurlyBraces(source) {
-  // Split on fenced code blocks (including language tag).  Odd indices are
-  // the code blocks themselves.
   const parts = source.split(/(```[\s\S]*?```)/g);
   return parts
     .map((part, i) => {
-      // Inside a code fence → leave alone
-      if (i % 2 === 1) return part;
-
-      // Outside code fences → escape bare { } that are NOT part of a JSX
-      // expression wrapped in a recognized MDX pattern (import/export,
-      // component prop expression).  For our content files the only {}
-      // occurrences outside fences are stray literals in prose, so a
-      // blanket escape is safe.
+      if (i % 2 === 1) return part; // inside a code fence, leave alone
       return part.replace(/(?<!\\)\{/g, "\\{").replace(/(?<!\\)\}/g, "\\}");
     })
     .join("");
 }
 
 /**
- * Per-pipeline state: raw HTML that needs to survive MDX compilation
- * byte-for-byte — mainly <ds-code>'s own content (YAML/JSON, full of `{`/
- * `<` that MDX would otherwise try to parse as JSX). Each blob is swapped
- * in for a plain, empty, self-closing placeholder before MDX ever sees the
- * source, then substituted back into the final HTML once MDX (and the rest
- * of postProcess) has finished running.
- *
- * This replaces an earlier approach that round-tripped through a markdown
- * fenced code block's "meta string" (```yaml label="…") to carry the label
- * across MDX compilation, the same way GFM code fences carry a language.
- * That never actually worked with this project's MDX setup — by default,
- * @mdx-js/mdx's compiled output simply discards a fenced block's meta
- * string; nothing in this pipeline's remark plugins (just remark-gfm)
- * preserves it. The result: every `label` on every <ds-example> across the
- * whole site silently rendered as nothing, undetected until traced with a
- * real compile and a byte-for-byte check of the output, not just read from
- * the source. Building the final <ds-code> HTML directly, the same way
- * createPropTableSlots() below already does for schema-driven property
- * tables, sidesteps the meta string entirely rather than trying to fix
- * whatever dropped it.
+ * Per-pipeline state: raw HTML that must survive MDX compilation byte-for-byte - mainly
+ * <ds-code>'s own content (YAML/JSON full of `{`/`<`). Each blob is swapped for a
+ * self-closing placeholder before MDX runs, then substituted back afterward. Building the
+ * final <ds-code> HTML directly (rather than round-tripping through a fenced code block's
+ * meta string) sidesteps a real bug: @mdx-js/mdx silently discards fence meta strings, which
+ * previously made every <ds-example> `label` render as nothing.
  */
 function createHtmlSlots() {
   return [];
@@ -214,20 +143,15 @@ function createHtmlSlots() {
 
 function pushHtmlSlot(slots, html) {
   const idx = slots.push(html) - 1;
-  // Self-closing custom element placeholder: MDX preserves this verbatim
-  // because the tag name is hyphenated (custom element), and there's
-  // nothing inside it for MDX to try to parse as JSX.
+  // Self-closing custom element: MDX preserves it verbatim since the hyphenated tag name
+  // has nothing inside for MDX to parse as JSX.
   return `<ds-html-slot idx="${idx}" />`;
 }
 
 function substituteHtmlSlotPlaceholders(html, slots) {
   if (!slots || slots.length === 0) return html;
-  // After MDX compiles a self-closing custom element it may emit either
-  // `<ds-html-slot idx="N" />` (void element form) or
-  // `<ds-html-slot idx="N"></ds-html-slot>` (paired form). Match both, and
-  // tolerate an optional surrounding <p>…</p> wrapper that markdown
-  // inserts around block-level content — same pattern
-  // substitutePropTablePlaceholders() uses below.
+  // MDX may emit either the void or paired form, and may wrap it in a markdown-inserted <p>;
+  // match both, same pattern substitutePropTablePlaceholders() uses below.
   const slotRe =
     /<p>\s*<ds-html-slot\s+idx="(\d+)"\s*(?:\/>|><\/ds-html-slot>)\s*<\/p>|<ds-html-slot\s+idx="(\d+)"\s*(?:\/>|><\/ds-html-slot>)/g;
   return html.replace(slotRe, (match, idxA, idxB) => {
@@ -238,23 +162,11 @@ function substituteHtmlSlotPlaceholders(html, slots) {
 }
 
 /**
- * Convert explicit `<ds-code language="…" label="…">…</ds-code>` blocks
- * straight to their final HTML (see createHtmlSlots() above for why this
- * builds the real tag directly instead of round-tripping through a fenced
- * code block). `language` is optional — a block with no language at all
- * (ASCII art, plain text) still needs this same protection, not just
- * highlighted code: without it, a blank line inside the block reaches
- * MDX's own JSX-children markdown parsing, which reads it as a paragraph
- * break and splits the block into two sibling <p>s - <ds-code>'s own
- * textContent then concatenates their text back together with no
- * separator at all (found this the hard way: a two-part example rendered
- * as one run-on line with no newline between the parts). Skips `inline`
- * spans - those are never written by hand in source (only ever produced
- * by postProcess()'s own backtick-to-<ds-code> conversion, which runs
- * after this step), but excluded on purpose in case a future page ever
- * does write one directly. Any other author-written attributes (`wrap`,
- * `slot="…"`, …) pass through verbatim — they're already valid HTML
- * attribute syntax in the source, nothing to escape.
+ * Convert explicit `<ds-code language="…" label="…">…</ds-code>` blocks straight to their
+ * final HTML rather than round-tripping through MDX's markdown parsing - without this, a
+ * blank line inside the block gets read as a paragraph break, splitting it into two <p>s
+ * whose text then concatenates back together with no separator. Skips `inline` spans (only
+ * ever produced later, by postProcess()'s backtick conversion); other attributes pass through.
  */
 function preprocessDsCodeBlocks(source, slots) {
   return source.replace(
@@ -290,9 +202,8 @@ function preprocessExamples(source, slots) {
         return `{/* Example not found: ${file} */}`;
       }
       let lang, raw;
-      // YAML example files (most of examples/ as of the 0.20.0 schema) are
-      // embedded as-authored, no reformatting — unlike JSON, YAML's own
-      // whitespace/comments are part of what the example is demonstrating.
+      // YAML examples are embedded as-authored, no reformatting - unlike JSON, their
+      // whitespace/comments are part of what the example demonstrates.
       if (/\.ya?ml$/.test(file)) {
         lang = "yaml";
         raw = fs.readFileSync(filePath, "utf-8").trimEnd();
@@ -306,15 +217,11 @@ function preprocessExamples(source, slots) {
           return `{/* Failed to load example: ${file} */}`;
         }
       }
-      // label="" (not omitted) opts <ds-code> out of its own default-to-
-      // language-name fallback - every <ds-example> caller today (Quick
-      // start) wants no label chip at all, not even a bare "yaml" tag.
+      // label="" (not omitted) opts out of <ds-code>'s default-to-language-name fallback.
       const labelAttr = ` label="${esc(label || "")}"`;
       const slotAttr = slot ? ` slot="${esc(slot)}"` : "";
-      // wrap unconditionally: an example's natural home is a column half
-      // the page's width or narrower (Quick start's split layout, or a
-      // normal reading-width column), where a long line should break
-      // instead of forcing horizontal scroll.
+      // wrap unconditionally: an example's column is often half-width or narrower, where a
+      // long line should break instead of forcing horizontal scroll.
       const html = `<ds-code language="${lang}"${labelAttr}${slotAttr} wrap>${esc(raw)}</ds-code>`;
       return pushHtmlSlot(slots, html);
     },
@@ -322,31 +229,14 @@ function preprocessExamples(source, slots) {
 }
 
 // ===========================================================================
-// Schema-driven property table shortcode
-//
-//   <ds-prop-table schema="<group>/<base>" def="<defName>" />
-//
-// Examples:
-//   <ds-prop-table schema="entities/component" def="component" />
-//   <ds-prop-table schema="common/agents" def="agents" />
-//   <ds-prop-table schema="root" def="entityGroup" />
-//
-// Pass `def="$root"` to render the schema's top-level `properties` (used
-// by schemas that put their fields at the
-// root instead of in a $defs entry).
-//
-// The rendered HTML contains void/inline elements like <br>, <small>,
-// and <ds-code> that MDX/JSX would otherwise complain about. The
-// preprocessor therefore replaces each shortcode with a self-closing
-// custom element placeholder (<ds-prop-table-slot idx="N" />) which MDX
-// preserves verbatim. After MDX finishes compiling we substitute each
-// placeholder for the rendered HTML in `postProcess`.
+// Schema-driven property table shortcode: <ds-prop-table schema="<group>/<base>" def="<defName>" />
+// (pass def="$root" for a schema whose fields live at the top level, not in a $defs entry).
+// The rendered HTML has void/inline elements MDX/JSX would choke on, so it's swapped for a
+// placeholder custom element and substituted back in after MDX compiles.
 // ===========================================================================
 
-// Shared cross-reference index, built lazily on first preprocess. Holds
-// both halves buildSharedDefIndex() returns: `index` (the $ref → page/anchor
-// lookup describeType() needs) and `schemaById` (the raw-schema-by-$id
-// registry resolveSchema() needs to flatten an allOf chain).
+// Shared cross-reference index, built lazily on first preprocess: `index` (the $ref →
+// page/anchor lookup describeType() needs) and `schemaById` (for flattening allOf chains).
 let MDX_DEF_INDEX = null;
 function getMdxDefIndex() {
   if (MDX_DEF_INDEX === null) {
@@ -355,17 +245,14 @@ function getMdxDefIndex() {
   return MDX_DEF_INDEX;
 }
 
-/**
- * Per-pipeline state: maps placeholder index → rendered HTML. Reset on
- * each call to `preprocess()` so concurrent file compiles don't bleed.
- */
+// Per-pipeline state: maps placeholder index → rendered HTML, reset each call to preprocess()
+// so concurrent file compiles don't bleed into each other.
 function createPropTableSlots() {
   return [];
 }
 
 function preprocessPropTables(source, slots) {
-  // Match both self-closing (`/>`) and open/close (`></ds-prop-table>`)
-  // forms so authors can be loose with the syntax.
+  // Match both self-closing and open/close forms so authors can be loose with the syntax.
   return source.replace(
     /<ds-prop-table\s+([^>]*?)\s*(?:\/>|><\/ds-prop-table>)/g,
     (_match, attrs) => {
@@ -380,9 +267,8 @@ function preprocessPropTables(source, slots) {
       const schemaRef = schemaMatch[1];
       const defName = defMatch[1];
 
-      // Optional `delta` (omit the common entity envelope) and `omit="a,b"`
-      // (omit an explicit list) — used by per-entity tables that should show
-      // only the properties unique to that entity.
+      // `delta` (omit the common entity envelope) and `omit="a,b"` let a per-entity table
+      // show only properties unique to that entity.
       const isDelta = /(^|\s)delta(\s|$|=)/.test(attrs);
       const omitMatch = attrs.match(/omit="([^"]+)"/);
       const pathMatch = attrs.match(/path="([^"]+)"/);
@@ -397,16 +283,11 @@ function preprocessPropTables(source, slots) {
         path: pathMatch ? pathMatch[1] : undefined,
       });
 
-      // Comments that start with `{/* ds-prop-table:` indicate a render
-      // failure (missing schema, missing def, parse error). Pass those
-      // through directly so they remain visible in the output as a
-      // diagnostic — MDX comment syntax, not `<!-- -->`, since this is
-      // substituted straight into MDX source before compilation.
+      // A leading "{/* ds-prop-table:" marks a render failure - pass it through as a visible
+      // diagnostic (MDX comment syntax, since this goes into MDX source before compilation).
       if (html.startsWith("{/*")) return html;
 
       const idx = slots.push(html) - 1;
-      // Self-closing custom element placeholder: MDX preserves this
-      // verbatim because the tag name is hyphenated (custom element).
       return `<ds-prop-table-slot idx="${idx}" />`;
     },
   );
@@ -414,11 +295,7 @@ function preprocessPropTables(source, slots) {
 
 function substitutePropTablePlaceholders(html, slots) {
   if (!slots || slots.length === 0) return html;
-  // After MDX compiles a self-closing custom element it may emit either
-  // `<ds-prop-table-slot idx="N" />` (void element form) or
-  // `<ds-prop-table-slot idx="N"></ds-prop-table-slot>` (paired form).
-  // Match both, and tolerate an optional surrounding <p>…</p> wrapper that
-  // markdown inserts around block-level content.
+  // Match both the void and paired forms MDX may emit, and an optional surrounding <p> wrapper.
   const slotRe =
     /<p>\s*<ds-prop-table-slot\s+idx="(\d+)"\s*(?:\/>|><\/ds-prop-table-slot>)\s*<\/p>|<ds-prop-table-slot\s+idx="(\d+)"\s*(?:\/>|><\/ds-prop-table-slot>)/g;
   return html.replace(slotRe, (match, idxA, idxB) => {
@@ -428,11 +305,8 @@ function substitutePropTablePlaceholders(html, slots) {
   });
 }
 
-/**
- * Run all preprocessing steps in order. Returns the transformed source
- * plus per-pipeline state (the ds-prop-table and raw-HTML slot arrays)
- * that postProcess needs to finish the job.
- */
+// Runs all preprocessing steps in order; returns the transformed source plus the
+// ds-prop-table and raw-HTML slot arrays postProcess needs to finish the job.
 function preprocess(source) {
   const propTableSlots = createPropTableSlots();
   const htmlSlots = createHtmlSlots();
@@ -446,11 +320,8 @@ function preprocess(source) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// String-based JSX runtime
-//
-// MDX compiles markdown + JSX into calls to jsx(type, props).  This runtime
-// renders those calls to HTML strings instead of DOM nodes or virtual-DOM
-// objects, so we get a plain HTML string without any framework dependency.
+// String-based JSX runtime: MDX compiles to calls to jsx(type, props); this renders those
+// straight to HTML strings instead of DOM/virtual-DOM nodes, with no framework dependency.
 // ═══════════════════════════════════════════════════════════════════════════
 
 const VOID_ELEMENTS = new Set([
@@ -480,13 +351,8 @@ function renderChildren(children) {
   return String(children);
 }
 
-/**
- * JSX factory — called by the compiled MDX module for every element.
- *
- * - Fragment   → concatenate children
- * - Function   → call it (component)
- * - String     → render as HTML tag
- */
+// JSX factory called by the compiled MDX module for every element: Fragment concatenates
+// children, a function type is called as a component, a string type renders as an HTML tag.
 function jsx(type, props) {
   const { children, ...attrs } = props || {};
   const childStr = renderChildren(children);
@@ -522,20 +388,15 @@ function jsx(type, props) {
 /** jsxs — same as jsx; MDX calls this for elements with static children. */
 const jsxs = jsx;
 
-/**
- * MDX calls useMDXComponents() to allow component overrides.  We return an
- * empty map because we handle element→web-component mapping in post-processing
- * rather than at the JSX level.  This keeps the runtime dead-simple.
- */
+// MDX calls this to allow component overrides; returns empty since element→web-component
+// mapping happens in post-processing instead, keeping the runtime dead-simple.
 function useMDXComponents() {
   return {};
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Post-processing — runs AFTER MDX evaluation
-//
-// Converts standard HTML elements produced by the string JSX runtime into
-// the site's web-component equivalents (ds-heading, ds-code, ds-table, etc.)
+// Post-processing (runs after MDX evaluation): converts standard HTML elements from the
+// string JSX runtime into the site's web-component equivalents (ds-heading, ds-code, etc).
 // ═══════════════════════════════════════════════════════════════════════════
 
 /** Generate a URL-safe anchor slug from heading text. */
@@ -564,11 +425,8 @@ function postProcess(html) {
     },
   );
 
-  // ── 2. Fenced code blocks with language ─────────────────────────────
-  //    <pre><code class="language-xxx">…</code></pre>  →  <ds-code language="xxx">
-  //
-  //    Also extract an optional `label="…"` that was preserved in the
-  //    class string by some remark plugins (or our preprocessing).
+  // ── 2. Fenced code blocks with language: <pre><code class="language-xxx"> → <ds-code>,
+  //    also extracting an optional label="…" preserved in the class string.
   out = out.replace(
     /<pre><code\s+class="language-(\w+)(?:\s+label=&quot;([^&]*)&quot;)?">([\s\S]*?)<\/code><\/pre>/g,
     (_m, lang, label, content) => {
@@ -591,21 +449,17 @@ function postProcess(html) {
     (_m, content) => `<ds-code>${content}</ds-code>`,
   );
 
-  // ── 4. Inline code → <ds-code inline> ──────────────────────────────
-  //    Must run AFTER fenced-code replacement so we don't touch <code>
-  //    inside <pre> (those are already gone).
+  // ── 4. Inline code → <ds-code inline>. Must run after fenced-code replacement, above.
   out = out.replace(
     /<code>([\s\S]*?)<\/code>/g,
     (_m, content) => `<ds-code inline>${content}</ds-code>`,
   );
 
-  // ── 5. Wrap bare <table> in <ds-table> ──────────────────────────────
-  //    Skip tables that are already inside a <ds-table>.
+  // ── 5. Wrap bare <table> in <ds-table>, skipping tables already inside one.
   out = out.replace(
     /<table>([\s\S]*?)<\/table>/g,
     (match, _inner, offset) => {
-      // Look backwards for an unclosed <ds-table>
-      const before = out.slice(Math.max(0, offset - 200), offset);
+      const before = out.slice(Math.max(0, offset - 200), offset); // look backward for an unclosed <ds-table>
       if (/<ds-table[^>]*>\s*$/.test(before)) {
         return match; // Already wrapped
       }
@@ -613,8 +467,8 @@ function postProcess(html) {
     },
   );
 
-  // ── 6. Clean up paragraph-wrapped block elements ────────────────────
-  //    MDX sometimes wraps block-level web components in <p> tags.
+  // ── 6. Clean up paragraph-wrapped block elements: MDX sometimes wraps block-level web
+  //    components in <p> tags.
   out = out.replace(
     /<p>\s*(<(?:ds-code|ds-table|ds-heading|ds-callout|ds-example|ds-def-section|ds-badge)[^>]*>[\s\S]*?<\/(?:ds-code|ds-table|ds-heading|ds-callout|ds-example|ds-def-section|ds-badge)>)\s*<\/p>/g,
     "$1",
@@ -645,9 +499,8 @@ export async function compileMdxFile(filePath) {
     : path.resolve(process.cwd(), filePath);
   const raw = fs.readFileSync(absPath, "utf-8");
 
-  // 0. Inject the canonical spec version wherever {{VERSION}} appears
-  //    (frontmatter title, headings, example snippets, $schema URLs). Runs
-  //    first so the token never reaches frontmatter parsing or MDX compile.
+  // 0. Inject the canonical spec version wherever {{VERSION}} appears, before frontmatter
+  //    parsing or MDX compile ever see the token.
   const templated = substituteVersion(raw);
 
   // 1. Frontmatter
@@ -697,10 +550,8 @@ export async function compileMdxFile(filePath) {
   // 6. Post-process: markdown HTML → web components
   html = postProcess(html);
 
-  // 7. Substitute the ds-prop-table and raw-HTML (<ds-code>) placeholders
-  //    with their real content. Done AFTER postProcess so neither kind of
-  //    pre-rendered markup is mangled by the markdown-to-web-component
-  //    transformations above.
+  // 7. Substitute placeholders with real content, after postProcess so the pre-rendered
+  //    markup isn't mangled by the markdown-to-web-component transformations above.
   html = substitutePropTablePlaceholders(html, propTableSlots);
   html = substituteHtmlSlotPlaceholders(html, htmlSlots);
 

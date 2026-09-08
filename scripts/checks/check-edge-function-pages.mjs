@@ -1,24 +1,11 @@
 #!/usr/bin/env node
 /**
- * check-edge-function-pages.mjs — Drift guard for
- * netlify/edge-functions/markdown-negotiation.js's page list.
- *
- * That edge function content-negotiates `Accept: text/markdown` on this
- * site's real pages, and its own header comment explains why its page list
- * (`PAGE_MD_PATH`) is a hand-written literal rather than something read from
- * nav.js at request time: an edge function is committed source Netlify's
- * deploy step discovers directly, not something `npm run build` produces
- * the way site/dist/ is - it has no access to nav.js's exports when a
- * request actually comes in.
- *
- * A hand-written copy of a list that already lives in nav.js is exactly the
- * kind of duplication that goes stale silently - add a page to
- * TOP_LINKS/FOOTER_LINKS (as Conformance/Stability/Security/Examples were)
- * and the edge function keeps negotiating only the old set, with no error
- * and no missing-page symptom a human would think to check for. This
- * doesn't regenerate the file (an edge function isn't a build artifact);
- * it fails loudly instead, the same shape check-docs-coverage.mjs already
- * uses for the nav itself.
+ * Drift guard for netlify/edge-functions/markdown-negotiation.js's page list. That edge
+ * function content-negotiates `Accept: text/markdown` on this site's pages, and its page list
+ * (`PAGE_MD_PATH`) is a hand-written literal since an edge function has no access to nav.js's
+ * exports at request time. A hand-written copy of a list that lives in nav.js is exactly the
+ * duplication that goes stale silently, so this fails loudly on drift rather than regenerating
+ * the file (an edge function isn't a build artifact).
  *
  * Run via `npm run check:docs`.
  */

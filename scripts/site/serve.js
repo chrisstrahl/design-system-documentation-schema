@@ -1,18 +1,14 @@
 #!/usr/bin/env node
 /**
- * serve.js — Zero-dependency static file server for local development.
- *
- * Serves the `site/` source tree (not `site/dist/`) so the redesign
- * workbench can load the *real* component ES modules and stylesheets
- * directly — edit a component or token, refresh, see the change. No
- * build step sits between the source and the browser.
+ * Zero-dependency static file server for local development. Serves the `site/` source tree
+ * (not `site/dist/`) so the workbench can load real component ES modules and stylesheets
+ * directly - edit, refresh, see the change, with no build step in between. The workbench
+ * lives at /workbench/ once running.
  *
  * Usage:
  *   npm run dev                 # serves site/ on http://localhost:4300
  *   npm run dev -- --port 8080  # custom port
  *   npm run dev -- --dist       # serve the built site/dist/ instead
- *
- * The workbench lives at /workbench/ once the server is running.
  */
 
 const http = require("http");
@@ -36,9 +32,8 @@ const SERVE_DIST = args.includes("--dist");
 const SERVE_DIR = path.join(ROOT, "site", SERVE_DIST ? "dist" : "");
 
 // ---------------------------------------------------------------------------
-// MIME types — enough to serve HTML, ES modules, CSS, JSON, and images.
-// .js and .mjs MUST be a JavaScript type or the browser refuses to run them
-// as modules.
+// MIME types - .js/.mjs must be a JavaScript type or the browser refuses to run them as
+// modules.
 // ---------------------------------------------------------------------------
 
 const MIME = {
@@ -96,11 +91,9 @@ const server = http.createServer((req, res) => {
 
     fs.readFile(target, (readErr, data) => {
       if (readErr) {
-        // Components fetch icons with a page-relative "assets/<file>.svg"
-        // path, which only resolves correctly for top-level pages (the
-        // real site is flat). Nested dev-only pages (e.g. /workbench/)
-        // request "workbench/assets/<file>.svg" instead — fall back to
-        // the real top-level assets/ dir before giving up.
+        // Components fetch icons with a page-relative "assets/<file>.svg" path, which only
+        // resolves for top-level pages. A nested dev-only page (e.g. /workbench/) requests
+        // "workbench/assets/<file>.svg" instead - fall back to the real top-level assets/ dir.
         const nestedAsset = req.url.split("?")[0].match(/\/assets\/([^/]+)$/);
         if (nestedAsset) {
           const fallback = path.join(

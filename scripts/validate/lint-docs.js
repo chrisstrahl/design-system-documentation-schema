@@ -1,34 +1,16 @@
 #!/usr/bin/env node
 /**
- * lint-docs.js — Editorial lint for DSDS documents (the advisory tier).
+ * Editorial lint for DSDS documents (the advisory tier): schema validation and validate.js's
+ * DSDS-01-10 answer "is this document allowed/consistent?", this answers "is this
+ * documentation good?" It runs on documents that already validate, reports quality gaps, and
+ * never fails the build - exit code is always 0 for a documentation finding.
  *
- * Schema validation answers "is this document allowed?" scripts/validate/validate.js's
- * DSDS-01–DSDS-10 answer "is this document internally consistent?" This lint
- * answers "is this documentation good?" It runs on documents that already
- * validate, reports quality gaps, and NEVER fails the build for a
- * documentation finding — warnings are warnings, and the exit code is 0.
+ * schema/conformance-rules.yaml is the source of truth: at startup this loads every
+ * `enforcement: advisory` rule and runs its matching check implementation, keyed by rule
+ * `name`. The only way this script exits non-zero is catalog/code drift (an advisory entry
+ * with no implementation, or vice versa) - a tooling bug, not a documentation finding.
  *
- * schema/conformance-rules.yaml is the source of truth, same as the
- * semantic tier. At startup this loads the catalog, takes every rule with
- * `enforcement: advisory`, and runs the matching check implementation
- * (keyed by rule `name`, below). Removing a rule from the catalog disables
- * it here with no code change. The one way this script exits non-zero is
- * catalog/code drift — a bidirectional check, same shape as
- * scripts/checks/check-rule-catalog.js's own semantic-tier check: an advisory
- * catalog entry with no implementation, or an implementation with no
- * catalog entry. That's a tooling bug, not a documentation finding, and it
- * should fail loudly.
- *
- * Ported from origin/0.16.0's identical-purpose scripts/lint-docs.js, which
- * itself ported PR #33 (DSDS-011, `token-description-restates-identifier`,
- * by Cody Clark). That version's checks were written against the pre-0.20.0
- * model (`.dsds.json`, `entity.documentBlocks`, `criteria`) — re-implemented
- * here against 0.20.0's `entries`/`sections`/`items` shape instead of
- * carried over verbatim; see each check below for what changed and why.
- *
- * Usage:
- *   node scripts/validate/lint-docs.js [paths…]   # files or directories
- *   npm run lint                    # defaults to the same corpus validate.js does
+ * Usage: node scripts/validate/lint-docs.js [paths…], or `npm run lint`.
  */
 "use strict";
 
@@ -43,16 +25,11 @@ function loadCatalog() {
 }
 
 /**
- * Build the active rule set: catalog rules with `enforcement: advisory`,
- * joined to their check implementations. Exits non-zero on drift in either
- * direction — the catalog and this file must agree exactly.
- *
- * Two implementation maps, not one: IMPLEMENTATIONS runs once per entity
- * (entry/shared item) via entriesIn(doc); DOCUMENT_IMPLEMENTATIONS runs
- * once per file, against the raw parsed document, for a rule that's about
- * the document's own top-level shape (DSDS-19's field order) rather than
- * anything inside one entry. A rule name is expected in exactly one map -
- * drift-checked the same way as the single-map case, just unioned first.
+ * Build the active rule set: catalog rules with `enforcement: advisory`, joined to their
+ * check implementations, exiting non-zero on drift in either direction. Two implementation
+ * maps: IMPLEMENTATIONS runs once per entity via entriesIn(doc); DOCUMENT_IMPLEMENTATIONS
+ * runs once per file against the raw parsed document, for rules about the document's own
+ * top-level shape rather than anything inside one entry.
  */
 function activeRules() {
   const catalog = loadCatalog();
@@ -82,12 +59,9 @@ function activeRules() {
 }
 
 // ---------------------------------------------------------------------------
-// Check implementations, keyed by catalog rule `name`.
-//
-// Each receives (entry, emit) once per top-level entry/shared entity (see
-// lib.js's entriesIn()) and calls emit(pointer, message) per finding. The
-// message follows the same "what's wrong + what to do" formula
-// validate.js's own error strings use.
+// Check implementations, keyed by catalog rule `name`. Each receives (entry, emit) once per
+// top-level entry/shared entity and calls emit(pointer, message) per finding, following the
+// same "what's wrong + what to do" formula validate.js's error strings use.
 // ---------------------------------------------------------------------------
 
 function normalizeProse(s) {
@@ -98,11 +72,7 @@ function normalizeProse(s) {
     .trim();
 }
 
-// Every `guidelines` section item across an entry's sections, with a
-// pointer for each - the 0.20.0 equivalent of 0.16.0's eachGuidelineItem()
-// walk over documentBlocks/criteria, which has no analogue in this model
-// (guidelines items live directly under sections[].items, not nested
-// inside a second criteria array).
+// Every `guidelines` section item across an entry's sections, with a pointer for each.
 function eachGuidelineItem(entry, fn) {
   (entry.sections || []).forEach((section, si) => {
     if (!section || section.kind !== "guidelines") return;
@@ -115,11 +85,8 @@ function eachGuidelineItem(entry, fn) {
 const LOWERCASE_RFC_REGEX = /(?<![A-Za-z])(must|should)(?: not)?(?![A-Za-z])/g;
 
 // ---------------------------------------------------------------------------
-// STYLE_GUIDE.md's canonical orders (DSDS-16/17/18/19). Kept here, not
-// derived from the schema files - the schema imposes no order at all (see
-// STYLE_GUIDE.md's own opening paragraph), so there is no single source to
-// read this back out of; STYLE_GUIDE.md and this list have to be kept in
-// sync by hand when one changes.
+// STYLE_GUIDE.md's canonical orders (DSDS-17/18/19/20). Kept here rather than derived from
+// the schema files, since the schema imposes no order at all - must be kept in sync by hand.
 // ---------------------------------------------------------------------------
 
 const ENTRY_FIELD_ORDER = {
@@ -134,10 +101,8 @@ const DOCUMENT_FIELD_ORDER = ["schemaVersion", "$schema", "name", "entries", "sh
 const SECTION_KIND_RANK = { guidelines: 0, definitions: 1, steps: 2, section: 3 };
 const GUIDELINE_LEVEL_RANK = { must: 0, should: 1, may: 2, "should-not": 3, "must-not": 4 };
 
-// Returns the out-of-order pair, or null if `actual` (filtered to keys that
-// also appear in `canonical`) is already non-decreasing by canonical rank -
-// the general "is this sequence sorted per this canonical list" check
-// DSDS-16/17/18/19 all reduce to, just over different kinds of items.
+// Returns the first out-of-order pair, or null if `actual` is already non-decreasing by
+// canonical rank - the general "is this sequence sorted" check DSDS-17/18/19/20 all reduce to.
 function firstInversion(actual, rankOf) {
   for (let i = 1; i < actual.length; i++) {
     if (rankOf(actual[i]) < rankOf(actual[i - 1])) return [actual[i - 1], actual[i]];
@@ -146,9 +111,6 @@ function firstInversion(actual, rankOf) {
 }
 
 const IMPLEMENTATIONS = {
-  // Direct port of 0.16.0's check of the same name - only the walk changed
-  // (guideline items live at sections[].items now, not
-  // documentBlocks[].items), the regex and reasoning are identical.
   "rfc-keywords-lowercase-in-normative-prose": (entry, emit) => {
     eachGuidelineItem(entry, (item, p) => {
       if (typeof item.statement !== "string") return;
@@ -162,10 +124,7 @@ const IMPLEMENTATIONS = {
     });
   },
 
-  // Ported from PR #33 (DSDS-011, by Cody Clark) - same algorithm
-  // (normalize both strings, flag an exact restatement or a bare value
-  // literal), adapted to a token entry's own id/name/description fields
-  // directly (0.20.0 has no separate token-group kind to also check).
+  // Normalizes both strings and flags an exact restatement or a bare value literal.
   "token-description-restates-identifier": (entry, emit) => {
     if (entry.kind !== "token") return;
     const desc = entry.description;
@@ -188,14 +147,9 @@ const IMPLEMENTATIONS = {
     }
   },
 
-  // No analogue in 0.16.0 - that model's "criterion-missing-verification"
-  // checked a separate accessibility-criteria array 0.20.0 doesn't have.
-  // The equivalent gap in this model is a hard-requirement guideline
-  // (level: must/must-not) with no checkedBy at all: a tool has no way to
-  // tell whether it's automatable, so it stays invisible to any dashboard
-  // built off checkedBy. DSDS-03 already blocks the narrower case
-  // (checkedBy: automated with no checks ref); this flags the case DSDS-03
-  // can't see - checkedBy left out entirely.
+  // A hard-requirement guideline (level: must/must-not) with no checkedBy at all is invisible
+  // to any dashboard built off it. DSDS-03 already blocks the narrower case (checkedBy:
+  // automated with no checks ref); this flags checkedBy left out entirely.
   "guideline-missing-checkedby": (entry, emit) => {
     eachGuidelineItem(entry, (item, p) => {
       if ((item.level === "must" || item.level === "must-not") && !item.checkedBy) {
@@ -207,11 +161,6 @@ const IMPLEMENTATIONS = {
     });
   },
 
-  // Adapted from 0.16.0's "entity-missing-use-cases" (which checked for a
-  // documentBlocks entry of kind: use-cases). 0.20.0 folds that content
-  // into a guidelines section with framing: when-to-use instead of a
-  // separate block kind - this checks for that section's presence on a
-  // component the same way the original checked for the block's.
   "component-missing-when-to-use": (entry, emit) => {
     if (entry.kind !== "component") return;
     const hasWhenToUse = (entry.sections || []).some(
@@ -225,31 +174,23 @@ const IMPLEMENTATIONS = {
     }
   },
 
-  // Ported from PR #37 (DSDS-012, by Cody Clark) - the scale-position
-  // companion to token-description-restates-identifier (DSDS-13). Same
-  // algorithm as the original: flag a description that reduces to a single
-  // leading scale word plus a number and nothing else - the ordinal the id
-  // and the token's place among its metadata.group siblings already carry.
-  // Adapted to 0.20.0's model the same way DSDS-13 was: a token entry's own
-  // id/name/description, kind: token only (0.20.0 has no token-group kind).
+  // The scale-position companion to token-description-restates-identifier (DSDS-13): flags a
+  // description that reduces to a single leading scale word plus a number and nothing else -
+  // the ordinal the id and the token's metadata.group position already carry.
   "token-description-restates-scale-position": (entry, emit) => {
     if (entry.kind !== "token") return;
     const desc = entry.description;
     if (typeof desc !== "string" || !desc.trim()) return;
     const d = normalizeProse(desc);
     if (!d) return;
-    // A description that restates the id or name is DSDS-13's case; leave it
-    // there so one that is both is reported once, not twice.
+    // A description that restates the id or name is DSDS-13's case; leave it there so one
+    // that is both is reported once, not twice.
     const id = normalizeProse(entry.id || "");
     const name = normalizeProse(entry.name || "");
     if ((id && d === id) || (name && d === name)) return;
-    // A single leading scale word plus a number, and nothing else: "shade
-    // 900", "step 500", "level six", and the phrasal "level 6 of the neutral
-    // scale"/"ramp". Kept deliberately narrow - the scale word must lead and
-    // be singular, so number-first and plural forms ("nine weights", "twelve
-    // steps") and a bare family-plus-number ("neutral 700") are left alone,
-    // and any role or usage word stops the match. See the DSDS-16 note in
-    // schema/conformance-rules.yaml.
+    // A single leading scale word plus a number, and nothing else ("shade 900", "level 6 of
+    // the neutral scale"). Kept narrow: the scale word must lead and be singular, so
+    // number-first/plural forms and any role/usage word leave it alone. See DSDS-16's note.
     const SW = "(?:level|step|shade|tint|grade|weight|size|swatch)";
     const N = "(?:\\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)";
     const scaleOnly = [
@@ -264,9 +205,8 @@ const IMPLEMENTATIONS = {
     }
   },
 
-  // STYLE_GUIDE.md §1 - only checks the relative order of fields actually
-  // present (firstInversion filters `actual` to keys in `order` first), so
-  // an entry that leaves a field out is never flagged for its absence.
+  // STYLE_GUIDE.md §1 - only checks the relative order of fields actually present, so an
+  // entry that leaves a field out is never flagged for its absence.
   "entry-field-order": (entry, emit) => {
     const order = entry.kind === undefined ? SHARED_FIELD_ORDER : (ENTRY_FIELD_ORDER[entry.kind] || ENTRY_FIELD_ORDER.entry);
     const actual = Object.keys(entry).filter((k) => order.includes(k));
@@ -279,11 +219,10 @@ const IMPLEMENTATIONS = {
     }
   },
 
-  // STYLE_GUIDE.md §2 - same-kind sections must stay contiguous and
-  // general-to-specific (guidelines, definitions, steps, section); among
-  // guidelines sections specifically, framing: when-to-use comes first.
-  // Doesn't attempt the tag-scoped-guidelines sub-tier (see this rule's
-  // own catalog note) - not mechanically checkable the same way.
+  // STYLE_GUIDE.md §2 - same-kind sections must stay contiguous and general-to-specific
+  // (guidelines, definitions, steps, section); among guidelines sections, framing:
+  // when-to-use comes first. Doesn't attempt the tag-scoped-guidelines sub-tier (see this
+  // rule's catalog note) - not mechanically checkable the same way.
   "section-order": (entry, emit) => {
     const sections = entry.sections;
     if (!Array.isArray(sections) || sections.length < 2) return;
@@ -305,9 +244,8 @@ const IMPLEMENTATIONS = {
     }
   },
 
-  // STYLE_GUIDE.md §3 - must, should, may, should-not, must-not. Items
-  // sharing a level keep their relative order (firstInversion only flags a
-  // strict level-to-level inversion, not a tie).
+  // STYLE_GUIDE.md §3 - must, should, may, should-not, must-not. Items sharing a level keep
+  // their relative order; only a strict level-to-level inversion is flagged.
   "guideline-item-level-order": (entry, emit) => {
     (entry.sections || []).forEach((section, si) => {
       if (!section || section.kind !== "guidelines" || !Array.isArray(section.items)) return;
@@ -322,12 +260,11 @@ const IMPLEMENTATIONS = {
   },
 };
 
-// Document-scoped rules run once per file, against the raw parsed
-// document, instead of once per entity - see activeRules()'s own comment.
+// Document-scoped rules run once per file, against the raw parsed document, instead of once
+// per entity - see activeRules()'s own comment.
 const DOCUMENT_IMPLEMENTATIONS = {
-  // STYLE_GUIDE.md's "Base documents" order. Only applies to a base
-  // document (has schemaVersion) - a standalone entry file has no
-  // document-level fields of its own to order.
+  // STYLE_GUIDE.md's "Base documents" order - only applies to a base document (has
+  // schemaVersion); a standalone entry file has no document-level fields to order.
   "document-field-order": (doc, emit) => {
     if (typeof doc.schemaVersion === "undefined") return;
     const actual = Object.keys(doc).filter((k) => DOCUMENT_FIELD_ORDER.includes(k));

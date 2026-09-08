@@ -1,26 +1,14 @@
 #!/usr/bin/env node
 /**
- * check-markdown-mirrors.mjs — Regression guard for the agent-facing
- * markdown mirror of the Schema page (site/dist/schema.md).
+ * Regression guard for the agent-facing markdown mirror of the Schema page
+ * (site/dist/schema.md). The `<ds-*>` web components render their real content into shadow
+ * DOM from attributes, invisible to a non-JS fetch of the HTML page - schema.md exists to
+ * carry that data as plain text instead. Asserts schema.md actually contains every schema
+ * file's def name(s) and every nested field name, so a markdown-generator regression or drift
+ * fails loudly instead of silently shipping an incomplete mirror. Def resolution reuses the
+ * same helpers build-site.js itself calls.
  *
- * The `<ds-*>` web components render their real content (title, definition
- * names/descriptions, field names/types) into shadow DOM from attributes —
- * a non-JS fetch of the HTML page sees none of it. schema.md exists to
- * carry that data as plain text instead. This script is the backstop: it
- * asserts schema.md actually contains every schema file's own def name(s)
- * and every field name nested inside each — the exact data that's
- * otherwise trapped in attributes. If the markdown generator regresses or
- * drifts from the schema, this fails loudly instead of silently shipping
- * an incomplete mirror.
- *
- * Def resolution (allOf flattening, `$ref` lookups) reuses the same
- * helpers build-site.js itself calls, so this can't drift into checking a
- * different notion of "every schema definition" than what actually gets
- * built.
- *
- * Run via `npm run check:docs`.
- *
- * Exits non-zero if schema.md is missing or missing any expected name.
+ * Run via `npm run check:docs`. Exits non-zero if schema.md is missing or missing any name.
  */
 
 import fs from "node:fs";
@@ -49,9 +37,8 @@ function collectSchemaFiles() {
     const slug = group === "root" ? baseName : `${group}-${baseName}`;
     const title = raw.title || baseName;
 
-    // Same shape build-site.js's own discoverPages()/makePage() produces:
-    // one "def" per file — the file's own resolved top-level shape, keyed
-    // by its title — plus every local $defs entry alongside it.
+    // Same shape build-site.js's own discoverPages()/makePage() produces: one "def" per file
+    // (the resolved top-level shape, keyed by title) plus every local $defs entry.
     const defs = { [title]: resolveSchema(raw, schemaById) };
     for (const [defName, def] of Object.entries(raw.$defs || {})) {
       defs[defName] = def;
@@ -90,9 +77,7 @@ if (!fs.existsSync(mdPath)) {
 
 const md = fs.readFileSync(mdPath, "utf-8");
 
-// Every def name (each file's own top-level shape, plus each local $defs
-// entry), and every field name nested inside each, must appear somewhere
-// in the one combined schema.md.
+// Every def name and every nested field name must appear somewhere in the combined schema.md.
 for (const file of schemaFiles) {
   for (const [defName, defSchema] of Object.entries(file.defs)) {
     if (!md.includes(defName)) {

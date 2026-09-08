@@ -12,7 +12,7 @@ notes
 # markdown mirrors, component bundle, or copied examples in git.
 #
 # The `v<version>/` directories are the deliberate exception, and they are
-# NOT build output: scripts/build-site.js preserves them across rebuilds and
+# NOT build output: scripts/site/build-site.js preserves them across rebuilds and
 # never regenerates an older one (see its own comment — "URLs are public
 # contracts — we MUST NOT blow them away on rebuild"). They are the
 # immutable published artifacts every released `$id` and `$schema` URL

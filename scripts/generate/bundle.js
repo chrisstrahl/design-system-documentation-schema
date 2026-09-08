@@ -1,19 +1,9 @@
 #!/usr/bin/env node
-// Bundles every schema/*.schema.yaml file into one self-contained JSON
-// Schema document, published as dsds.bundled.yaml. "JSON Schema"
-// names the spec these files conform to (a data-model constraint
-// language), not a mandate on file syntax - the schema source is
-// authored in YAML, and the bundle stays YAML too instead of switching
-// formats partway through the pipeline for no reason. (Versions before
-// this one published a JSON bundle and keep doing so, frozen, under
-// their own site/dist/v<n>/ directory - only the current version moved.)
-// Each file becomes one entry under $defs, keyed by its path relative to
-// schema/ (minus the .schema.yaml suffix) - e.g. "sections/api".
-// $ref values are left as full $id URIs; a bundled
-// document doesn't need them rewritten to "#/$defs/..." because every
-// $id is still present and unique inside the one file, so a JSON Schema
-// tool resolves them the same way whether they're split across files or
-// collected into one.
+// Bundles every schema/*.schema.yaml file into one self-contained JSON Schema document,
+// published as dsds.bundled.yaml (YAML, not JSON, since the schema source is authored in
+// YAML). Each file becomes one entry under $defs, keyed by its path relative to schema/ minus
+// the .schema.yaml suffix (e.g. "sections/api"). $ref values are left as full $id URIs, since
+// every $id stays present and unique inside the one file either way.
 "use strict";
 
 const fs = require("fs");
@@ -23,21 +13,17 @@ const yaml = require("js-yaml");
 const rootDir = path.join(__dirname, "..", "..");
 const schemaDir = path.join(rootDir, "schema");
 const outFile = path.join(rootDir, "schema/dsds.bundled.yaml");
-// Every version through v0.15.2 published a JSON bundle at this filename,
-// and tooling built against those versions (Ajv/jsonschema CLIs, editor
-// $schema resolution) still expects it - v0.20.0 dropping it silently
-// broke that tooling even though the schema itself didn't change shape.
-// Writing both formats from the one parsed object costs nothing and keeps
-// YAML as the single source of truth; JSON is a projection of it, not a
-// second thing to maintain.
+// Tooling built against pre-0.20.0 versions (Ajv/jsonschema CLIs, editor $schema resolution)
+// still expects a JSON bundle at this filename. Writing both formats from the one parsed
+// object costs nothing and keeps YAML the single source of truth; JSON is just a projection.
 const outFileJson = path.join(rootDir, "schema/dsds.bundled.schema.json");
 
 function walkYamlFiles(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) return walkYamlFiles(full);
-    // Only actual schema files - excludes conformance-rules.yaml, which
-    // lives alongside the schema but isn't itself a JSON Schema document.
+    // Only actual schema files - excludes conformance-rules.yaml, which lives alongside the
+    // schema but isn't itself a JSON Schema document.
     return entry.name.endsWith(".schema.yaml") ? [full] : [];
   });
 }
@@ -48,8 +34,7 @@ for (const file of walkYamlFiles(schemaDir).sort()) {
     .relative(schemaDir, file)
     .replace(/\.schema\.yaml$/, "")
     .replace(/\\/g, "/");
-  // JSON_SCHEMA: see scripts/v0.20/lib.js's loadYaml for why this is needed
-  // with the js-yaml v4 this repo pins (unlike dsds-2's js-yaml v5).
+  // JSON_SCHEMA: see lib.js's loadYaml for why this is needed with this repo's pinned js-yaml.
   defs[key] = yaml.load(fs.readFileSync(file, "utf8"), { schema: yaml.JSON_SCHEMA });
 }
 
@@ -65,9 +50,8 @@ const bundle = {
 fs.writeFileSync(outFile, yaml.dump(bundle, { lineWidth: -1, noRefs: true }));
 console.log(`Wrote ${path.relative(rootDir, outFile)} (${Object.keys(defs).length} definitions).`);
 
-// JSON projection - same $defs, own $id (a distinct URL needs a distinct
-// $id; reusing the YAML bundle's would make the two indistinguishable to
-// a tool that has both loaded, e.g. Ajv's own schema registry).
+// JSON projection - same $defs, own $id, since a distinct URL needs a distinct $id (reusing
+// the YAML bundle's would make the two indistinguishable to a tool with both loaded).
 const bundleJson = {
   ...bundle,
   $id: "https://designsystemdocspec.org/v0.20.0/dsds.bundled.schema.json",

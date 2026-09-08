@@ -1,28 +1,13 @@
 #!/usr/bin/env node
 /**
- * readability-audit.mjs — Run the `readability` CLI against every piece of
- * DSDS content that's intended for human reading and emit a sorted summary.
+ * Runs the `readability` CLI against every piece of DSDS content intended for human reading
+ * and emits a sorted summary: (1) long-form prose (README, CHANGELOG, MDX content pages,
+ * .claude/ docs) and (2) schema descriptions, concatenated per-file into one blob so metrics
+ * aren't dominated by single-sentence cells. Prints one row per file (score/grade/sentence and
+ * word/complex/unfamiliar counts) plus a "Worst offenders" callout below threshold.
  *
- * Scope:
- *   1. Long-form prose:    README.md, CHANGELOG, COMPATIBILITY_REPORT.md,
- *                          recommendations.md, the MDX content pages, and
- *                          any docs under .claude/.
- *   2. Schema descriptions: every `description` value in every
- *                          schema/**\/*.schema.yaml file. For each schema we
- *                          concatenate the descriptions into a single text
- *                          blob and score the blob as a unit so the metrics
- *                          aren't dominated by single-sentence cells.
- *
- * Output:
- *   - One row per file showing score / grade / sentence + word / complex /
- *     unfamiliar counts.
- *   - A "Worst offenders" callout for files that fall below thresholds.
- *
- * The `readability` CLI must be on PATH. It is the `readability-cli` binary
- * built from the readability tool (Rust): symlink
- * src-rust/target/release/readability-cli onto PATH as `readability`.
- * (This script does not pin to a version — it shells out to whatever the
- *  user has installed.)
+ * The `readability` CLI must be on PATH - symlink the readability tool's (Rust)
+ * src-rust/target/release/readability-cli binary onto PATH as `readability`.
  */
 
 import { execFileSync } from "node:child_process";
@@ -38,12 +23,8 @@ const ROOT = path.resolve(__dirname, "..", "..");
 // Discover content
 // ---------------------------------------------------------------------------
 
-// Every page under site/content/ is discovered rather than listed, including
-// fragments/ (schema-intro, 404) — a hardcoded list silently stopped covering
-// new pages, which is how conformance/stability/security/examples ended up
-// unaudited while the three original guides stayed in the report. Non-content
-// long-form files still need naming, since there's no directory that means
-// "prose worth scoring".
+// Every page under site/content/ is discovered rather than listed, so a hardcoded list can't
+// silently stop covering new pages. Non-content long-form files still need naming below.
 function findContentPages(dir) {
   if (!fs.existsSync(path.join(ROOT, dir))) return [];
   const out = [];
@@ -86,11 +67,8 @@ const SCHEMA_FILES = findSchemaFiles(path.join(ROOT, "schema"));
 // Schema description extraction
 // ---------------------------------------------------------------------------
 
-/**
- * Recursively walk a JSON schema and yield every `description` string we find.
- * We skip the values *inside* `enum`, `pattern`, `default`, `format`, and
- * `const` because those are not human prose.
- */
+// Recursively walks a JSON schema and yields every `description` string, skipping the values
+// inside `enum`/`pattern`/`default`/`format`/`const` since those aren't human prose.
 function* descriptionsOf(node) {
   if (Array.isArray(node)) {
     for (const child of node) yield* descriptionsOf(child);
@@ -141,8 +119,8 @@ function scoreFile(absPath, { markdown = false } = {}) {
   return scoreText(text, { asMarkdown: markdown });
 }
 
-// Fail fast when the CLI is absent — otherwise every row reads "(error)" and
-// the aggregate math runs on an empty set.
+// Fail fast when the CLI is absent, otherwise every row reads "(error)" and the aggregate
+// math runs on an empty set.
 try {
   execFileSync("readability", ["--format", "json"], {
     input: "probe.",

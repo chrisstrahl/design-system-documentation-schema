@@ -1,38 +1,22 @@
 #!/usr/bin/env node
 /**
- * sync-skill-versions.js — Update agent skill files to match the spec version.
+ * Rewrites `.agents/skills/dsds-*` SKILL.md files so their frontmatter `metadata.version`,
+ * URL fragments, `schemaVersion` literals, and other version strings point at the current (or
+ * specified) spec version. Without an explicit version, reads the target from
+ * schema/dsds.bundled.yaml's own `$id`, so running this after `npm run bundle` picks up a
+ * freshly bumped version automatically.
  *
- * Rewrites `.agents/skills/dsds-*` SKILL.md files so their YAML frontmatter
- * `metadata.version`, URL fragments, `schemaVersion` literals, and any other
- * remaining version strings all point at the current (or specified) spec
- * version.
+ * --check goes beyond the version string: it also fails if the highest `DSDS-XX` id any skill
+ * mentions doesn't match the catalog's highest, or a skill cites a bundled-schema filename
+ * bundle.js doesn't actually write - closing the failure mode where a version bump alone made
+ * a skill look "in sync" while its rule-count references and paths were stale.
  *
  * Usage:
  *   node scripts/generate/sync-skill-versions.js              # use version from schema
  *   node scripts/generate/sync-skill-versions.js <version>    # explicit target version
  *   node scripts/generate/sync-skill-versions.js --dry-run    # preview only
- *   node scripts/generate/sync-skill-versions.js --check      # exit 1 if stale (see below)
+ *   node scripts/generate/sync-skill-versions.js --check      # exit 1 if stale
  *   node scripts/generate/sync-skill-versions.js --help
- *
- * When run without a version argument, reads the target from
- * schema/dsds.bundled.yaml's own `$id` (ex:
- * "https://.../v0.20.0/dsds.bundled.yaml") — the same source
- * nav.js's readSpecVersion() uses — so running this after `npm run bundle`
- * picks up a freshly bumped version automatically.
- *
- * --check goes beyond the version string this script has always synced.
- * Bumping `metadata.version` on every release is exactly how the skills
- * kept "certifying" content that was actually stale on every other axis —
- * broken paths, a rule count six releases out of date — because nothing
- * ever checked those (see notes/dsds-0.20.0-improvement-plan.md's
- * contribution fold-back, F-4). --check additionally fails if:
- *   - the highest `DSDS-XX` id any skill mentions doesn't match the
- *     highest id actually in schema/conformance-rules.yaml, or
- *   - a skill references a bundled-schema filename that isn't one
- *     scripts/generate/bundle.js actually writes.
- * Neither check can catch every way a skill can go stale — no automation
- * can — but it closes the specific failure mode that already happened
- * once: a version bump alone is no longer enough to look "in sync."
  */
 
 const fs = require("fs");
@@ -158,7 +142,7 @@ for (const file of skillFiles) {
   let text = original;
   let count = 0;
 
-  // Frontmatter metadata.version → target version
+  // Frontmatter metadata.version → target version.
   text = text.replace(FRONTMATTER_VERSION_REGEX, (m, prefix) => {
     if (m.slice(prefix.length) === TARGET_VERSION) return m;
     count++;
@@ -211,9 +195,7 @@ if (!CHECK) {
 }
 
 // ---------------------------------------------------------------------------
-// --check: version drift (above) plus rule-count and bundle-filename drift —
-// see this file's header comment for why these two are checked here rather
-// than left to a version bump alone.
+// --check: version drift (above) plus rule-count and bundle-filename drift.
 // ---------------------------------------------------------------------------
 
 let checkFailed = versionDrift;
@@ -233,16 +215,9 @@ if (fs.existsSync(CONFORMANCE_RULES)) {
   }
 }
 
-// A skill that cites any DSDS-XX id at all should, somewhere, cite the
-// catalog's actual current top id - checking the file's own HIGHEST
-// mention (not every "DSDS-01-DSDS-NN" range individually) because a
-// skill legitimately cites a sub-range for one tier alone (ex:
-// "DSDS-01-DSDS-11" for the semantic tier, discussed separately from
-// "DSDS-12-DSDS-15" for the advisory one) - that's correct, not stale, as
-// long as the file's top mention overall keeps up with the catalog. A
-// skill still topping out at DSDS-07 six releases after the catalog
-// reached DSDS-15 is exactly the staleness a version-only sync already
-// missed once (see this file's header comment).
+// A skill that cites any DSDS-XX id should, somewhere, cite the catalog's actual current top
+// id - checks the file's own HIGHEST mention, not every range individually, since a skill can
+// legitimately cite a sub-range for one tier alone as long as its overall top mention keeps up.
 const RULE_ID_MENTION_REGEX = /DSDS-(\d+)/g;
 if (highestRealRuleId) {
   const highestRealN = Number(highestRealRuleId.slice(5));
@@ -261,13 +236,10 @@ if (highestRealRuleId) {
   }
 }
 
-// A skill's bundled-schema filename should be one bundle.js actually
-// writes, not a name from a dropped or renamed format.
+// A skill's bundled-schema filename should be one bundle.js actually writes.
 const REAL_BUNDLE_FILENAMES = ["dsds.bundled.yaml", "dsds.bundled.schema.json"];
-// Each dot-separated segment must start with a letter, so a sentence-ending
-// period is not swallowed into the filename: "see dsds.bundled.yaml." used to
-// capture "dsds.bundled.yaml." (trailing dot included), which matched no real
-// filename and failed --check on correct prose.
+// Each dot-separated segment must start with a letter, so a sentence-ending period isn't
+// swallowed into the filename (e.g. "see dsds.bundled.yaml." capturing the trailing dot).
 const CITED_BUNDLE_FILENAME_REGEX = /dsds\.bundled\.[a-z]+(?:\.[a-z]+)*/g;
 for (const file of skillFiles) {
   const text = fs.readFileSync(file, "utf-8");

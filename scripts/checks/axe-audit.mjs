@@ -57,7 +57,7 @@ async function main() {
 
   const server = spawn(
     process.execPath,
-    [path.join(ROOT, "scripts", "serve.js"), "--dist", "--port", String(PORT)],
+    [path.join(ROOT, "scripts", "site", "serve.js"), "--dist", "--port", String(PORT)],
     { stdio: "ignore" },
   );
 

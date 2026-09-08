@@ -54,7 +54,7 @@ name: Onboarding excerpt
 description: A short, reusable pull-quote of onboarding copy, shared across three different surfaces.
 ```
 
-A custom entry kind (`acme.excerpt` above) or a custom section kind (`acme.checklist`, say) is checked against the same **open** base every generic kind is — `entry.schema.yaml` for an entry, `section.schema.yaml` for a section. Open means genuinely open: no schema file exists for `acme.excerpt` in this repo, so nothing stops a misspelled field, or a value of the wrong type, from passing silently. If you want your custom kind to actually enforce a shape — required fields, no unexpected properties — you have to write and ship that schema file yourself, in your own copy of `scripts/validate.js`'s schema folder. Neither DSDS itself, nor any other tool, will ever recognize a `kind: acme.excerpt` document as anything more than a set of open fields.
+A custom entry kind (`acme.excerpt` above) or a custom section kind (`acme.checklist`, say) is checked against the same **open** base every generic kind is — `entry.schema.yaml` for an entry, `section.schema.yaml` for a section. Open means genuinely open: no schema file exists for `acme.excerpt` in this repo, so nothing stops a misspelled field, or a value of the wrong type, from passing silently. If you want your custom kind to actually enforce a shape — required fields, no unexpected properties — you have to write and ship that schema file yourself, in your own copy of `scripts/validate/validate.js`'s schema folder. Neither DSDS itself, nor any other tool, will ever recognize a `kind: acme.excerpt` document as anything more than a set of open fields.
 
 That's the tradeoff with a custom kind: total freedom over the shape, but total unfamiliarity to every other tool. It's the right choice for a document type that's genuinely yours and nobody else's. It's the wrong choice for making a kind the spec already defines stricter — for that, use a profile instead.
 
@@ -80,7 +80,7 @@ This isn't a new idea — other standards use the same pattern to narrow a share
 
 ### The `profiles/` folder
 
-Save a file at `profiles/entries/<kind>.schema.yaml` or `profiles/sections/<kind>.schema.yaml`, and `scripts/validate.js` picks it up automatically — no code change, nothing to register. `<kind>` can be a well-known kind (`component`, `guidelines`) or a custom one.
+Save a file at `profiles/entries/<kind>.schema.yaml` or `profiles/sections/<kind>.schema.yaml`, and `scripts/validate/validate.js` picks it up automatically — no code change, nothing to register. `<kind>` can be a well-known kind (`component`, `guidelines`) or a custom one.
 
 A profile file needs its own `$id`, different from the schema it's narrowing — reusing the built-in schema's `$id` crashes the validator outright, since two schemas can't share the same id. It narrows the real schema by linking to it with `$ref`, inside `allOf`:
 
@@ -108,7 +108,7 @@ allOf:
 
 This is the most useful form of profile: *if the status is stable, then require these fields.* It works on anything with a lifecycle field — a component, a token, a theme — and turns "is the documentation complete?" from a question someone has to remember to ask into something the build checks automatically.
 
-`profiles/` is never bundled into the published schema. `scripts/bundle.js` only ever looks inside `schema/`, so a project's own profile — which reflects decisions specific to that project, not to the spec itself — can never end up in the published `dsds.bundled.yaml`. Only the command-line validator reads it, and only for the project that added it.
+`profiles/` is never bundled into the published schema. `scripts/generate/bundle.js` only ever looks inside `schema/`, so a project's own profile — which reflects decisions specific to that project, not to the spec itself — can never end up in the published `dsds.bundled.yaml`. Only the command-line validator reads it, and only for the project that added it.
 
 <ds-callout variant="tip" title="This repo doesn't ship a live profile:">
 

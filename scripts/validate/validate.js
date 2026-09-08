@@ -1,27 +1,9 @@
 #!/usr/bin/env node
-// Validates entry and base document YAML file(s) against the proposed
-// structure:
-//   - JSON Schema shape: each entry is checked against its own
-//     entries/<kind>.schema.yaml, falling back to the generic
-//     entry.schema.yaml for a kind with no dedicated file (either a
-//     custom kind, or the well-known generic `entry` kind, which has
-//     no fields of its own). Each section is checked against its own
-//     sections/<kind>.schema.yaml, falling back to the generic
-//     section.schema.yaml for a custom kind or the well-known generic
-//     `section` kind. Any entry kind may use any section kind - there
-//     is no placement gate.
-//   - A ref's `to` (see common/ref.schema.yaml) resolves within the
-//     document: a bare id names a real entry or shared entry, and
-//     entryId#itemId also resolves the item half. Document-wide - only
-//     checked for base documents, since a standalone entry file can't see
-//     any entry but itself. Doesn't follow `rel: file` to a sibling
-//     document - a corpus split across files needs project scope, which
-//     this validator doesn't have yet.
-// A file with a `schemaVersion` key is a base document (base.schema.yaml);
-// its inline `entries` are checked the same way a standalone entry file's
-// are - one validator, no special-casing. System-wide facts and
-// documentation live on that list's own `kind: system` entry, not on the
-// base document directly.
+// Validates entry and base document YAML file(s): each entry against its own
+// entries/<kind>.schema.yaml (falling back to entry.schema.yaml), each section against its own
+// sections/<kind>.schema.yaml, plus the semantic rules below (ref resolution, cycles, etc). A
+// file with a `schemaVersion` key is a base document; its inline `entries` are checked the
+// same way a standalone entry file's are.
 "use strict";
 
 const fs = require("fs");
@@ -33,24 +15,10 @@ const { rootDir, schemaDir, loadYaml, walkYamlFiles, defaultTargets, findRefs, e
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);
 
-// Stable ids for every semantic (hand-written, not pure-schema) check this
-// validator enforces - so a bug report, a fixture, or an independent
-// validator reimplementation can cite exactly which rule failed instead of
-// matching on free-text message wording. Deliberately NOT applied to pure
-// JSON Schema errors (from ajv's own `.errors`) - those are already tied to
-// the schema itself via instancePath/schemaPath, which is its own stable
-// citation. See examples/invalid/ for one fixture per id, and
-// tools/conformance-test.js for the runner that checks each fixture
-// actually trips the id it claims to.
-//
-// The catalog itself lives in schema/conformance-rules.yaml, not here -
-// that's the single source both this lookup and the Conformance page's
-// rule list are generated from, so the two can't drift apart.
-// enforcement: semantic only - the catalog also carries structural
-// (enforced by the schema itself, no code here) and advisory (checked by
-// scripts/validate/lint-docs.js instead, never blocking) entries, neither of which
-// this map's own callers below (tagging a hand-written check via err())
-// have any business referencing.
+// Stable ids for every semantic (hand-written) check this validator enforces, so a fixture or
+// an independent implementation can cite which rule failed. Not applied to pure JSON Schema
+// errors, which already cite instancePath/schemaPath. Filtered to enforcement: semantic - the
+// catalog (schema/conformance-rules.yaml) also carries structural and advisory (lint-docs.js) entries.
 const RULES = Object.fromEntries(
   loadYaml(path.join(rootDir, "schema/conformance-rules.yaml"))
     .filter((rule) => rule.enforcement === "semantic")
@@ -61,11 +29,8 @@ function err(id, message) {
   return `[${id}] ${message}`;
 }
 
-// Register every schema file under schema/ by its $id, so $refs
-// between common/, sections/, entries/, and base all resolve. Also keep the
-// raw parsed schema objects around (schemaById), so discriminator-aware
-// validation below can reach into component's own `traits.items.anyOf`
-// list instead of only having compiled validate functions to work with.
+// Register every schema file by its $id so cross-file $refs resolve. schemaById keeps the raw
+// parsed objects around too, so discriminator-aware validation below can inspect them directly.
 const schemaById = new Map();
 for (const file of walkYamlFiles(schemaDir)) {
   const schema = loadYaml(file);
@@ -81,26 +46,10 @@ function schemaFor(id, fallbackId, profileId) {
   return ajv.getSchema(id) || ajv.getSchema(fallbackId);
 }
 
-// Optional local profiles: a project can drop a file at
-// profiles/entries/<kind>.schema.yaml or profiles/sections/<kind>.schema.yaml
-// that narrows an existing kind (built-in or custom) by $ref-ing its real
-// schema.yaml file via allOf and adding `required`/`if`-`then` on top -
-// never a new field. See site/content/extending.mdx for the one rule
-// (a profile may narrow, must not extend) and why that's what makes this
-// safe to build on.
-//
-// Read here, and only here - profiles/ is a sibling of schema/, not
-// nested inside it, so bundle.js's own walk of schema/ never sees it and
-// a private profile can never leak into the published schema.
-//
-// A profile MUST declare its own $id, distinct from the schema it's
-// profiling: adding two schemas under the same $id crashes Ajv outright
-// (`schema with key or id "..." already exists`), which is exactly the
-// failure mode that made profiling a built-in kind look impossible before
-// this dispatch-level fix - the schema files themselves already supported
-// $ref + allOf narrowing (see B1 in dsds-0.20.0-recommendations.md); only
-// wiring a profile in *alongside* the built-in schema instead of *as* it
-// was missing.
+// Optional local profiles: a project can drop a file at profiles/entries/<kind>.schema.yaml or
+// profiles/sections/<kind>.schema.yaml that narrows an existing kind (never adds a field) - see
+// extending.mdx. profiles/ is a sibling of schema/, so bundle.js's own walk never sees it. A
+// profile must declare its own $id, distinct from the schema it profiles, or Ajv crashes on the collision.
 const PROFILES_DIR = path.join(rootDir, "profiles");
 const profileEntryIdByKind = new Map(); // kind -> profile's own $id
 const profileSectionIdByKind = new Map();
@@ -121,40 +70,12 @@ function loadProfiles(subdir, targetMap) {
 loadProfiles("entries", profileEntryIdByKind);
 loadProfiles("sections", profileSectionIdByKind);
 
-// ---------------------------------------------------------------------------
-// Project discovery: following rel: file across sibling documents
-// ---------------------------------------------------------------------------
-//
-// A large system's documentation is meant to be split across files (see
-// base.schema.yaml's own $comment), each pointing at the others via an
-// ordinary `refs` entry (rel: file). A validator handed just one of those
-// files can't tell a genuinely broken `to:` from one that resolves in a
-// sibling it hasn't read - see C1 in notes/recommendations.md. This follows
-// that same rel: file link transitively, so resolution can run against the
-// whole project instead of just the one file it was handed.
-//
-// Bounded to the directory of the file actually being validated (and its
-// subdirectories) - an href resolving outside that is never read. This is
-// a real security boundary, not just tidiness: a hosted validator fed an
-// attacker-controlled document must not follow an href like
-// `../../../etc/passwd` onto the host's own filesystem.
-//
-// LIMITATION, by design, not oversight: this only reaches a sibling at or
-// below the entry file's own directory. A split where a target lives in a
-// *parent* or cousin directory (`../shared/badge.dsds.yaml`, one level up
-// from the file that references it) won't be found, and any `to:` it
-// can't resolve there reports as a warning, not a false "confirmed
-// broken." A boundary derived by walking upward to find a `.git` or
-// `package.json` was considered and rejected: in a monorepo, `.git`
-// commonly lives well above the actual docs project, which would widen
-// the boundary to "the whole monorepo" for exactly the case this exists
-// to protect (a CI job or hosted validator checking a document it
-// doesn't fully trust). A directory-of-the-target boundary is strictly
-// safer, and deterministic - the same file gets the same result
-// regardless of what else happens to exist on disk around it - at the
-// cost of that narrower reach. An explicit `--root` flag is the right
-// way to widen it for a layout that actually needs more; not implemented
-// yet because nothing has needed it.
+// Project discovery: follows rel: file links transitively so ref resolution can run against a
+// whole multi-file system, not just the one file handed to the validator. Bounded to the
+// directory of the file being validated (and its subdirectories) as a real security boundary -
+// a hosted validator fed an untrusted document must not follow an href like `../../etc/passwd`.
+// This means a sibling in a parent/cousin directory won't be found (unresolved `to:` there is a
+// warning, not a confirmed break); an explicit `--root` flag would widen it, not implemented yet.
 function resolveHref(href, fromAbsPath) {
   return path.resolve(path.dirname(fromAbsPath), href);
 }
@@ -164,15 +85,9 @@ function isWithinRoot(absPath, root) {
   return rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel));
 }
 
-// Returns every entry/shared entity reachable from entryAbsPath by
-// following rel: file transitively, including entryAbsPath's own, plus
-// how many *other* files were actually read (siblingCount) - a sibling
-// that doesn't exist, fails to parse, or resolves outside the root is
-// silently skipped, so the caller needs to know whether "not found" means
-// "checked and it's not there" or "nothing else was reachable at all"
-// (see validateItemRefs's scopeNote). An unresolved target after this is
-// always a warning, never a hard error - this search is inherently best-
-// effort, per the limitation above.
+// Returns every entry/shared entity reachable from entryAbsPath via rel: file, plus siblingCount
+// (files actually read) - a missing/unparseable/out-of-bounds sibling is silently skipped, so
+// callers can tell "checked, not there" from "nothing else was reachable."
 function loadProject(entryAbsPath) {
   const root = path.dirname(entryAbsPath);
   const visited = new Map(); // absPath -> doc
@@ -202,13 +117,8 @@ function loadProject(entryAbsPath) {
   };
 }
 
-// DSDS-11: does a relative sourceFiles[].file/source/rel:file href
-// actually exist on disk? Reuses resolveHref()/isWithinRoot() above -
-// same directory-of-the-file boundary loadProject() uses, for the same
-// reason (a CI job validating an untrusted document shouldn't have a
-// relative path walk it outside that file's own directory tree).
-// URL-scheme hrefs (https:, npm:, and similar) aren't filesystem paths at
-// all and are never checked here.
+// DSDS-11: does a relative sourceFiles[].file/source/rel:file href exist on disk? Reuses the
+// same directory boundary as loadProject(). URL-scheme hrefs (https:, npm:) are never checked.
 const URL_SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i;
 
 function checkFileExists(href, filePath, warnings, label) {
@@ -221,10 +131,8 @@ function checkFileExists(href, filePath, warnings, label) {
   }
 }
 
-// Every {href, rel: "file"} object anywhere in an entity's own tree - the
-// same exhaustive walk lib.js's findRefs() does for {to, rel}, but keyed
-// on href instead (a file-pointing ref is never a `to:`, which addresses
-// something inside this same document).
+// Every {href, rel: "file"} object anywhere in an entity's tree - the same walk findRefs() does
+// for {to, rel}, but keyed on href since a file-pointing ref is never a `to:`.
 function findFileHrefRefs(value, out) {
   if (Array.isArray(value)) {
     value.forEach((item) => findFileHrefRefs(item, out));
@@ -236,11 +144,8 @@ function findFileHrefRefs(value, out) {
   }
 }
 
-// sourceFiles[].file and source (common/ref.schema.yaml values) accept
-// either a bare string (shorthand for href) or the full {href, ...}
-// object - both point at a real file regardless of any `rel` they carry
-// (or don't), unlike a general `refs` entry, which only means "a file"
-// when it's explicitly tagged rel: file.
+// sourceFiles[].file and source accept a bare string (shorthand for href) or a full {href, ...}
+// object - both point at a file regardless of `rel`, unlike a general `refs` entry.
 function refHref(value) {
   if (typeof value === "string") return value;
   if (value && typeof value.href === "string") return value.href;
@@ -269,11 +174,8 @@ function validateFileRefs(entity, warnings, opts) {
   }
 }
 
-// The current spec version, read back out of any loaded schema's own
-// $id (they all encode the same version) rather than hardcoded — so this
-// file never needs touching on a version bump. See scripts/tools/bump-version.js,
-// which rewrites every schema file's own $id but has no reason to know
-// this file exists.
+// The current spec version, read back out of any loaded schema's own $id rather than
+// hardcoded, so this file never needs touching on a version bump.
 const SPEC_VERSION = (() => {
   for (const id of schemaById.keys()) {
     const m = /\/v([^/]+)\//.exec(id);
@@ -286,15 +188,10 @@ function specUrl(relPath) {
   return `https://designsystemdocspec.org/v${SPEC_VERSION}/${relPath}`;
 }
 
-// A branch is either a plain object schema, or one that extends a shared
-// base via allOf (a component's own trait branches do) - the discriminator
-// field can live on either shape: as a sibling of the branch's own `allOf`
-// (the current open-base + closing-leaf pattern - see
-// docs-new/content/architecture.mdx #3, unevaluatedProperties needs `properties` there
-// too), or inside one of the allOf's own array elements (older shape, kept
-// as a fallback so this doesn't silently break again if that ever comes
-// back). Returns the set of tag values this branch matches, or null if the
-// branch has no such field at all.
+// A branch is either a plain object schema or one that extends a shared base via allOf; the
+// discriminator field can live as a sibling of `allOf` (current shape) or inside one of its
+// array elements (older shape, kept as a fallback). Returns the branch's matching tag values,
+// or null if it has no such field.
 function branchDiscriminatorValues(branch, prop) {
   const candidates = [branch, ...(branch.allOf || [])];
   for (const candidate of candidates) {
@@ -316,14 +213,8 @@ function compileBranch(branch) {
   return validate;
 }
 
-// Brute-forcing all of AJV's anyOf branches on a typo produces one error
-// per branch per required/additional-properties check - 20+ irrelevant
-// lines for a single missing field. Since every branch already declares
-// which tag value it's for (`const`/`enum` on this field), we can read the
-// tag first and validate only against the one matching branch instead.
-// Generic over where the discriminated array actually lives - a
-// component's own `traits` today, a section's `items` in the past - the
-// caller passes in the already-resolved branch list.
+// Brute-forcing all of Ajv's anyOf branches on a typo produces 20+ irrelevant errors. Since each
+// branch declares which tag value it's for, read the tag first and validate only that branch.
 function validateDiscriminatedItems(items, branches, prop, label, errors) {
   const fallbackBranch = branches.find((b) => branchDiscriminatorValues(b, prop) === null);
   const knownValues = [...new Set(branches.flatMap((b) => branchDiscriminatorValues(b, prop) || []))];
@@ -362,16 +253,8 @@ function traitsBranches() {
   return schema.allOf[1].properties.traits.items.anyOf;
 }
 
-// Ajv reports a failed `contains` (ex: guidelines.schema.yaml's "refs
-// must include a same-as or external-link entry") by testing every array
-// item against the contains sub-schema and surfacing each item's own
-// sub-errors right alongside the actual summary - "/refs/0/rel must be
-// equal to one of the allowed values" before "/refs must contain at
-// least 1 valid item(s)". Noise, not signal: nobody needs "here's why
-// item 0 specifically didn't match," only "here's what would have
-// matched." This collapses a `contains` failure and the per-item probe
-// errors Ajv generated finding it into one message built from whatever
-// `enum`/`required` sub-errors it found along the way.
+// Ajv reports a failed `contains` by surfacing every per-item probe error alongside the real
+// summary - noise, not signal. Collapses those into one message built from what it found.
 function collapseContainsFailures(ajvErrors) {
   const containsErrors = ajvErrors.filter((e) => e.keyword === "contains");
   if (!containsErrors.length) return ajvErrors;
@@ -414,19 +297,12 @@ function validateSections(sections, label, errors) {
   }
 }
 
-// `sections` now dispatches per kind too (entry.schema.yaml#/$defs/sections
-// -> section.schema.yaml#/$defs/dispatch), so the same-shape whole-entry
-// check below already reports a bad section - skip those here, since
-// validateSections() below reports the identical problem with a section
-// index and kind in the label instead of a bare instancePath.
+// The whole-entry check below already catches a bad section too; skip those since
+// validateSections() reports the same problem with a section index/kind instead of a bare instancePath.
 const NESTED_SECTION_ERROR = /^\/sections\/\d/;
 
-// opts.standalone marks an entry validated as its own file (not wrapped
-// in a base document's `entries`), the only case validateItemRefs() runs
-// here - an entry nested inside a base document is already covered by
-// that base document's own single validateItemRefs() pass, which sees
-// every sibling entry/shared entity at once; running it again per-entry
-// would just duplicate every finding.
+// opts.standalone: an entry validated as its own file. An entry nested inside a base document is
+// already covered by that document's own single validateItemRefs() pass over every sibling at once.
 function validateEntry(entry, errors, warnings, opts = {}) {
   const entrySchemaId = specUrl(`entries/${entry.kind}.schema.yaml`);
   const validate = schemaFor(entrySchemaId, specUrl("entries/entry.schema.yaml"), profileEntryIdByKind.get(entry.kind));
@@ -434,8 +310,7 @@ function validateEntry(entry, errors, warnings, opts = {}) {
 
   if (!validate(entry)) {
     for (const err of validate.errors) {
-      // Per-trait shape errors are replaced below with discriminator-aware
-      // ones; everything else still gets reported straight from AJV.
+      // Per-trait shape errors are replaced below with discriminator-aware ones.
       if (isComponent && err.instancePath.startsWith("/traits")) continue;
       if (NESTED_SECTION_ERROR.test(err.instancePath)) continue;
       errors.push(`entry "${entry.id}" schema: ${err.instancePath || "/"} ${err.message}`);
@@ -467,17 +342,13 @@ function validateShared(entry, errors, warnings, opts = {}) {
   validateFileRefs(entry, warnings, opts);
 }
 
-// Checks that can't be expressed as a single item's shape - they need to
-// see across an entry's sections (or its own top-level fields) at once.
+// Checks that can't be expressed as a single item's shape - they need to see across an
+// entry's sections (or its own top-level fields) at once.
 function validateSemanticRules(entry, errors) {
   const sections = entry.sections || [];
 
-  // A rule claiming checkedBy: automated needs somewhere to actually run -
-  // a refs (or the more specific checks) entry pointing at the real
-  // test/lint-rule that does it, so "automated" isn't just an unverifiable
-  // label. Doesn't require the ref to resolve to a real file
-  // (tools/validate.js has no filesystem access to every referenced
-  // test), just that a check-shaped pointer exists.
+  // checkedBy: automated needs a refs/checks entry (rel: test/lint-rule) pointing at what runs it,
+  // so it isn't just an unverifiable label - doesn't require the target to actually resolve.
   for (const section of sections) {
     if (section.kind !== "guidelines") continue;
     for (const [i, item] of (section.items || []).entries()) {
@@ -491,9 +362,7 @@ function validateSemanticRules(entry, errors) {
     }
   }
 
-  // One sourceFiles entry per platform (including "no platform given",
-  // which all share the same bucket) - a component can't point a tool at
-  // two different source files for the same platform's interface.
+  // One sourceFiles entry per platform (including "no platform given," which share one bucket).
   const sourceFilesByPlatform = new Map();
   for (const sourceFile of entry.sourceFiles || []) {
     const key = sourceFile.platform || "(unspecified)";
@@ -506,15 +375,9 @@ function validateSemanticRules(entry, errors) {
   }
 }
 
-// base.schema.yaml's own `entries`/`shared` items now dispatch per kind
-// (see entry.schema.yaml#/$defs/dispatch), the same shape the loop below
-// checks in JS - needed so the bundled schema an editor's $schema points
-// at is exactly as strict as this CLI (see C2). That means a bad entry or
-// shared item shows up in `validate`'s own Ajv errors here too; skip those
-// - the per-entry/per-shared loop below reports the identical problem
-// with better context (an id, kind-aware messages, discriminated `traits`
-// errors). Keep everything else this Ajv pass catches (a bogus top-level
-// base document field, an empty `entries`/`shared` array).
+// base.schema.yaml's entries/shared items dispatch per kind too, so a bad one shows up in Ajv's
+// own errors here as well; skip those since the per-entry/per-shared loop below reports it with
+// better context. Keep everything else this pass catches (a bogus top-level field, an empty array).
 const NESTED_ENTRY_OR_SHARED_ERROR = /^\/(entries|shared)\/\d/;
 
 function validateBase(doc, errors, warnings, opts = {}) {
@@ -551,10 +414,7 @@ function validateBase(doc, errors, warnings, opts = {}) {
     validateShared(entry, errors, warnings, opts);
   }
 
-  // entries and shared entries share one id/addressing space (an
-  // entryId#itemId ref can't tell which array its entryId half came from),
-  // so a collision between the two is exactly as broken as a collision
-  // within `entries` alone.
+  // entries and shared entries share one id/addressing space, so a collision between the two arrays is as broken as one within entries alone.
   const seenIds = new Set();
   for (const entity of entriesIn(doc)) {
     if (seenIds.has(entity.id)) {
@@ -563,12 +423,7 @@ function validateBase(doc, errors, warnings, opts = {}) {
     seenIds.add(entity.id);
   }
 
-  // When a `kind: system` entry declares `metadata.platforms`, every
-  // `platform` value used anywhere in the document must be one of its
-  // entries - one declaration, checked everywhere, instead of free
-  // strings that can silently drift apart. Platforms aren't a bespoke
-  // base-level field; they live on a system entry's own metadata, the
-  // same shape every entry's metadata uses.
+  // When a `kind: system` entry declares metadata.platforms, every platform used anywhere must be one of them.
   const declaredPlatforms = (doc.entries || [])
     .filter((e) => e.kind === "system")
     .flatMap((e) => (e.metadata && e.metadata.platforms) || []);
@@ -589,11 +444,7 @@ function validateBase(doc, errors, warnings, opts = {}) {
           );
         }
       }
-      // `status` has two schema-legal shapes (entry-metadata.schema.yaml): a
-      // single object, or a list with one entry per platform. Reading
-      // `.platform` off the raw value only ever saw the object form, so the
-      // list form — the shape that exists *specifically* to name platforms —
-      // escaped this rule entirely. Normalize to an array and check each.
+      // status is either a single object or a list, one entry per platform - normalize to an array and check each.
       const entryStatus = entry.metadata && entry.metadata.status;
       const statusEntries = Array.isArray(entryStatus)
         ? entryStatus
@@ -616,10 +467,7 @@ function validateBase(doc, errors, warnings, opts = {}) {
   validateGraphCycles(doc, errors);
 }
 
-// DFS-based cycle detection over a directed adjacency list (Map<string,
-// Set<string>>). Standard 3-color (white/gray/black) walk: a gray node
-// reached again while still on the current path is the cycle. Returns the
-// cycle as an ordered array of ids, or null if the graph is acyclic.
+// Standard 3-color DFS cycle detection over a directed adjacency list. Returns the cycle as an ordered array of ids, or null.
 function findCycle(edges) {
   const WHITE = 0, GRAY = 1, BLACK = 2;
   const color = new Map();
@@ -651,18 +499,9 @@ function findCycle(edges) {
   return cycle;
 }
 
-// DSDS-06/DSDS-07: a `composes` or `depends-on` ref chain must not lead
-// back to an entry already in the chain (see
-// notes/2026-08-17-graph-rigor-and-composition-prd.md, Design A). Built
-// from every {to, rel} pair anywhere in the document (findRefs already
-// walks an entity's full nested shape for DSDS-05's item-ref resolution) -
-// only the bare-entry form of `to` forms a graph edge here; an
-// `entryId#itemId` ref points at content inside an entry, not at another
-// node in the composition/dependency graph. Each rel is checked as its own
-// independent graph - a `composes` cycle and a `depends-on` cycle are two
-// different rules, not one merged graph, since mixing the two relations
-// would report a "cycle" that isn't really one chain of the same kind of
-// edge.
+// DSDS-06/DSDS-07: a `composes` or `depends-on` ref chain must not lead back to an entry
+// already in it. Only the bare-entry form of `to` forms a graph edge - an entryId#itemId ref
+// points at content inside an entry, not another graph node. Each rel is its own independent graph.
 function validateGraphCycles(doc, errors) {
   const entities = entriesIn(doc);
   const relsToCheck = [
@@ -688,18 +527,10 @@ function validateGraphCycles(doc, errors) {
   }
 }
 
-// Every item id declared anywhere on an entry - the resolution target for
-// an entryId#itemId ref (see common/ref.schema.yaml's `to`). Walks into
-// any nested array of objects (a component's own trait `values`, a
-// freeform entry's own nested `items`), not just a section's top-level
-// `items` array, so an id is addressable no matter how deep it sits. Not
-// every item shape carries an `id`; this only indexes the ones that do, so
-// a ref at an entry that exists but an item that doesn't reports the same
-// "unknown item" error a typo would.
-// Same walk as collectItemIds, but keeps the actual item object per id
-// instead of just the id - needed wherever a check has to read a field
-// off the *target* item (see validateSameAsLevels's own level lookup),
-// not just confirm it exists.
+// Every item id declared anywhere on an entry - the resolution target for an entryId#itemId ref.
+// Walks into any nested array of objects, not just a section's top-level items, so an id is
+// addressable no matter how deep it sits. Keeps the item object per id (not just the id), for
+// checks that need to read a field off the target item.
 function collectItemsById(entry) {
   const byId = new Map();
   function walk(item) {
@@ -738,11 +569,8 @@ function collectItemIds(entry) {
   return ids;
 }
 
-// Every trait-space target a combo on this entry could legally name: a
-// bare id for a boolean trait ("loading"), or "traitId.valueId" for each
-// value of an enum trait ("size.small"). Bare enum trait ids are
-// included too (permissive on purpose - "any value of this trait" is a
-// plausible reading nothing in the schema rules out).
+// Every trait-space target a combo could legally name: a bare id for a boolean trait, or
+// "traitId.valueId" for each enum value (plus the bare enum trait id itself, permissively).
 function collectTraitTargets(entry) {
   const targets = new Set();
   for (const trait of entry.traits || []) {
@@ -757,25 +585,10 @@ function collectTraitTargets(entry) {
   return targets;
 }
 
-// DSDS-09: resolves every combo's `subject` and `items[]` on each local
-// entity. Three target spaces:
-//   1. Token space - a `{braced}` target, against every token entity in
-//      the wider pool (see resolveWiderScope - the same local/project/
-//      CLI-sibling merge validateItemRefs uses). Checked first, since a
-//      braced target can never mean anything else.
-//   2. Trait space - a bare id or `traitId.valueId` against this same
-//      entity's own `traits`. Always fully visible (an entity's own
-//      traits can't live in another file) - but a bare id is also
-//      legal as an entry id (see space 3 below), so a trait-space miss
-//      alone doesn't fail anything by itself; it just falls through.
-//   3. Entry space - a bare id that didn't match a local trait, against
-//      every entity in the wider pool (common/combo.schema.yaml's own
-//      description: "Can be a trait, token, or entry id").
-// A bare id only ends up reported once it's failed *both* 2 and 3, and
-// that combined failure follows the same warning-vs-error split
-// validateItemRefs uses, for the same reason: a search that couldn't
-// see the whole project can't assert a target is broken with full
-// confidence.
+// DSDS-09: resolves each combo's `subject`/`items[]` against three spaces in order - a
+// `{braced}` token reference, a trait/`traitId.valueId` on the entity's own traits, or a bare
+// entry id in the wider pool. A bare id is only reported once it misses both trait and entry
+// space, using the same warning-vs-error split as validateItemRefs.
 function validateComboTargets(doc, errors, warnings, opts = {}) {
   const localEntities = entriesIn(doc);
   const localIds = new Set(localEntities.map((e) => e.id));
@@ -828,53 +641,12 @@ function validateComboTargets(doc, errors, warnings, opts = {}) {
   }
 }
 
-// Resolves a ref's `to` against the document's actual entries/shared
-// entries and their items - only meaningful for a base document, since a
-// standalone entry file has no other entries to point at. A `same-as` ref
-// most often targets a `base.shared` entry (that's the whole point of
-// `shared` - one canonical statement, pointed at from many entries), so
-// both arrays share this one id space via entriesIn(doc). Skips anything
-// that isn't a real internal pointer at all ("://" anywhere in `to` marks
-// an ordinary URL fragment, not an id or entryId#itemId).
-//
-// Two distinct checks:
-//   - Bare `to` (DSDS-08): does the named entry/shared entry exist.
-//   - `to: entryId#itemId` (DSDS-05): does the entry exist, and does the
-//     named item exist somewhere in its sections.
-//
-// A target found among this document's own entities is always checked -
-// that's a space this validator can fully see, whatever else is true.
-// When it isn't found here, this looks wider, from two sources:
-//   - This document's own `rel: file` project, if it declares one -
-//     loadProject() follows that link transitively, bounded to the
-//     target file's own directory (see the limitation documented above
-//     it).
-//   - Every entity in every file passed to this one CLI run
-//     (opts.cliEntities - see the call site in the CLI entry point
-//     below). A standalone entry file has no field of its own like a
-//     base document's `refs` to declare "these are my siblings," so
-//     without this it could never resolve a reference to a sibling
-//     component at all - exactly the test/site-components/ shape,
-//     where the index declares rel: file to every component but no
-//     component declares anything back.
-//
-// If neither source finds it either:
-//   - No wider source was even available (no rel: file, and this file
-//     was validated alone) - nowhere else the target could be.
-//     Unresolved here means genuinely broken - a hard error.
-//   - A wider source was available but still came up empty. That's
-//     reported, but only as a warning: a `rel: file` sibling that
-//     couldn't be read (missing, unparsable, outside the root), or a
-//     CLI run that only included some of a larger project's files,
-//     makes the search incomplete, and a validator that can't see the
-//     whole project MUST NOT assert a pointer is broken with the same
-//     confidence as one it fully resolved. `--strict` promotes these to
-//     failures once a project is clean.
-// Shared by validateItemRefs (DSDS-05/08) and validateComboTargets
-// (DSDS-09): builds the "wider than this one document" resolution pool
-// both draw on, and decides whether an unresolved target there is a hard
-// error or a warning. See validateItemRefs's own comment for the full
-// reasoning; this is just the part both checks need identically.
+// Resolves a ref's `to` (DSDS-05/08) against the document's own entries/shared entries first,
+// then widens to this document's `rel: file` project and any CLI sibling files - the latter is
+// how a standalone entry file (with no `refs` of its own) can still resolve a pointer to a
+// sibling. Shared by validateItemRefs and validateComboTargets (DSDS-09) for that same pool.
+// An unresolved target is a hard error only when no wider source was even available to check;
+// otherwise it's a warning, since an incomplete search can't assert something is truly broken.
 function resolveWiderScope(doc, localIds, opts) {
   const isSplitAcrossFiles = (doc.refs || []).some((r) => r && r.rel === "file");
   const hasCliSiblings =
@@ -893,21 +665,13 @@ function resolveWiderScope(doc, localIds, opts) {
     foundSiblings = foundSiblings || hasCliSiblings;
   }
 
-  // A base document's `entries`/`shared` arrays are an explicit, complete
-  // declaration of "this is everything" when it has no `rel: file` link
-  // out - so an unresolved target there really is broken (a hard error).
-  // A standalone entry file has no equivalent way to assert completeness
-  // - it's always potentially one piece of a larger indexed project (see
-  // test/site-components/, where the index alone declares the shape),
-  // so it can never earn that same confidence. An unresolved target on
-  // a standalone entry is always a warning, even with no wider scope to
-  // check at all - matching the report this validator's own bug was
-  // filed against: "a standalone file genuinely cannot resolve a target
-  // on its own, so an error would be wrong."
+  // A base document with no `rel: file` link out declares its entries/shared arrays as
+  // complete, so an unresolved target there is a hard error. A standalone entry file can never
+  // assert that same completeness (it may be one piece of a larger indexed project), so an
+  // unresolved target there is always a warning, even with no wider scope to check at all.
   const treatAsError = !opts.standalone && !hasWiderScope;
 
-  // What actually got checked, honestly - claims a search only when one
-  // actually happened.
+  // Claims a search only when one actually happened.
   const scopeNote = foundSiblings
     ? "(checked every file given to this run, and this document's own rel: file project)"
     : "(no other file could be checked against)";
@@ -915,17 +679,10 @@ function resolveWiderScope(doc, localIds, opts) {
   return { hasWiderScope, widerEntities, treatAsError, scopeNote };
 }
 
-// DSDS-10: a guidelines item can borrow another item's text via a
-// `rel: same-as` ref (see guidelines.schema.yaml's own $comment) while
-// still declaring its own `level` - `level` is required unconditionally,
-// same-as or not, so the borrowing site and the shared rule each carry
-// their own copy with nothing checking the two agree. Whenever the
-// same-as target actually resolves and it has its own `level`, this
-// checks they match. Doesn't touch whether the target resolves at all
-// (DSDS-05 already owns that) - only compares levels once resolution
-// already succeeded, so this is a hard error whenever it fires: a
-// mismatch found between two items the validator can both see is a
-// real, confirmed drift, not a "might exist elsewhere" scope question.
+// DSDS-10: a guidelines item can borrow another item's text via `rel: same-as` while still
+// declaring its own required `level`, so nothing else checks the two agree. Once the same-as
+// target resolves and has its own `level`, this compares them and errors on a mismatch -
+// always a hard error, since resolution (DSDS-05) already succeeded by this point.
 function validateSameAsLevels(doc, errors, warnings, opts = {}) {
   const localEntities = entriesIn(doc);
   const localIds = new Set(localEntities.map((e) => e.id));
@@ -1024,28 +781,17 @@ function validateItemRefs(doc, errors, warnings, opts = {}) {
   }
 }
 
-// The reusable core: given an already-parsed document, returns every
-// error (both pure-schema and RULES-tagged semantic ones) and every
-// warning (a project-scope finding this validator couldn't confirm with
-// full confidence - see validateItemRefs) as strings. No I/O beyond what
-// opts.filePath's project discovery does, no process exit -
-// tools/conformance-test.js reuses this exact function so a fixture is
-// checked against the same logic validate.js's own CLI runs, not a
-// second copy of it.
-//
-// opts.filePath is only needed to resolve a rel: file project - pass it
-// whenever the document being validated came from a real file on disk.
+// The reusable core: given an already-parsed document, returns every error and warning as
+// strings, with no I/O beyond opts.filePath's project discovery and no process exit -
+// tools/conformance-test.js reuses this function so fixtures run against the same logic the
+// CLI does. Pass opts.filePath whenever the document came from a real file on disk.
 function validateDoc(doc, opts = {}) {
   const errors = [];
   const warnings = [];
   const isBase = typeof doc.schemaVersion !== "undefined";
-  // A root-level `dsdsVersion` with no `schemaVersion` is DSDS ≤0.15.2's
-  // own base-document marker, renamed in 0.20.0 - without this check,
-  // `isBase` above reads false (schemaVersion really is absent) and the
-  // document gets routed into validateEntry() instead, which then reports
-  // confusing entry-shape errors (missing id/kind/name/description) for a
-  // document that was never trying to be a standalone entry at all. Catch
-  // it here, before routing, with the actual reason instead.
+  // A root `dsdsVersion` with no `schemaVersion` is DSDS ≤0.15.2's old base-document marker
+  // (renamed in 0.20.0); catch it here with a clear message instead of routing into
+  // validateEntry() and reporting confusing entry-shape errors.
   if (!isBase && doc && typeof doc === "object" && typeof doc.dsdsVersion !== "undefined") {
     errors.push(
       `this document targets DSDS ≤0.15.2; 0.20.0 renamed the root "dsdsVersion" field to "schemaVersion" (see the CHANGELOG's 0.20.0 entry for the rest of what changed). Rename the field, or run a 0.15.2-era validator against this document instead.`,
@@ -1097,32 +843,23 @@ function validateFile(target, opts = {}) {
   return true;
 }
 
-// Only run the CLI when invoked directly - tools/conformance-test.js
-// requires this file for validateDoc/RULES and must not trigger a second
-// full validate run (with its own process.exit) as a side effect.
+// Only run the CLI when invoked directly - tools/conformance-test.js requires this file for
+// validateDoc/RULES and must not trigger a second full run (with its own process.exit).
 if (require.main === module) {
   const args = process.argv.slice(2);
   const strict = args.includes("--strict");
   const targets = args.filter((a) => a !== "--strict");
   const resolvedTargets = targets.length ? targets : defaultTargets();
 
-  // Every entry/shared entity across every file given to this one run,
-  // gathered up front. A standalone entry file has no way to declare
-  // "here are my siblings" the way a base document's own `refs` can (see
-  // validateItemRefs) - the real-world layout it needs that for is an
-  // index file listing many standalone entries via rel: file, with none
-  // of the entries themselves pointing back (test/site-components/ is
-  // exactly this shape). Treating every file handed to one CLI
-  // invocation as one project fills that gap for the common case: run
-  // together, as `npm run check` already does, they resolve against
-  // each other; run alone, a standalone file still only sees itself.
+  // Every entity across every file given to this run, gathered up front so files passed
+  // together (as `npm run check` does) can resolve refs against each other - the only way a
+  // standalone entry file (no `refs` of its own) can see its siblings.
   const cliEntities = [];
   for (const target of resolvedTargets) {
     try {
       cliEntities.push(...entriesIn(loadYaml(target)));
     } catch (e) {
-      // Let validateFile() below report the real parse/read error for
-      // this file; it just contributes nothing to the shared pool.
+      // validateFile() below reports the real parse/read error for this file.
     }
   }
 

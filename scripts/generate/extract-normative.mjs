@@ -1,34 +1,13 @@
 #!/usr/bin/env node
 /**
- * extract-normative.mjs — Generate the normative-statements index for the
- * site's Conformance page.
- *
- * DSDS keeps its normative language (RFC 2119 MUST/SHOULD/MAY sentences)
- * inside schema `description` strings, right next to the structures that
- * enforce it. That is deliberate — the second full schema review showed that
- * prose separated from structure drifts. But a citable specification needs a
- * single place where every normative statement can be found and referenced.
- *
- * This script derives that place instead of duplicating it: it walks every
- * split schema, extracts each sentence carrying an RFC 2119 keyword, assigns
- * it a stable location-based ID, and writes the index into
- * site/content/conformance.mdx (in its "Index of every normative statement"
- * section) between marker comments — the same generate-into-markers pattern
- * sync-examples.js and generate-rule-catalog.mjs use.
- *
- * Previously wrote into README.md instead: README is read by GitHub as well
- * as this site, so hosting a potentially-large, auto-regenerated appendix
- * there meant every clone/fork carried it and every README diff buried the
- * hand-written content under it. The index is conformance detail, so it
- * lives on the Conformance page now, compiled through this repo's own MDX
- * pipeline like the rest of that page. The schemas stay the single source
- * of truth; the index cannot drift because it is regenerated on every build
- * and guarded by --check in postvalidate.
- *
- * Statement IDs are location-based (`<dir>/<file>§<jsonPath>.<n>`), so they
- * are stable as long as the schema path is stable — moving or renaming a
- * definition changes its statement IDs, which is the correct signal that
- * citations need re-checking.
+ * Generates the normative-statements index for the site's Conformance page. DSDS keeps its
+ * normative language (RFC 2119 MUST/SHOULD/MAY sentences) inside schema `description` strings,
+ * next to the structures that enforce it - deliberate, since prose separated from structure
+ * drifts - but a citable spec still needs one place where every statement can be found. This
+ * script derives that place: it walks every split schema, extracts each sentence carrying an
+ * RFC 2119 keyword, assigns it a stable location-based ID (`<dir>/<file>§<jsonPath>.<n>`), and
+ * writes the index into site/content/conformance.mdx between marker comments. The schemas stay
+ * the single source of truth; the index is regenerated on every build and guarded by --check.
  *
  * Usage:
  *   node scripts/generate/extract-normative.mjs           # regenerate the index
@@ -48,21 +27,18 @@ const ROOT = path.resolve(__dirname, "..", "..");
 const SCHEMA_DIR = path.join(ROOT, "schema");
 const PAGE = path.join(ROOT, "site", "content", "conformance.mdx");
 
-// MDX comment syntax, not `<!-- -->` — this is substituted straight into
-// conformance.mdx source before MDX compilation, and a plain HTML comment
-// isn't valid MDX (see compile-mdx.mjs's own note on the same point).
+// MDX comment syntax, not `<!-- -->` - this is substituted into conformance.mdx source before
+// MDX compilation, and a plain HTML comment isn't valid MDX.
 const BEGIN = "{/* dsds:normative-index */}";
 const END = "{/* /dsds:normative-index */}";
 
-// Strongest keyword present classifies the statement. Order matters:
-// longest match first so "MUST NOT" is not classified as "MUST".
+// Strongest keyword present classifies the statement; order matters so "MUST NOT" isn't
+// classified as "MUST".
 const LEVELS = ["MUST NOT", "MUST", "SHOULD NOT", "SHOULD", "MAY"];
 const KEYWORD_RE = /\b(MUST NOT|MUST|SHOULD NOT|SHOULD|MAY)\b/;
 
-// Sentence splitter tolerant of inline code and abbreviations: split on a
-// period followed by whitespace and an uppercase/backtick/quote start, but
-// never directly after "e.g." / "i.e." / "vs." / "etc." (fixed-length
-// lookbehinds keep those sentences whole).
+// Sentence splitter tolerant of inline code and abbreviations: splits on a period followed by
+// whitespace and an uppercase/backtick/quote start, but never after "e.g."/"i.e."/"vs."/"etc.".
 function sentences(text) {
   return text
     .split(/(?<=\.)(?<!e\.g\.)(?<!i\.e\.)(?<!\bvs\.)(?<!etc\.)\s+(?=[A-Z`'"(])/)

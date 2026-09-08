@@ -1,37 +1,10 @@
 #!/usr/bin/env node
 /**
- * sync-examples.js — Synchronize JSON examples from source files into markdown.
- *
- * Scans all MDX content pages in site/content/ for include directives of the form:
- *
- *   <!-- dsds:include path/to/file.json#/key -->
- *
- * and replaces the fenced JSON code block that immediately follows with the
- * content from the referenced file and key path. If no code block follows the
- * directive, one is inserted.
- *
- * Directive syntax:
- *
- *   <!-- dsds:include <path> -->
- *     Includes the entire file content.
- *
- *   <!-- dsds:include <path>#/<key> -->
- *     Includes the value at the given top-level key.
- *
- *   <!-- dsds:include <path>#/<key>/<nested>/<path> -->
- *     Navigates a dot-like path of keys into the JSON structure.
- *     Array indices are supported (ex: #/tokenApi/0).
- *
- * Paths are resolved relative to the project root (the parent of scripts/).
- *
- * The directive comment and its closing marker are preserved as HTML comments
- * that are invisible when the markdown is rendered:
- *
- *   <!-- dsds:include spec/examples/tokens/token.json#/tokenDoc -->
- *   ```json
- *   { ... auto-generated ... }
- *   ```
- *   <!-- /dsds:include -->
+ * Synchronizes JSON examples from source files into markdown. Scans all MDX content pages in
+ * site/content/ for include directives (`<!-- dsds:include path/to/file.json#/key -->`) and
+ * replaces the fenced JSON code block that follows with the content at that path (inserting
+ * one if none follows). `#/key/nested/0` navigates the JSON structure, supporting array
+ * indices. Paths resolve relative to the project root.
  *
  * Usage:
  *   node scripts/generate/sync-examples.js           # update all markdown files
@@ -51,24 +24,11 @@ const ROOT = path.resolve(__dirname, "..", "..");
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Parse an include directive line.
- * Returns { filePath, keyPath } or null if not a directive.
- *
- * Examples:
- *   "<!-- dsds:include spec/examples/tokens/token.json#/tokenDoc -->"
- *   → { filePath: "spec/examples/tokens/token.json", keyPath: ["tokenDoc"] }
- *
- *   "<!-- dsds:include spec/examples/tokens/token.json -->"
- *   → { filePath: "spec/examples/tokens/token.json", keyPath: [] }
- *
- *   "<!-- dsds:include spec/examples/common/accessibility.json#/accessibilityObject/colorContrast/0 -->"
- *   → { filePath: "...", keyPath: ["accessibilityObject", "colorContrast", "0"] }
- */
+// Parses an include directive line into { filePath, keyPath } or null if not a directive.
 function parseDirective(line) {
   const trimmed = line.trim();
-  // Two marker syntaxes: HTML comments in spec/modules markdown, MDX (JSX)
-  // comments in site/content pages — MDX rejects HTML comments outright.
+  // Two marker syntaxes: HTML comments in spec/modules markdown, MDX (JSX) comments in
+  // site/content pages - MDX rejects HTML comments outright.
   let style = "html";
   let match = trimmed.match(/^<!--\s*dsds:include\s+(\S+)\s*-->$/);
   if (!match) {
@@ -95,17 +55,12 @@ function parseDirective(line) {
   return { filePath, keyPath };
 }
 
-/**
- * Test if a line is a closing include marker.
- */
+// Tests if a line is a closing include marker.
 function isClosingMarker(line) {
   return /^\s*(<!--\s*\/dsds:include\s*-->|\{\/\*\s*\/dsds:include\s*\*\/\})\s*$/.test(line);
 }
 
-/**
- * Resolve a key path into a JSON value.
- * Supports object keys and array indices.
- */
+// Resolves a key path into a JSON value; supports object keys and array indices.
 function resolveKeyPath(data, keyPath) {
   let current = data;
   for (const segment of keyPath) {
@@ -125,10 +80,8 @@ function resolveKeyPath(data, keyPath) {
   return current;
 }
 
-/**
- * Read a JSON file and optionally navigate to a key path.
- * Returns the pretty-printed JSON string.
- */
+// Reads a JSON file and optionally navigates to a key path, returning the pretty-printed
+// JSON string.
 function readExample(filePath, keyPath) {
   const absPath = path.resolve(ROOT, filePath);
 
@@ -163,13 +116,8 @@ function readExample(filePath, keyPath) {
 // Process a single markdown file
 // ---------------------------------------------------------------------------
 
-/**
- * Process a markdown file, replacing include directives with JSON content.
- * Returns { content, updated, includes } where:
- *   - content is the new file content
- *   - updated is true if any changes were made
- *   - includes is an array of { line, filePath, keyPath, ok, error }
- */
+// Processes a markdown file, replacing include directives with JSON content. Returns
+// { content, updated, includes: [{ line, filePath, keyPath, ok, error }] }.
 function processMarkdown(mdPath) {
   const text = fs.readFileSync(mdPath, "utf-8");
   const lines = text.split("\n");
@@ -206,9 +154,8 @@ function processMarkdown(mdPath) {
         ok: false,
         error,
       });
-      // Skip past existing code block and closing marker if present
+      // Skip past the existing code block and closing marker, leaving it untouched on error.
       i = skipExistingBlock(lines, i);
-      // Re-emit what was there (leave it untouched on error)
       continue;
     }
 
@@ -267,15 +214,12 @@ function processMarkdown(mdPath) {
   };
 }
 
-/**
- * Starting at line index `start`, check if the next content is a fenced
- * JSON code block. Returns the index of the closing ``` line, or null.
- */
+// Starting at line index `start`, checks if the next content is a fenced JSON code block.
+// Returns the index of the closing ``` line, or null.
 function findExistingCodeBlock(lines, start) {
   let i = start;
 
-  // The very next line should be the opening fence
-  if (i >= lines.length) return null;
+  if (i >= lines.length) return null; // the very next line should be the opening fence
   if (!/^\s*```json\s*$/i.test(lines[i])) return null;
 
   // Find the closing fence
@@ -290,11 +234,8 @@ function findExistingCodeBlock(lines, start) {
   return null; // unclosed block
 }
 
-/**
- * Skip past an existing code block and optional closing marker.
- * Used when an error occurs reading the source file — we leave
- * the existing content untouched.
- */
+// Skips past an existing code block and optional closing marker, used when an error occurs
+// reading the source file so the existing content is left untouched.
 function skipExistingBlock(lines, start) {
   let i = start;
 
@@ -380,11 +321,8 @@ function main() {
   }
 
   if (mdFiles.length === 0) {
-    // No .mdx files at all is a broken checkout (or a moved content dir),
-    // not a passing sync — the same failure mode validate.js guards
-    // against. Zero *includes* across real .mdx files, by contrast, is a
-    // legitimate state (no page currently embeds a dsds:include) and not
-    // itself an error.
+    // No .mdx files at all is a broken checkout, not a passing sync - unlike zero *includes*
+    // across real .mdx files, which is a legitimate state.
     console.error(
       "  ✗ No .mdx files found — site/content/ is missing or empty.",
     );

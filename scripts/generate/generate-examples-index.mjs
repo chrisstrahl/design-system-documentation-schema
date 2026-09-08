@@ -1,16 +1,9 @@
 #!/usr/bin/env node
 /**
- * generate-examples-index.mjs — Generates the file listing on the Examples
- * page directly from the examples/ directory tree, so a new or removed
- * example file shows up (or disappears) without anyone remembering to edit
- * a hand-typed list. Same generate-into-markers pattern as
- * generate-rule-catalog.mjs and extract-normative.mjs.
- *
- * Every example is validated (`npm run check`), but until this script
- * existed, none of them were linkable from an absolute URL — a reader could
- * be told "see examples/entries/button.yaml" but had no site link to
- * actually open it. build-site.js mirrors examples/ into site/dist/examples/
- * verbatim so each file in the list below actually resolves.
+ * Generates the file listing on the Examples page directly from the examples/ directory tree,
+ * so a new or removed example shows up without anyone editing a hand-typed list - same
+ * generate-into-markers pattern as generate-rule-catalog.mjs. build-site.js mirrors examples/
+ * into site/dist/examples/ verbatim so each link below actually resolves.
  *
  * Usage:
  *   node scripts/generate/generate-examples-index.mjs           # regenerate the list
@@ -29,8 +22,8 @@ const PAGE = path.join(ROOT, "site", "content", "examples.mdx");
 const BEGIN = "{/* dsds:examples-index */}";
 const END = "{/* /dsds:examples-index */}";
 
-// One-line blurb per top-level category — hand-written, stable; the file
-// list under each is what's generated.
+// One-line blurb per top-level category, hand-written and stable; the file list under each is
+// what's generated.
 const GROUP_BLURBS = {
   base: "Full base documents — a system with multiple entries, split across files via `rel: file`.",
   entries: "Standalone entry files, one per kind, plus the source/manifest/story files a couple of them point at.",
