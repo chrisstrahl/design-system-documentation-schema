@@ -245,10 +245,15 @@
     `guidelines` sections order `framing: when-to-use` before
     `how-to-use`/unset.
   note: >-
-    Doesn't attempt to verify the tag-scoped-guidelines sub-ordering
-    STYLE_GUIDE.md describes as a third guidelines tier - identifying
-    "this section is really about one tag" isn't mechanically checkable
-    the way framing is.
+    Checks kind grouping/order and the framing sort only. Two sub-sorts
+    STYLE_GUIDE.md §2 describes are deliberately NOT checked, because
+    neither is decidable from a section's shape the way framing is:
+    the tag-scoped-guidelines tier (identifying "this section is really
+    about one tag" means reading its items), and the audience tie-break
+    (`for: all`, then human, then agent - whether two sections are the
+    same rules for two audiences, and therefore orderable against each
+    other, is not something `for` alone tells you). Both remain
+    conventions; see STYLE_GUIDE.md's Tooling section.
 
 - id: DSDS-19
   name: guideline-item-level-order

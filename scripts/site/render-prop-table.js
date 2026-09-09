@@ -37,18 +37,15 @@ const ENTRY_ENVELOPE = [
   "$extensions",
 ];
 
-// The common envelope every section shares (sections/section.schema.yaml) - same idea as
-// ENTRY_ENVELOPE, one level down.
-const SECTION_ENVELOPE = [
-  "kind",
-  "for",
-  "title",
-  "description",
-  "metadata",
-  "items",
-  "freeform",
-  "$extensions",
-];
+// There is deliberately no SECTION_ENVELOPE constant here. One existed as the
+// section-level counterpart to ENTRY_ENVELOPE above, but nothing ever consumed it
+// (ENTRY_ENVELOPE is real: renderPropertyTableForRef passes it as `omit` for delta
+// tables), and being unused it had silently gone stale - it was missing `context`,
+// which sections/section.schema.yaml has declared for a while. A dead constant that
+// disagrees with the schema is worse than no constant, because AGENTS.md pointed
+// readers at this file as the single source of truth for envelope shape. The schema
+// file is that source; if a section-level omit list is ever needed, derive it from
+// sections/section.schema.yaml rather than re-transcribing it here.
 
 // JSON_SCHEMA disables YAML's implicit !!timestamp type, which otherwise parses a bare
 // `2026-06-02` into a JS Date instead of a string - see lib.js's loadYaml.
@@ -612,5 +609,4 @@ module.exports = {
   ROOT_FILES,
   DEFAULT_SCHEMA_GROUPS,
   ENTRY_ENVELOPE,
-  SECTION_ENVELOPE,
 };

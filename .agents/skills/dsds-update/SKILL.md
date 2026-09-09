@@ -33,6 +33,12 @@ Modify an existing `.dsds.yaml` file.
 
 - Never remove existing content unless explicitly instructed — specs are additive by default.
 - Preserve the existing order of `sections` and `traits` items.
+- When you add a *new* top-level field, insert it at its
+  [STYLE_GUIDE.md](https://github.com/somerandomdude/design-system-documentation-schema/blob/main/STYLE_GUIDE.md)
+  position rather than appending it to the end — that guide's whole point is
+  that a reader can rely on the order, and `DSDS-17`–`DSDS-20` report
+  violations under `npm run lint`. Don't reshuffle fields that were already
+  there just to comply; that turns a one-line edit into an unreviewable diff.
 - When adding trait values, place them in logical order (not necessarily alphabetical) — the first value is implied as the default.
 - Update `metadata.status` if the change constitutes a breaking API modification.
 - If adding a new relationship, use `common/ref`'s one shape: `{to: "<id>", rel: "<depends-on|extends|alternative-to|composes|...>"}` for something in this document's own graph, or `{href: "<url>", rel: "..."}` for something outside it.

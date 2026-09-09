@@ -18,6 +18,10 @@ When you need precise field-level details beyond this skill, consult these in or
 1. **Bundled schema**: `https://designsystemdocspec.org/v0.20.0/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if installed as a dependency)
 2. **Schema architecture reference**: https://designsystemdocspec.org/schema#how-the-schema-is-organized (and [Conformance](https://designsystemdocspec.org/conformance) for conformance classes and the full rule catalog)
 3. **Quick start with examples**: https://designsystemdocspec.org/quickstart
+   — and [STYLE_GUIDE.md](https://github.com/somerandomdude/design-system-documentation-schema/blob/main/STYLE_GUIDE.md)
+   for the field order every example follows. The schema permits any order;
+   the style guide picks one, and `DSDS-17`–`DSDS-20` report deviations as
+   advisory warnings.
 4. **GitHub source** (split schema + examples): https://github.com/somerandomdude/design-system-documentation-schema/tree/main/schema
 
 Key pages for field-level detail:

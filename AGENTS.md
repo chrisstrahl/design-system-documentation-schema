@@ -78,7 +78,9 @@ scratch each time. This is the schema's `ENTRY_ENVELOPE` constant
 (`scripts/site/render-prop-table.js`) — one source of truth, not a convention you
 have to infer from examples. `sections/section.schema.yaml` has the same
 role one level down: every section kind shares `kind`, `for`, `title`,
-`description`, `items`, `metadata`, `$extensions`.
+`description`, `context`, `metadata`, `items`, `freeform`, `$extensions`
+— read it from that schema file, which is authoritative for both the set
+and the order.
 
 Each well-known entry kind also has a canonical, standalone identifier at
 `/id/entry/<kind>` (e.g. `/id/entry/component`) — the same data as that

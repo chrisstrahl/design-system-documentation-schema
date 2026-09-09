@@ -16,7 +16,8 @@ Create a new standalone `.dsds.yaml` entry file in your project's spec directory
 3. Create `{directory}/{id}.dsds.yaml` using the template below.
 4. Add a `refs` entry (`rel: file`) in `index.dsds.yaml` pointing at the new file.
 5. Run `npx dsds-validate {directory}/{id}.dsds.yaml` — fix errors until it passes.
-6. If your project generates its own index or catalog from spec files, regenerate it now.
+6. Order the entry's fields per [STYLE_GUIDE.md](https://github.com/somerandomdude/design-system-documentation-schema/blob/main/STYLE_GUIDE.md): identity (`id`, `kind`, `name`, `description`, `purpose`, plus a token's `tokenType`/`source`), then `metadata`, then a component's `sourceFiles`, then `sections`, then structured facts (`specs`, `imports`, `traits`, `combos`), then `related`/`extends`/`refs`, with `$extensions` always last. Order doesn't affect validity — `npx dsds-validate` won't mention it — but `DSDS-17`–`DSDS-20` in the advisory lint tier will, and the template below already follows it.
+7. If your project generates its own index or catalog from spec files, regenerate it now.
 
 ## File Placement
 

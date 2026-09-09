@@ -19,9 +19,12 @@ This isn't optional polish. A predictable order means:
   linter, or an agent writing a new entry has one canonical order to
   produce, not "whatever order felt right that day."
 
-None of this is enforced by `npm run check:all` today — it's a convention,
-not a schema rule. See [Tooling](#tooling) at the end for why, and what
-could change that.
+This guide is checked, but never blocking: `DSDS-17`–`DSDS-20` in the
+[advisory lint tier](https://designsystemdocspec.org/conformance#enforcement-tiers)
+report violations under `npm run lint`, and nothing here can fail
+`npm run check:all`. Field order has no effect on whether a document is
+valid. See [Tooling](#tooling) at the end for exactly which parts are
+mechanized and which are left to judgment.
 
 ---
 
@@ -33,15 +36,15 @@ Fields fall into six bands, always in this order:
 
 1. **Identity** — what this thing *is*: `id`, `kind`, `name`, `description`,
    `purpose`, plus any kind-specific field that's really just a more
-   specific answer to "what is this" (a token's `tokenType`, a theme's
-   `colorScheme`). These are the fields you'd read first to know whether
-   you're even looking at the right entry.
+   specific answer to "what is this" (a token's `tokenType` and `source`, a
+   theme's `colorScheme` and `source`). These are the fields you'd read
+   first to know whether you're even looking at the right entry.
 2. **Metadata** — `metadata`. Facts *about* the entry (status, ownership,
    tags) rather than facts that define it.
-3. **Primary content pointer** — a component's `sourceFiles`, a token's
-   `source`. The thing everything else is a fact *about*. Comes right
-   after metadata because it's the closest thing to a second identity
-   field: "here's the real artifact this entry documents."
+3. **Primary content pointer** — a component's `sourceFiles`. The thing
+   everything else is a fact *about*. Comes right after metadata because
+   it's the closest thing to a second identity field: "here's the real
+   artifact this entry documents."
 4. **Documentation** — `sections`. The narrative: guidelines, definitions,
    steps. See [§2](#2-section-order-within-sections) for how to order what's
    inside it.
@@ -55,13 +58,18 @@ Fields fall into six bands, always in this order:
    last on every object in this schema, not just entries — it's the
    "everything else" bucket, and reads better positioned as such.
 
-Why `tokenType`/`colorScheme` land in band 1 (before `metadata`) while
-`sourceFiles` lands in band 3 (after `metadata`): a token's type is as
-fundamental to what the token *is* as its `kind` — "this is a color
-token" is an identity fact, not a supporting one. A component's
+Why a token's `tokenType`/`source` and a theme's `colorScheme`/`source`
+land in band 1 (before `metadata`) while a component's `sourceFiles`
+lands in band 3 (after `metadata`): a token's type is as fundamental to
+what the token *is* as its `kind` — "this is a color token" is an identity
+fact, not a supporting one — and a token entry deliberately carries no
+`value`, so its `source` *is* where the thing being documented lives.
+Identity and content are the same fact for a token. A component's
 `sourceFiles`, by contrast, is where the *implementation* lives, which is
 a level removed from identity — you know it's a component named "Button"
-before you know or care which file it's built from.
+before you know or care which file it's built from, and the component
+entry carries plenty of its own substance (`traits`, `combos`, `sections`)
+that a token entry doesn't.
 
 ### Component
 
@@ -220,21 +228,30 @@ general-to-specific:
 ### Within `guidelines`: when-to-use, then how-to-use, then tag-specific
 
 A component or pattern commonly has more than one `guidelines` section.
-Order them:
+These are two separate sorts, not one list: order on **specificity**
+first, then break ties on **audience**.
+
+Specificity, general to specific:
 
 1. **`framing: when-to-use`** — the fit judgment: should you reach for
    this at all. The most general question there is.
 2. **`framing: how-to-use`** (or no `framing`, which defaults to
    `how-to-use`) covering the entry broadly — general implementation
    rules that apply everywhere.
-3. **`for: all`, then `for: human`, then `for: agent`**
-4. **Tag-scoped `guidelines` sections** — a section whose items all carry
+3. **Tag-scoped `guidelines` sections** — a section whose items all carry
    the same `metadata.tags`/item-level `tags` entry (for example, a
    section that's really just the accessibility rules, or just the
    mobile-specific ones). Most specific, so it goes last. Order multiple
    tag-scoped sections alphabetically by their tag unless there's an
    obvious narrative reason not to (for example, accessibility rules
    conventionally lead, since they're rarely truly optional in practice).
+
+Then, **only between sections that tie on the above** — same `framing`,
+both un-tag-scoped — order by audience: `for: all`, then `for: human`,
+then `for: agent`. Broadest readership first. This is a tie-break, not a
+fourth tier: a `for: agent` when-to-use section still comes before a
+`for: all` how-to-use one, because specificity wins. `DSDS-18` doesn't
+check this sort (see [Tooling](#tooling)).
 
 ```yaml
 sections:
@@ -415,12 +432,45 @@ refs:
 
 ## Tooling
 
-Nothing in `npm run check:all` enforces this guide today — it's a
-convention for humans and agents writing DSDS documents by hand, not a
-rule the schema or validator knows about. A future `scripts/validate/lint-docs.js`
-rule (run via `npm run lint`) could assert compliance the same way the
-[advisory lint tier](https://designsystemdocspec.org/conformance#enforcement-tiers)
-checks documentation quality — reordering keys isn't something a document
-should ever fail `npm run check:all` over, but it's exactly the kind of
-thing the advisory tier exists for. Not built yet; a reasonable next step
-if drift becomes a real problem instead of a hypothetical one.
+Four rules in the [advisory lint tier](https://designsystemdocspec.org/conformance#enforcement-tiers)
+check this guide. They live in `scripts/validate/lint-docs.js`, are
+catalogued in `schema/conformance-rules.yaml` with
+`enforcement: advisory`, and run under `npm run lint`:
+
+| Rule | Checks | This guide |
+|---|---|---|
+| `DSDS-17` | An entry's top-level field order | [§1](#1-entry-level-field-order) |
+| `DSDS-18` | `sections[]` grouping and kind order | [§2](#2-section-order-within-sections) |
+| `DSDS-19` | Guideline item order by `level` | [§3](#3-guideline-item-order-within-one-section) |
+| `DSDS-20` | A base document's own field order | [§1 Base documents](#base-documents) |
+
+Reordering keys should never fail `npm run check:all`, and it can't:
+advisory rules warn and always exit 0. `lint-docs.js` does fail on
+catalog/implementation drift in either direction, so a rule can't be
+listed here without an implementation or vice versa.
+
+**Deliberately not mechanized.** Two sub-tiers of §2's guidelines
+ordering are judgment calls a linter would get wrong more often than
+right, so `DSDS-18` checks neither:
+
+- **Audience order** (`for: all`, then `human`, then `agent`). Whether two
+  guidelines sections are really "the same rules for two audiences" —
+  and therefore orderable — or two unrelated sections that happen to
+  differ in `for`, isn't something the field alone tells you.
+- **Tag-scoped sections.** Deciding that a section "is really just the
+  accessibility rules" means reading its items, not its shape. See
+  `DSDS-18`'s own catalog note.
+
+Both are still conventions worth following; they're just not checked. If
+either turns out to be mechanizable in practice, the rule to extend is
+`section-order` in `lint-docs.js`.
+
+**Field order here is not the same as the schema's property order.** The
+[Schema page](https://designsystemdocspec.org/schema)'s property tables are
+generated in each schema file's own declaration order — base entry fields
+first, then the kind-specific ones appended — which is the right order for
+a *reference table* you read top to bottom, and a different order from the
+one above. This guide orders the fields of an *instance document* you
+write; the schema page documents the shape of a *definition*. Neither is
+wrong, and they are not going to converge: don't infer authoring order
+from a property table, or vice versa.

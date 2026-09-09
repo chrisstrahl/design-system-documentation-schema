@@ -109,6 +109,10 @@ function collectMdxFiles(dir, base = "") {
 const sources = [
   { label: "README.md", path: path.join(ROOT, "README.md"), page: null },
   { label: "AGENTS.md", path: path.join(ROOT, "AGENTS.md"), page: null },
+  // Read on GitHub like README/AGENTS (page: null), but it is a primary
+  // authoring doc that links out to the Conformance page's enforcement-tier
+  // anchor, so a page restructure can rot it the same way it can rot README.
+  { label: "STYLE_GUIDE.md", path: path.join(ROOT, "STYLE_GUIDE.md"), page: null },
   { label: "schema/conformance-rules.yaml", path: path.join(ROOT, "schema/conformance-rules.yaml"), page: null },
   ...collectMdxFiles(CONTENT_DIR).map((rel) => ({
     label: `site/content/${rel}`,
