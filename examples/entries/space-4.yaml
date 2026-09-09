@@ -1,5 +1,5 @@
-id: space-4
 kind: token
+id: space-4
 name: Space 4
 description: A single step on the base spacing scale - 4 times the 4px base unit.
 

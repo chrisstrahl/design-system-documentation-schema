@@ -1,5 +1,5 @@
-id: logo
 kind: component
+id: logo
 name: Logo
 description: The DSDS mark, fetched from site/assets/dsds.svg and inlined so its fill can be recolored at runtime.
 

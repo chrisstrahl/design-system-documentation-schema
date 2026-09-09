@@ -48,8 +48,8 @@ There is no `token-group` kind: a group of related tokens is a `metadata.group` 
 A **standalone entry** file (most components, tokens, themes) has no wrapper — the entry's own fields sit at the file's top level:
 
 ```yaml
-id: checkbox
 kind: component
+id: checkbox
 name: Checkbox
 description: A styled checkbox input for boolean or indeterminate selection.
 ```
@@ -61,8 +61,8 @@ schemaVersion: "0.20.1"
 name: Acme Design System
 
 entries:
-  - id: acme-design-system
-    kind: system
+  - kind: system
+    id: acme-design-system
     name: Acme Design System
     description: Acme's cross-platform design system.
     metadata:

@@ -1,5 +1,5 @@
-id: badge
 kind: component
+id: badge
 name: Badge
 description: A small chip with a color-coded icon block, used for kind/status/experimental labels. The icon is decorative — the variant's meaning is redundant with the visible label text next to it.
 

@@ -1,5 +1,5 @@
-id: empty-state
 kind: entry
+id: empty-state
 name: Empty State
 description: Composition of components shown when a view has no content to display yet.
 

@@ -719,12 +719,6 @@
         "description"
       ],
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "This entry's unique id in the design system graph.",
-          "$comment": "Every ref that points at it uses this. A token entry's id uses a looser pattern (see entries/token.schema.yaml). Every other kind uses common/id.schema.yaml's standard pattern.",
-          "example": "button"
-        },
         "kind": {
           "description": "What kind of thing this entry is, as a real design-system artifact: one of the 5 well-known kinds, or a namespaced custom kind.",
           "$comment": "Reusable content that is not an artifact at all (like a rule other entries point at instead of restating) belongs in the base document's `shared` list instead.",
@@ -746,6 +740,12 @@
               "example": "acme.icon-library"
             }
           ]
+        },
+        "id": {
+          "type": "string",
+          "description": "This entry's unique id in the design system graph.",
+          "$comment": "Every ref that points at it uses this. A token entry's id uses a looser pattern (see entries/token.schema.yaml). Every other kind uses common/id.schema.yaml's standard pattern.",
+          "example": "button"
         },
         "name": {
           "type": "string",
@@ -971,15 +971,15 @@
         {
           "type": "object",
           "properties": {
+            "kind": {
+              "const": "token",
+              "description": "Marks this entry as a token."
+            },
             "id": {
               "$ref": "https://designsystemdocspec.org/v0.20.1/common/id.schema.yaml#/$defs/tokenId",
               "description": "This token's unique id.",
               "$comment": "Looser than the standard id pattern. Allows slash separators too, to fit however a token layer or DTCG source already names things.",
               "example": "color.action.primary"
-            },
-            "kind": {
-              "const": "token",
-              "description": "Marks this entry as a token."
             },
             "metadata": {
               "allOf": [

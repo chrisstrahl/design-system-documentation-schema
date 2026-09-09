@@ -1,5 +1,5 @@
-id: header
 kind: component
+id: header
 name: Header
 description: The page header block at the top of every page — a title, an optional lead description, and an optional source path for schema-reference pages.
 

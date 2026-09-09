@@ -9,8 +9,8 @@ schemaVersion: "0.20.1"
 name: Acme Design System
 
 entries:
-  - id: icon-button
-    kind: component
+  - kind: component
+    id: icon-button
     name: Icon Button
     description: A button variant that renders a single icon with no visible label.
     metadata:

@@ -1,5 +1,5 @@
-id: icon
 kind: component
+id: icon
 name: Icon
 description: A single glyph from the system's icon set, rendered at a fixed size.
 

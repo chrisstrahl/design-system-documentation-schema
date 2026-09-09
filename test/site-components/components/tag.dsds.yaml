@@ -1,5 +1,5 @@
-id: tag
 kind: component
+id: tag
 name: Tag
 description: A pill-shaped tag for keyword and category labels.
 

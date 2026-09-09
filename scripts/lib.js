@@ -32,7 +32,7 @@ function loadYaml(file) {
 // Schema-derived field order
 // ---------------------------------------------------------------------------
 
-// STYLE_GUIDE.md §1 says to write a document's fields in the order the schema files list
+// STYLE_GUIDE.md says to write a document's fields in the order the schema files list
 // them, which makes those files the only place that order is recorded. Anything that needs
 // a canonical field order reads it from here instead of keeping a copy, because a copy goes
 // stale the moment a schema file is reordered and it goes stale silently.

@@ -1,5 +1,5 @@
-id: color.action.primary
 kind: token
+id: color.action.primary
 name: Action Primary
 description: Background color for primary action surfaces — the one action we most want the user to take on a screen. The value itself lives in the DTCG file that `source` points to; this document only carries the meaning and usage rules around it.
 sections:

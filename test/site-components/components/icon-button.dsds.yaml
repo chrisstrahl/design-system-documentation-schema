@@ -1,5 +1,5 @@
-id: icon-button
 kind: component
+id: icon-button
 name: IconButton
 description: A minimal icon-only button — a slotted icon plus a required accessible label. No built-in positioning, color variants, or sizes; that's left to whatever's using it.
 

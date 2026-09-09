@@ -1,5 +1,5 @@
-id: my-element
 kind: component
+id: my-element
 name: MyElement
 description: This is the description of the class
 

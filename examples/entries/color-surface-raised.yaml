@@ -1,5 +1,5 @@
-id: color.surface.raised
 kind: token
+id: color.surface.raised
 name: Surface Raised
 description: The background color for a surface that sits visually above the default surface, like a card or menu.
 

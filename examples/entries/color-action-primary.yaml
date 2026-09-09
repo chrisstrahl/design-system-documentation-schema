@@ -1,5 +1,5 @@
-id: color.action.primary
 kind: token
+id: color.action.primary
 name: Action Primary
 description: The fill color for high-emphasis interactive surfaces.
 

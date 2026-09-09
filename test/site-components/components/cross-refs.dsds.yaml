@@ -1,5 +1,5 @@
-id: cross-refs
 kind: component
+id: cross-refs
 name: CrossRefs
 description: A plain wrapper that styles a list of slotted links in monospace — used below a definition's description to list the other schema definitions it references.
 

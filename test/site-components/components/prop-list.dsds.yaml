@@ -1,5 +1,5 @@
-id: prop-list
 kind: component
+id: prop-list
 name: PropList
 description: A schema definition's property list. Two elements from one module — `<ds-prop-table>` (the list, sorted required-first) and its declarative child `<ds-prop>` (one property row) — documented as a single entry since one always implies the other.
 

@@ -1,5 +1,5 @@
-id: table
 kind: component
+id: table
 name: Table
 description: A styled table wrapper that accepts a slotted `<table>` element — all styling is encapsulated in shadow DOM so the slotted table inherits consistent typography, spacing, borders, and responsive overflow.
 

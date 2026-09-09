@@ -99,7 +99,7 @@ const LOWERCASE_RFC_REGEX = /(?<![A-Za-z])(must|should)(?: not)?(?![A-Za-z])/g;
 // and no schema file has an opinion about that. Those are kept in sync with the guide by hand.
 // ---------------------------------------------------------------------------
 
-// Read out of the schema files, not transcribed from them. STYLE_GUIDE.md §1's rule is to
+// Read out of the schema files, not transcribed from them. STYLE_GUIDE.md's rule is to
 // follow the order the schema lists, so reading that order at runtime is the only honest way
 // to check it - a hardcoded table here would be a second source of truth for the exact thing
 // the guide says has one, and it drifted twice before this became derived (a stale
@@ -239,7 +239,7 @@ const IMPLEMENTATIONS = {
     }
   },
 
-  // STYLE_GUIDE.md §1 - only checks the relative order of fields actually present, so an
+  // STYLE_GUIDE.md §2 - only checks the relative order of fields actually present, so an
   // entry that leaves a field out is never flagged for its absence.
   "entry-field-order": (entry, emit) => {
     // A namespaced custom kind (`acme.icon-library`) has no schema file of its own, so it
@@ -253,12 +253,12 @@ const IMPLEMENTATIONS = {
         : `entries/entry.schema.yaml, then entries/${entry.kind}.schema.yaml`;
       emit(
         "",
-        `"${entry.id}" has \`${inversion[0]}\` before \`${inversion[1]}\` — STYLE_GUIDE.md §1 says match the spec's own declared order, which for a ${entry.kind || "shared"} entry (${source}) is [${order.join(", ")}]. Actual order here: [${actual.join(", ")}].`,
+        `"${entry.id}" has \`${inversion[0]}\` before \`${inversion[1]}\` — STYLE_GUIDE.md §2 says match the spec's own declared order, which for a ${entry.kind || "shared"} entry (${source}) is [${order.join(", ")}]. Actual order here: [${actual.join(", ")}].`,
       );
     }
   },
 
-  // STYLE_GUIDE.md §2 - same-kind sections must stay contiguous and general-to-specific
+  // STYLE_GUIDE.md §4 - same-kind sections must stay contiguous and general-to-specific
   // (guidelines, definitions, steps, section); among guidelines sections, framing:
   // when-to-use comes first, then audience (all, human, agent) within one framing group.
   // Doesn't attempt the tag-scoped-guidelines sub-tier (see this rule's catalog note) -
@@ -305,7 +305,7 @@ const IMPLEMENTATIONS = {
     }
   },
 
-  // STYLE_GUIDE.md §3 - must, should, may, should-not, must-not. Items sharing a level keep
+  // STYLE_GUIDE.md §5 - must, should, may, should-not, must-not. Items sharing a level keep
   // their relative order; only a strict level-to-level inversion is flagged.
   "guideline-item-level-order": (entry, emit) => {
     (entry.sections || []).forEach((section, si) => {

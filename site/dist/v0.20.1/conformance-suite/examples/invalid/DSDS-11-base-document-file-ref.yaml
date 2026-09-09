@@ -8,8 +8,8 @@
 schemaVersion: "0.20.1"
 name: Base Document With A Dead File Ref
 entries:
-  - id: button
-    kind: component
+  - kind: component
+    id: button
     name: Button
     description: An entry that exists, in a document whose own refs point at one that doesn't.
 refs:

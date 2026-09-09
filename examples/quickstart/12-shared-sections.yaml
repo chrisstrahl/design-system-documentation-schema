@@ -3,8 +3,8 @@ schemaVersion: "0.20.1"
 name: Pizza Party Design System
 
 entries:
-  - id: button
-    kind: component
+  - kind: component
+    id: button
     name: Button
     description: Triggers an action.
     sections:

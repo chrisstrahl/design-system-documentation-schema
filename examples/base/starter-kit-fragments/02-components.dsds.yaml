@@ -1,12 +1,12 @@
 entries:
-  - id: button
-    kind: component
+  - kind: component
+    id: button
     name: Button
     description: An interactive element that triggers an action when activated.
     metadata:
       status: {status: stable}
     sections:
-      # `for: all` precedes `for: human` per STYLE_GUIDE.md §2's audience
+      # `for: all` precedes `for: human` per STYLE_GUIDE.md §4's audience
       # sort - both sections are how-to-use, so audience breaks the tie.
       - kind: guidelines
         for: all

@@ -1,5 +1,5 @@
-id: heading
 kind: component
+id: heading
 name: Heading
 description: An anchored heading — renders the requested heading level with a stable, deep-linkable id, derived from its text content unless one is given explicitly.
 

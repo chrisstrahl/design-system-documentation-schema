@@ -1,5 +1,5 @@
-id: callout
 kind: component
+id: callout
 name: Callout
 description: An info box with a bold, color-coded title above a plain content area — the variant's meaning lives in the title's background color, not an icon.
 

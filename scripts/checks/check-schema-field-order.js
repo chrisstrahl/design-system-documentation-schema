@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// STYLE_GUIDE.md §1 tells authors to write a document's fields in the order the schema files
+// STYLE_GUIDE.md tells authors to write a document's fields in the order the schema files
 // list them, which makes those files the only record of that order. This asserts the schema
 // files don't contradict each other about it.
 //

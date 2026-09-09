@@ -1,5 +1,5 @@
-id: type-ref
 kind: component
+id: type-ref
 name: TypeRef
 description: An inline, monospace link to another schema definition — used inside a property's type text or description to cross-reference another definition on the Schema page.
 

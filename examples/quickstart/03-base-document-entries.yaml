@@ -3,8 +3,8 @@ schemaVersion: "0.20.1"
 name: Pizza Party Design System
 
 entries:
-  - id: pizza-party-design-system
-    kind: system
+  - kind: system
+    id: pizza-party-design-system
     name: Pizza Party Design System
     description: The design system behind Pizza Party Super-time.
     metadata:
@@ -13,7 +13,7 @@ entries:
       version: 0.1.0
       platforms: [web-component]
 
-  - id: button
-    kind: component
+  - kind: component
+    id: button
     name: Button
     description: Triggers an action.

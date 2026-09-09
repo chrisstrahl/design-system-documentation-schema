@@ -33,8 +33,8 @@ Create a new standalone `.dsds.yaml` entry file in your project's spec directory
 ## Template (Component)
 
 ```yaml
-id: <filename-without-extension>
 kind: component
+id: <filename-without-extension>
 name: <PascalCase>
 description: <one-sentence summary>
 

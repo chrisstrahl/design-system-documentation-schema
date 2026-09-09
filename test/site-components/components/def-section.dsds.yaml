@@ -1,5 +1,5 @@
-id: def-section
 kind: component
+id: def-section
 name: DefSection
 description: One schema definition's block on the Schema page — a sticky heading (eyebrow, name, type/source line) above its description, property list, and optional worked example. One instance renders per schema file.
 

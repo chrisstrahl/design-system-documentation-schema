@@ -1,5 +1,5 @@
-id: spec-nav
 kind: component
+id: spec-nav
 name: SpecNav
 description: The specification site's top bar navigation. Reads its structure from declarative light-DOM `<a>` children instead of a JSON attribute — a flat top bar, not a sidebar, since every schema definition lives on one Schema page instead of its own.
 

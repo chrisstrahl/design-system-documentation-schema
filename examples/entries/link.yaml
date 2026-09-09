@@ -1,5 +1,5 @@
-id: link
 kind: component
+id: link
 name: Link
 description: Navigates to a new URL, page, or section. Renders as inline or standalone text.
 

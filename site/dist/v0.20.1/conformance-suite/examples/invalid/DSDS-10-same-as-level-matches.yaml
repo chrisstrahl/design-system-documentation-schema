@@ -3,8 +3,8 @@
 schemaVersion: "0.20.1"
 name: Mismatched Level
 entries:
-  - id: widget
-    kind: entry
+  - kind: entry
+    id: widget
     name: Widget
     description: A test.
     sections:

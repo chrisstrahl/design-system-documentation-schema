@@ -7,8 +7,8 @@ entries:
   # and system-wide documentation live on this entry's own metadata and
   # sections - the same shapes every other entry uses, instead of a
   # bespoke base-level shape.
-  - id: acme-design-system
-    kind: system
+  - kind: system
+    id: acme-design-system
     name: Acme Design System
     description: Acme's cross-platform design system.
     metadata:
@@ -26,8 +26,8 @@ entries:
           - level: must
             statement: This design system follows semver; breaking token renames bump the major version.
 
-  - id: color.action.primary
-    kind: token
+  - kind: token
+    id: color.action.primary
     name: Action Primary
     description: The fill color for high-emphasis interactive surfaces.
     metadata:
@@ -35,8 +35,8 @@ entries:
       status: {status: stable}
     tokenType: color
 
-  - id: light
-    kind: theme
+  - kind: theme
+    id: light
     name: Light
     description: The default theme - standard luminance for well-lit surfaces.
     metadata:
@@ -47,8 +47,8 @@ entries:
         note: DTCG source for this theme's own token values.
     colorScheme: light
 
-  - id: dark
-    kind: theme
+  - kind: theme
+    id: dark
     name: Dark
     description: Inverted-luminance theme for low-light surfaces and user preference.
     metadata:
@@ -62,14 +62,14 @@ entries:
         note: DTCG source for this theme's token overrides - the specific tokens that differ from `light` are whichever this file redeclares.
     colorScheme: dark
 
-  - id: button
-    kind: component
+  - kind: component
+    id: button
     name: Button
     description: An interactive element that triggers an action when activated.
     metadata:
       status: {status: stable}
     sections:
-      # `for: all` precedes `for: human` per STYLE_GUIDE.md §2's audience
+      # `for: all` precedes `for: human` per STYLE_GUIDE.md §4's audience
       # sort - both sections are how-to-use, so audience breaks the tie.
       - kind: guidelines
         for: all

@@ -239,7 +239,7 @@
   enforcement: advisory
   title: An entry's `sections[]` doesn't follow STYLE_GUIDE.md's grouping and ordering.
   description: >-
-    Per STYLE_GUIDE.md §2, sections of the same `kind` must stay
+    Per STYLE_GUIDE.md §4, sections of the same `kind` must stay
     contiguous, kinds are ordered general-to-specific (guidelines,
     definitions, steps, then the generic `section`), multiple
     `guidelines` sections order `framing: when-to-use` before
@@ -252,7 +252,7 @@
     precedes a `for: all` how-to-use one, and comparing those two on `for`
     would be a false positive.
 
-    One sub-tier STYLE_GUIDE.md §2 describes is deliberately NOT checked:
+    One sub-tier STYLE_GUIDE.md §4 describes is deliberately NOT checked:
     the tag-scoped-guidelines tier. Identifying "this section is really
     just the accessibility rules" means reading its items, not its shape,
     which is not decidable the way `framing` and `for` are. It remains a
@@ -263,7 +263,7 @@
   enforcement: advisory
   title: A `guidelines` section's items aren't ordered must, should, may, should-not, must-not.
   description: >-
-    Per STYLE_GUIDE.md §3, items within one guidelines section should be
+    Per STYLE_GUIDE.md §5, items within one guidelines section should be
     ordered by `level` in that exact sequence - strongest positive to
     strongest negative, with the two conditional levels in the middle.
     Items sharing a level keep their relative order; only a level-to-level

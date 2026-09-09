@@ -1,7 +1,7 @@
+kind: component
 # expect: DSDS-01
 # rejectedBy: semantic
 id: bad-api-platform
-kind: component
 name: Bad Api Platform
 description: A component declaring two sourceFiles entries for the same platform.
 sourceFiles:

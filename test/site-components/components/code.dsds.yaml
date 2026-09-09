@@ -1,5 +1,5 @@
-id: code
 kind: component
+id: code
 name: Code
 description: A syntax-highlighted code block (or inline code span), highlighted via the CSS Custom Highlight API — the raw text stays one untouched text node, so nothing is ever wrapped in spans or escaped through innerHTML.
 

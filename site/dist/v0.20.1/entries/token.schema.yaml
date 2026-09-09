@@ -8,14 +8,14 @@ allOf:
   - $ref: https://designsystemdocspec.org/v0.20.1/entries/entry.schema.yaml
   - type: object
     properties:
+      kind:
+        const: token
+        description: Marks this entry as a token.
       id:
         $ref: https://designsystemdocspec.org/v0.20.1/common/id.schema.yaml#/$defs/tokenId
         description: This token's unique id.
         $comment: Looser than the standard id pattern. Allows slash separators too, to fit however a token layer or DTCG source already names things.
         example: color.action.primary
-      kind:
-        const: token
-        description: Marks this entry as a token.
       metadata:
         allOf:
           - $ref: https://designsystemdocspec.org/v0.20.1/metadata/entry-metadata.schema.yaml

@@ -16,22 +16,22 @@ schemaVersion: "0.20.1"
 name: Nested Color Tokens
 
 entries:
-  - id: color.palette.blue-500
-    kind: token
+  - kind: token
+    id: color.palette.blue-500
     name: Blue 500
     description: A primitive blue value in the palette scale. No usage meaning of its own — semantic tokens like color.action.primary alias it.
     tokenType: color
     source: ./nested-color.tokens.json
 
-  - id: color.palette.blue-600
-    kind: token
+  - kind: token
+    id: color.palette.blue-600
     name: Blue 600
     description: A primitive blue value in the palette scale, one step darker than blue-500. No usage meaning of its own.
     tokenType: color
     source: ./nested-color.tokens.json
 
-  - id: color.action.primary
-    kind: token
+  - kind: token
+    id: color.action.primary
     name: Action Primary
     description: Background for the single primary action on a surface. Its value is a DTCG alias into the palette (`{color.palette.blue-500}`) — the primitive and the semantic meaning live in two different places on purpose, so the palette can be re-themed without touching what "primary action" means.
     sections:
@@ -47,8 +47,8 @@ entries:
     tokenType: color
     source: ./nested-color.tokens.json
 
-  - id: color.action.primary-hover
-    kind: token
+  - kind: token
+    id: color.action.primary-hover
     name: Action Primary Hover
     description: Hover state for the primary action background.
     refs:

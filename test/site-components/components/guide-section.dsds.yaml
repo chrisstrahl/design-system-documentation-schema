@@ -1,5 +1,5 @@
-id: guide-section
 kind: component
+id: guide-section
 name: GuideSection
 description: A two-column split wrapper for narrative guide pages — prose and headings on the left, a worked code example on the right. Renders nothing of its own; both columns are plain slots, so the caller's markdown-compiled content passes through unchanged.
 

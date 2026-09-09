@@ -1,5 +1,5 @@
-id: dialog
 kind: component
+id: dialog
 name: Dialog
 description: A modal surface that interrupts the current task until the user responds or dismisses it.
 

@@ -1,5 +1,5 @@
-id: button-group
 kind: component
+id: button-group
 name: Button Group
 description: A set of related buttons laid out together, sharing consistent spacing and alignment.
 

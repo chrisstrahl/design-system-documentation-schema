@@ -1,5 +1,5 @@
-id: color.surface.default
 kind: token
+id: color.surface.default
 name: Surface Default
 description: The base background color for a standard content surface.
 

@@ -1,7 +1,7 @@
+kind: entry
 # rejectedBy: schema
 # errorAt: /items/0/level
 id: bad-level-casing
-kind: entry
 name: Bad Level Casing
 description: A guideline whose level uses capitals, which requirement-level.schema.yaml's enum (all lowercase) doesn't allow.
 sections:

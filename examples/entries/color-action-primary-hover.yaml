@@ -1,5 +1,5 @@
-id: color.action.primary.hover
 kind: token
+id: color.action.primary.hover
 name: Action Primary Hover
 description: The fill color for a high-emphasis interactive surface while the pointer is over it.
 

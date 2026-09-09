@@ -1,3 +1,4 @@
+kind: component
 # Two hard cases in one small file:
 #   - No sourceFiles. This component is designed but not yet built - the
 #     spec has no position on documentation-before-implementation, and
@@ -8,7 +9,6 @@
 #     the shape of one (examples/invalid/DSDS-03-checked-by-needs-ref.yaml
 #     shows the failure case; this is the same rule done right).
 id: icon-button
-kind: component
 name: Icon Button
 description: A button variant that renders a single icon with no visible label.
 metadata:
