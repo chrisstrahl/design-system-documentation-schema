@@ -27,6 +27,7 @@ const PAGE_FOR_SOURCE = {
   "conformance.mdx": "conformance",
   "stability.mdx": "stability",
   "interoperability.mdx": "interoperability",
+  "style-guide.mdx": "style-guide",
   "fragments/404.mdx": "404",
   "fragments/schema-intro.mdx": "schema",
 };

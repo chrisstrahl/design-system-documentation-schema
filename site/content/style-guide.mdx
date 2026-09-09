@@ -1,8 +1,17 @@
+---
+# GENERATED FILE - do not edit. Source: STYLE_GUIDE.md, rewritten by
+# scripts/generate/sync-style-guide.mjs. Edit the root file instead; `npm run generate`
+# rewrites this one and `npm run generate:check` fails if the two drift.
+title: "DSDS authoring style guide — DSDS {{VERSION}}"
+slug: style-guide
+description: "How to order things inside a DSDS document, so every document reads the same way no matter who wrote it."
+---
+
 # DSDS authoring style guide
 
 How to order things inside a DSDS document, so every document reads the same way no matter who wrote it.
 
-None of this changes whether a document is valid. The schema accepts any order. Four warning-only rules — `DSDS-17` through `DSDS-20`, in the [advisory tier](https://designsystemdocspec.org/conformance#enforcement-tiers) — point out anything out of order when you run `npm run lint`. Nothing here can fail `npm run check:all`. See [Tooling](#tooling) for what gets checked automatically and what's left to you.
+None of this changes whether a document is valid. The schema accepts any order. Four warning-only rules — `DSDS-17` through `DSDS-20`, in the [advisory tier](conformance.html#enforcement-tiers) — point out anything out of order when you run `npm run lint`. Nothing here can fail `npm run check:all`. See [Tooling](#tooling) for what gets checked automatically and what's left to you.
 
 These guidelines are nothing more than opinions. Ignore them if a different organization reads better for your needs.
 
@@ -35,13 +44,13 @@ Everything below is one of a few ideas, applied to a different part of a documen
 
 ## 1. Base documents and `shared` entries
 
-A base document is the outermost object. Its fields go in the order seen in [`base.schema.yaml`](schema/base.schema.yaml). `shared` entries follow [`shared.schema.yaml`](schema/shared.schema.yaml).
+A base document is the outermost object. Its fields go in the order seen in [`base.schema.yaml`](/v{{VERSION}}/base.schema.yaml). `shared` entries follow [`shared.schema.yaml`](/v{{VERSION}}/shared.schema.yaml).
 
 `DSDS-20` checks base documents. `DSDS-17` checks shared entries, falling back to `shared.schema.yaml` when an object has no `kind`.
 
 ### Entry order, inside `entries[]`
 
-When a base document holds several entries, order the entries themselves by `kind` (the order [`entries/entry.schema.yaml`](schema/entries/entry.schema.yaml) lists its `kind` values). This order intends to reflect the "food chain" of systems' elements.
+When a base document holds several entries, order the entries themselves by `kind` (the order [`entries/entry.schema.yaml`](/v{{VERSION}}/entries/entry.schema.yaml) lists its `kind` values). This order intends to reflect the "food chain" of systems' elements.
 
 1. **`system`:** Always first since it contextualizes everything contained within.
 2. **`token`:** Defines the attributes that themes and components are created from.
@@ -69,7 +78,7 @@ entries:
 
 Follow the high-level order:
 
-1. **Shared entry fields _except_ `$extensions`** defined in [`entries/entry.schema.yaml`](schema/entries/entry.schema.yaml).
+1. **Shared entry fields _except_ `$extensions`** defined in [`entries/entry.schema.yaml`](/v{{VERSION}}/entries/entry.schema.yaml).
 2. **Then that kind's own fields**, defined in `entries/<kind>.schema.yaml`. A custom kind has no file of its own, so should follow the high-level guidance.
 3. **Then `$extensions`.** All information that adds to the schema goes last.
 
@@ -79,7 +88,7 @@ If a document is ordered differently, the `DSDS-17` warning prints the whole ord
 
 ## 3. `metadata`
 
-A `metadata` block joins two lists the same way an entry does: the fields every entry's metadata shares, from [`metadata/metadata.schema.yaml`](schema/metadata/metadata.schema.yaml), then the ones for that kind of entry, from [`metadata/entry-metadata.schema.yaml`](schema/metadata/entry-metadata.schema.yaml) or [`metadata/system-metadata.schema.yaml`](schema/metadata/system-metadata.schema.yaml), then `$extensions` last. All `metadata` types work the same way.
+A `metadata` block joins two lists the same way an entry does: the fields every entry's metadata shares, from [`metadata/metadata.schema.yaml`](/v{{VERSION}}/metadata/metadata.schema.yaml), then the ones for that kind of entry, from [`metadata/entry-metadata.schema.yaml`](/v{{VERSION}}/metadata/entry-metadata.schema.yaml) or [`metadata/system-metadata.schema.yaml`](/v{{VERSION}}/metadata/system-metadata.schema.yaml), then `$extensions` last. All `metadata` types work the same way.
 
 ---
 
@@ -87,7 +96,7 @@ A `metadata` block joins two lists the same way an entry does: the fields every 
 
 ### A section's own fields
 
-A section leads with the fields that say what it is: `kind`, then `for`, then the one field its kind adds — `framing` for `guidelines`, `ordered` for `steps`. The rest follow in the order [`sections/section.schema.yaml`](schema/sections/section.schema.yaml) lists them.
+A section leads with the fields that say what it is: `kind`, then `for`, then the one field its kind adds — `framing` for `guidelines`, `ordered` for `steps`. The rest follow in the order [`sections/section.schema.yaml`](/v{{VERSION}}/sections/section.schema.yaml) lists them.
 
 That's the same reason `kind` leads everywhere. These fields tell a reader what they're looking at before they read any of it, so they sit at the top where the reader already is.
 
@@ -104,19 +113,19 @@ Order section kinds like this:
 3. **`steps`** — one procedure or checklist. The narrowest of the three, because it's one exact sequence rather than general advice.
 4. **`section`** (the plain kind) — prose that didn't fit the other three. Last, because it's the fallback.
 
-That's the order [`sections/section.schema.yaml`](schema/sections/section.schema.yaml) lists its `kind` values in. A namespaced custom kind like `acme.custom-section` isn't in that list, so it sorts after all four. A section with no `kind` at all is read as `section`, the default that file declares.
+That's the order [`sections/section.schema.yaml`](/v{{VERSION}}/sections/section.schema.yaml) lists its `kind` values in. A namespaced custom kind like `acme.custom-section` isn't in that list, so it sorts after all four. A section with no `kind` at all is read as `section`, the default that file declares.
 
 ### Within `guidelines`: how broad, then who it's for
 
 Guidelines sorts content by: **how broad first, who it's for second.** `for: agent`, `framing: when-to-use` still comes before a `for: all` `framing: how-to-use`, because breadth is settled first. Audience only sorts within one breadth tier — the three above.
 
-Guidelines should lead with when to use, then describe how to use it. That's the order [`sections/guidelines.schema.yaml`](schema/sections/guidelines.schema.yaml) lists its `framing` values in:
+Guidelines should lead with when to use, then describe how to use it. That's the order [`sections/guidelines.schema.yaml`](/v{{VERSION}}/sections/guidelines.schema.yaml) lists its `framing` values in:
 
 1. **`framing: when-to-use`:** Does it make sense to use?
 2. **`framing: how-to-use`:** If so, how do you use it? Leaving `framing` out means this — it's the default that file declares.
 3. **Tagged guidelines:** A section counts as tagged when it has two or more items and every one of them names the same tag — the accessibility rules, say, or the mobile-only ones. Narrow instruction should follow general information, so these come last whatever their `framing` is. Two items are the minimum because one item always shares a tag with itself.
 
-Sections in the same breadth tier are then ordered by how broad the audience is. The order [`sections/section.schema.yaml`](schema/sections/section.schema.yaml) lists its `for` values in:
+Sections in the same breadth tier are then ordered by how broad the audience is. The order [`sections/section.schema.yaml`](/v{{VERSION}}/sections/section.schema.yaml) lists its `for` values in:
 
 1. **`for: all`** — also what you get by leaving `for` out, since it's the default that file declares. So an omitted `for` sorts first, not last.
 2. **`for: human`**
@@ -165,13 +174,13 @@ Order an item's fields the way its own schema file lists them.
 
 | Shape | Its schema file |
 |---|---|
-| A `guidelines` item | [`sections/guidelines.schema.yaml`](schema/sections/guidelines.schema.yaml) |
-| A `definitions` item | [`sections/definitions.schema.yaml`](schema/sections/definitions.schema.yaml) |
-| A `steps` item | [`sections/steps.schema.yaml`](schema/sections/steps.schema.yaml) |
+| A `guidelines` item | [`sections/guidelines.schema.yaml`](/v{{VERSION}}/sections/guidelines.schema.yaml) |
+| A `definitions` item | [`sections/definitions.schema.yaml`](/v{{VERSION}}/sections/definitions.schema.yaml) |
+| A `steps` item | [`sections/steps.schema.yaml`](/v{{VERSION}}/sections/steps.schema.yaml) |
 
 ### Guideline item order, by `level`
 
-Order items by `level`, in the order [`common/requirement-level.schema.yaml`](schema/common/requirement-level.schema.yaml) lists its values in:
+Order items by `level`, in the order [`common/requirement-level.schema.yaml`](/v{{VERSION}}/common/requirement-level.schema.yaml) lists its values in:
 
 ```
 must
@@ -201,9 +210,9 @@ items:
 
 ## 6. Refs and combos
 
-A `combo` follows [`common/combo.schema.yaml`](schema/common/combo.schema.yaml).
+A `combo` follows [`common/combo.schema.yaml`](/v{{VERSION}}/common/combo.schema.yaml).
 
-A `ref` follows [`common/ref.schema.yaml`](schema/common/ref.schema.yaml): `to` or `href` first, then `rel`, then `role` and `note`. "What does this point at" reads before "what kind of pointer is it".
+A `ref` follows [`common/ref.schema.yaml`](/v{{VERSION}}/common/ref.schema.yaml): `to` or `href` first, then `rel`, then `role` and `note`. "What does this point at" reads before "what kind of pointer is it".
 
 This used to be the one place the guide overrode the schema, because the file listed `rel` first. The file was reordered to match instead, so there's no exception left. Nothing checks these smaller shapes, so the order here is a convention rather than something enforced.
 
@@ -300,4 +309,4 @@ Getting the order wrong should never fail `npm run check:all`. These rules only 
 
 **The tag tier reads the items.** Every other sort here looks at a field. `DSDS-18` decides whether a section is "about one tag" by intersecting its items' `tags`, which is the one judgment it makes from content rather than shape. It needs two items to say yes, so a section with a single tagged item is left alone.
 
-**Field order has one source: the schema files.** The tables on the [Schema page](https://designsystemdocspec.org/schema) are generated from each schema file's own order, `DSDS-17` and `DSDS-20` read that same order when they run, and [§2](#2-entries) tells you to follow it. So you can read the authoring order off a property table, and the other way round.
+**Field order has one source: the schema files.** The tables on the [Schema page](schema.html) are generated from each schema file's own order, `DSDS-17` and `DSDS-20` read that same order when they run, and [§2](#2-entries) tells you to follow it. So you can read the authoring order off a property table, and the other way round.

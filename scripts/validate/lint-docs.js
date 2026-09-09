@@ -128,6 +128,39 @@ const framingRank = enumRanker("sections/guidelines.schema.yaml", FRAMING_AT);
 const LEVEL = declaredEnum("common/requirement-level.schema.yaml", (d) => d);
 const levelRank = enumRanker("common/requirement-level.schema.yaml", (d) => d);
 
+// STYLE_GUIDE.md §4's breadth scale has three tiers, not two: `when-to-use`, then
+// `how-to-use`, then a section that is really about one tag. The third isn't a field - it is
+// true when every item names the same tag - so unlike the other sorts it has to be read out of
+// the items rather than off the section's own shape.
+const TAG_TIER = FRAMING.values.length;
+
+// The tag a section is entirely about, or null. Two items minimum: a one-item section shares a
+// tag with itself no matter what, and treating that as "about one tag" would sort every single
+// tagged item to the end of the run for a reason no reader would recognize.
+function sharedTag(section) {
+  const items = section.items;
+  if (!Array.isArray(items) || items.length < 2) return null;
+  if (!items.every((it) => it && Array.isArray(it.tags) && it.tags.length)) return null;
+  const shared = items
+    .map((it) => new Set(it.tags))
+    .reduce((a, b) => new Set([...a].filter((tag) => b.has(tag))));
+  return shared.size ? [...shared].sort()[0] : null;
+}
+
+// A tag-scoped section is the narrowest tier whatever its `framing`, so this replaces the
+// framing rank rather than composing with it.
+const breadthRank = (section) => (sharedTag(section) ? TAG_TIER : framingRank(section.framing));
+
+function describeBreadth(section) {
+  const tag = sharedTag(section);
+  return tag
+    ? `a section about one tag (\`${tag}\`)`
+    : `a \`framing: ${section.framing || FRAMING.fallback}\` section`;
+}
+
+const describeTier = (tier) =>
+  tier === TAG_TIER ? "both about one tag" : `both ${FRAMING.values[tier]}`;
+
 // How a section's audience reads once the schema's default is applied, for use in messages.
 // A section that leaves `for` out is ranked as the default, so it has to be named as the
 // default too - printing "for: undefined" would describe the document rather than the problem.
@@ -259,10 +292,9 @@ const IMPLEMENTATIONS = {
   },
 
   // STYLE_GUIDE.md §4 - same-kind sections must stay contiguous and general-to-specific
-  // (guidelines, definitions, steps, section); among guidelines sections, framing:
-  // when-to-use comes first, then audience (all, human, agent) within one framing group.
-  // Doesn't attempt the tag-scoped-guidelines sub-tier (see this rule's catalog note) -
-  // "this section is really about one tag" means reading its items, not its shape.
+  // (guidelines, definitions, steps, section); among guidelines sections, breadth decides
+  // first (when-to-use, how-to-use, then about-one-tag), then audience (all, human, agent)
+  // within one breadth tier.
   "section-order": (entry, emit) => {
     const sections = entry.sections;
     if (!Array.isArray(sections) || sections.length < 2) return;
@@ -275,30 +307,30 @@ const IMPLEMENTATIONS = {
       return; // fix grouping first - the framing check below assumes the guidelines sections are already one contiguous run
     }
     const guidelinesRun = sections.filter((s) => s.kind === "guidelines");
-    const framingInversion = firstInversion(guidelinesRun, (s) => framingRank(s.framing));
-    if (framingInversion) {
+    const breadthInversion = firstInversion(guidelinesRun, breadthRank);
+    if (breadthInversion) {
       emit(
         "/sections",
-        `"${entry.id}" has a how-to-use guidelines section before a when-to-use one — STYLE_GUIDE.md orders \`framing\` ${FRAMING.values.join(", ")}.`,
+        `"${entry.id}" has ${describeBreadth(breadthInversion[0])} before ${describeBreadth(breadthInversion[1])} — STYLE_GUIDE.md §4 orders guidelines sections ${FRAMING.values.join(", ")}, then sections about one tag.`,
       );
-      return; // fix specificity first - the audience sort below only orders sections that TIE on framing
+      return; // fix breadth first - the audience sort below only orders sections that TIE on breadth
     }
-    // Audience, within one framing group only. Grouping by framing rather than scanning the
-    // whole run is what keeps the two sorts composed in the right order: a `for: agent`
-    // when-to-use section legitimately precedes a `for: all` how-to-use one, so comparing
-    // those two on `for` would be a false positive.
-    const byFraming = new Map();
+    // Audience, within one breadth tier only. Grouping first is what keeps the two sorts
+    // composed in the right order: a `for: agent` when-to-use section legitimately precedes a
+    // `for: all` how-to-use one, and a `for: all` tag-scoped section legitimately follows a
+    // `for: human` one, so comparing across tiers on `for` would be a false positive.
+    const byBreadth = new Map();
     for (const s of guidelinesRun) {
-      const framing = s.framing || FRAMING.fallback;
-      if (!byFraming.has(framing)) byFraming.set(framing, []);
-      byFraming.get(framing).push(s);
+      const tier = breadthRank(s);
+      if (!byBreadth.has(tier)) byBreadth.set(tier, []);
+      byBreadth.get(tier).push(s);
     }
-    for (const [framing, run] of byFraming) {
+    for (const [tier, run] of byBreadth) {
       const audienceInversion = firstInversion(run, (s) => audienceRank(s.for));
       if (audienceInversion) {
         emit(
           "/sections",
-          `"${entry.id}" has a \`for: ${describeAudience(audienceInversion[0])}\` guidelines section before a \`for: ${describeAudience(audienceInversion[1])}\` one (both ${framing}) — STYLE_GUIDE.md orders audience ${AUDIENCE.values.join(", ")}, broadest readership first.`,
+          `"${entry.id}" has a \`for: ${describeAudience(audienceInversion[0])}\` guidelines section before a \`for: ${describeAudience(audienceInversion[1])}\` one (${describeTier(tier)}) — STYLE_GUIDE.md orders audience ${AUDIENCE.values.join(", ")}, broadest readership first.`,
         );
         break;
       }

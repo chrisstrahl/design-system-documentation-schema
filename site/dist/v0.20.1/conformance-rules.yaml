@@ -242,21 +242,23 @@
     Per STYLE_GUIDE.md §4, sections of the same `kind` must stay
     contiguous, kinds are ordered general-to-specific (guidelines,
     definitions, steps, then the generic `section`), multiple
-    `guidelines` sections order `framing: when-to-use` before
-    `how-to-use`/unset, and within one framing group they order by
-    audience: `for: all`, then `human`, then `agent`.
+    `guidelines` sections are ordered by breadth (`framing: when-to-use`,
+    then `how-to-use`/unset, then a section about a single tag), and
+    within one breadth tier they order by audience: `for: all`, then
+    `human`, then `agent`.
   note: >-
-    The two sorts compose in that order - specificity, then audience - so
-    the audience check runs per framing group rather than across the whole
+    The two sorts compose in that order - breadth, then audience - so the
+    audience check runs per breadth tier rather than across the whole
     guidelines run. A `for: agent` when-to-use section legitimately
-    precedes a `for: all` how-to-use one, and comparing those two on `for`
-    would be a false positive.
+    precedes a `for: all` how-to-use one, and a `for: all` tag-scoped
+    section legitimately follows a `for: human` one, so comparing across
+    tiers on `for` would be a false positive.
 
-    One sub-tier STYLE_GUIDE.md §4 describes is deliberately NOT checked:
-    the tag-scoped-guidelines tier. Identifying "this section is really
-    just the accessibility rules" means reading its items, not its shape,
-    which is not decidable the way `framing` and `for` are. It remains a
-    convention; see STYLE_GUIDE.md's Tooling section.
+    The third breadth tier is the only sort not read off a field. A
+    section counts as being about one tag when it has at least two items
+    and every one of them names the same tag. Two items are required
+    because a single item shares a tag with itself no matter what, which
+    would sort every lone tagged item to the end of the run.
 
 - id: DSDS-19
   name: guideline-item-level-order

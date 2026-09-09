@@ -8,15 +8,13 @@ A standard, machine-readable format for design system documentation.
 
 DSDS defines a YAML-based format for documenting a design system as a graph of **entries** and **sections**:
 
-- **System** — The design system as a whole: version, organization, url, license, platforms, plus system-wide documentation.
-- **Components** — Reusable UI elements, with their own `sourceFiles`/`imports` (pointing at real source instead of hand-typing an interface), `traits` (variants and states, boolean or enum), and `combos` (pairing rules).
-- **Tokens** — Documents the purpose, guidelines, and organization of a design token. Values and types live in the DTCG source file a token entry points at, not in DSDS.
-- **Themes** — A named set of token overrides, pointing at its own DTCG source file.
-- **Entry** — The generic, open kind for anything else: a foundation, a pattern, a guide, or a namespaced custom kind (e.g. `acme.icon-library`) for a document that wants its own recognizable name.
+- **System:** The design system as a whole.
+- **Tokens:** Documents the purpose, guidelines, and organization of a design token. Values and types live in the DTCG source file each token entry points at.
+- **Themes:** A named set of token overrides, pointing at its own DTCG source file.
+- **Components:** Reusable UI elements, with their own `sourceFiles`/`imports` (pointing at real source instead of hand-typing an interface), `traits` (variants and states, boolean or enum), and `combos` (pairing rules).
+- **Entries** — An open kind for anything else. Link a foundation, pattern, or guide. Custom kinds can also be namespaced (ex: `acme.icon-library`) for teams that want recognizable custom entries.
 
-Every entry's structured documentation lives in one **sections** array. Each section is a typed object with a `kind` tag — `definitions`, `guidelines`, `steps`, or the generic `section` — plus `freeform`, headed nestable prose every section kind can carry alongside its own structured `items`. Any entry kind can use any section kind; there's no placement gate. A section also carries a `for` field (`human`, `agent`, or `all`) naming its audience, so a document serves both readers without a separate parallel structure.
-
-The goal is simple: make design system docs structured, portable, and easy for tools to read. The tool can be a docs site, a linter, a code assistant, or a person reading YAML.
+Every entry's structured documentation lives in a **sections** array. Each section is a typed object with a `kind` tag (`definitions`, `guidelines`, `steps`, or the generic `section`). Sections also include `freeform` for nestable content that sits alongside its own structured `items`. Any entry kind can use any section kind. A section also carries a `for` field (`human`, `agent`, or `all`) naming its audience, so audience-specific content can be displayed when appropriate.
 
 ## Why?
 
@@ -36,10 +34,7 @@ The W3C Design Tokens Community Group defines a format for trading token **value
 
 ## Interoperability
 
-DSDS is built to sit alongside the formats that already own a layer, not to
-replace them. **If another format owns a fact, DSDS points at it rather than
-restating it** — a token entry has a `source` and no `value`; a component
-entry has `sourceFiles` and `specs` and no property table.
+DSDS is built to sit alongside the formats that already own a layer. **If another format owns a fact, DSDS points at it rather than restating it**. A token entry has a `source` and no `value`; a component entry has `sourceFiles` and `specs` and no property table.
 
 | Format | What it owns | The DSDS field |
 |---|---|---|
@@ -51,53 +46,38 @@ entry has `sourceFiles` and `specs` and no property table.
 | WCAG, ARIA APG, MDN | Why a guideline exists | A guideline's `evidence` |
 | Figma, npm, anything else | Design artifacts, distribution, vendor data | `rel: design`, `imports[].package`, `$extensions` |
 
-Full detail, with a worked example for each, is on the site's
-**[Interoperability](https://designsystemdocspec.org/interoperability)** page.
-Validated example pairs live in [`examples/interop/`](examples/interop/).
-
-> [!NOTE]
-> **Credit where due:** DSDS's conformance design follows the trail blazed by the [Adobe Spectrum Design Data specification](https://opensource.adobe.com/spectrum-design-data/spec/) — a layered model of structural schema rules plus a semantic-rule catalog with stable IDs. Prior art this good deserves a shoutout.
+Full detail, with a worked example for each, is on the site's **[Interoperability](https://designsystemdocspec.org/interoperability)** page. Validated example pairs live in [`examples/interop/`](examples/interop/).
 
 ## Conformance
 
-What it means for a document to follow the DSDS spec — the four conformance
-classes, the three enforcement tiers, and the full `DSDS-01`–`DSDS-20` rule
-catalog — is documented on the site:
+Two pages on the site cover what it takes to follow the spec:
 
-- **[Conformance](https://designsystemdocspec.org/conformance)** — the rule
-  catalog, conformance classes, enforcement tiers, project-scope resolution,
-  and how a component's status works across platforms.
-- **[Stability](https://designsystemdocspec.org/stability)** — what's safe to
-  build tooling around, what can still change before 1.0, how to migrate a
-  0.15.2 document, and the criteria for declaring 1.0.
+- **[Conformance](https://designsystemdocspec.org/conformance)** — the four conformance classes, the three enforcement tiers, all 20 rules, how a project's scope gets worked out, and how a component's status works when it ships on more than one platform.
+- **[Stability](https://designsystemdocspec.org/stability)** — what's safe to build tooling on, what can still change before 1.0, how to bring a 0.15.2 document up to date, and what has to be true before 1.0 ships.
 
-The machine-readable catalog is
-[`schema/conformance-rules.yaml`](schema/conformance-rules.yaml); `npm run
-check` asserts it matches `scripts/validate/validate.js` in both directions.
+If you're writing a tool, read the rules from [`schema/conformance-rules.yaml`](schema/conformance-rules.yaml) rather than from a page. `npm run check` keeps that file honest: for the semantic rules, every rule in the file has to exist in `scripts/validate/validate.js`, and every rule in the validator has to exist in the file.
 
-The words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY**
-carry their [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) meaning
-inside the DSDS schema files, and only when written in capital letters. The
-full index of every such statement in the schema — regenerated from those
-schemas on every build, so it can't drift — is on the site's
-[Conformance](https://designsystemdocspec.org/conformance#index-of-every-normative-statement)
-page, not duplicated here.
+The last four rules are focused on style/organization. `DSDS-17` through `DSDS-20` are suggestions on the ordering conventions in the **[Style guide](https://designsystemdocspec.org/style-guide)**, or [STYLE_GUIDE.md](STYLE_GUIDE.md) if you'd rather read it in the repo. What order an object's fields go in, and what order entries, sections, and guideline items come in. These four rules only warn. `npm run lint` prints them and still exits 0. Ignore all four and your document still conforms.
+
+> [!NOTE]
+> **Credit where due:** DSDS's conformance design follows thinking from the [Adobe Spectrum Design Data specification](https://opensource.adobe.com/spectrum-design-data/spec/). Props to them.
 
 ## Documentation
 
-The authoritative reference for every schema and field is the **documentation site at [designsystemdocspec.org](https://designsystemdocspec.org/)**. Property tables there come straight from the schema files, so they cannot drift from the code.
+Every schema and field is described in the **documentation site at [designsystemdocspec.org](https://designsystemdocspec.org/)**. But all schema docs are generated directly from the schema—so read the YAML files directly if that's your kind of thing.
 
 - **[Overview](https://designsystemdocspec.org/)** — What DSDS is, the entry/section model, design principles, humans & agents, and interoperability with DTCG/CEM/Storybook. For conformance classes, the `DSDS-01`–`DSDS-11` semantic rule catalog, and stability guarantees, see [Conformance](#conformance) below.
 - **[Quick Start](https://designsystemdocspec.org/quickstart.html)** — Document structure, entry kinds, the section system, and minimal examples for every entry kind.
 - **[Extending the schema](https://designsystemdocspec.org/extending.html)** — `$extensions`, custom kinds, and profiles: the three ways to go beyond what the spec ships with, and when to reach for each.
 - **[Interoperability](https://designsystemdocspec.org/interoperability)** — every format DSDS points at instead of restating: DTCG, CEM, CSF/Storybook, tests, standards, design tools.
 - **[Schema](https://designsystemdocspec.org/schema.html)** — Opens with how the schema itself is organized, then every schema definition, each with a real example next to it.
+- **[Style guide](https://designsystemdocspec.org/style-guide)** — What order to write things in: an object's fields, and the entries, sections, and guideline items inside a list.
 
 You can also build the site locally with `npm run build` and open `site/dist/index.html`.
 
-This README leaves out schema field listings and example payloads on purpose — those live on the documentation site as a single source of truth.
+Writing a DSDS document yourself? The **[Style guide](https://designsystemdocspec.org/style-guide)** covers field order and list order — a consistent, non-normative convention every example in this repo follows, not something the schema enforces. See [Conformance](#conformance) for which rules report it.
 
-Writing a DSDS document yourself? [STYLE_GUIDE.md](STYLE_GUIDE.md) covers field order — a consistent, non-normative convention every example in this repo follows, not something the schema enforces.
+That page is generated from [STYLE_GUIDE.md](STYLE_GUIDE.md), so edit the root file and run `npm run generate`; `npm run check` fails if the two drift.
 
 ## Repository layout
 
@@ -155,17 +135,9 @@ git tag -a v0.20.1 -m "v0.20.1"
 git push && git push origin v0.20.1
 ```
 
-The build launches no browser. `site/assets/og-image.png` is a committed
-source asset, copied into `site/dist/assets/` like any other; run
-`npm run og:generate` and commit the result only when the logo
-(`site/assets/dsds.svg`) or the accent/text tokens in `site/tokens.css`
-change. Playwright is a devDependency for `npm run test:a11y` alone.
-
 Use `npm run bump-version <version> -- --dry-run` to preview changes first, or `--help` for the rest of the flags.
 
-The versioned dist directories (`site/dist/v<n>/dsds.bundled.schema.json` and `dsds.bundled.yaml`) are **immutable public contracts** — older `v<n>/` directories must stay untouched, and they are the one part of `site/dist/` that is tracked in git. `scripts/site/build-site.js` preserves them across rebuilds and never regenerates an older one, so nothing else would put them back.
-
-The rest of `site/dist/` is git-ignored generated output: Netlify runs `npm run check && npm run build` on every deploy, so the served site is always built from the source that produced it. Commit the schema changes, examples, README, CHANGELOG, `package.json`, and the new `site/dist/v<new-version>/` directory together — but not the regenerated HTML, markdown mirrors, or component bundle.
+The versioned dist directories (`site/dist/v<n>/dsds.bundled.schema.json` and `dsds.bundled.yaml`) are **immutable public contracts**. Older `v<n>/` directories must stay untouched, and they are the one part of `site/dist/` that is tracked in git. `scripts/site/build-site.js` preserves them across rebuilds and never regenerates an older one, so nothing else would put them back.
 
 Tag every release (`vX.Y.Z`, pushed to the remote) once its commit is merged — a released version with no tag is indistinguishable from a work-in-progress one to anything that resolves "latest" by walking tags (`dsds-mcp`'s staleness check is one real example). Releases through v0.15.2 did this consistently; if the working tree is currently untagged past that point, tag it before cutting anything new so tag history stops having a gap.
 
@@ -177,10 +149,7 @@ For a documentation-only edit (no schema/example changes), just commit the `site
 
 ## Contributing
 
-This is an early-stage specification (currently DSDS 0.20.1). Feedback and
-contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for what
-a rule, example, or schema change needs to land, and
-[SECURITY.md](SECURITY.md) to report a vulnerability.
+This is an early-stage specification (currently DSDS 0.20.1). Feedback and contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for what a rule, example, or schema change needs to land, and [SECURITY.md](SECURITY.md) to report a vulnerability.
 
 ### Contributors
 
@@ -204,8 +173,7 @@ Everyone who has landed a PR here, with what it added:
 
 And with thanks for contributions that didn't arrive as a PR:
 
-- **[Afyia Smith](https://afyiasmith.co/)** — the `owner`/`reviewed` and
-  `origin` metadata schemas.
+- **[Afyia Smith](https://afyiasmith.co/)** — the `owner`/`reviewed` and `origin` metadata schemas.
 
 ## License
 

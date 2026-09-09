@@ -45,6 +45,7 @@ const FOOTER_LINKS = [
   { label: "Interoperability", href: "interoperability.html", slug: "interoperability" },
   { label: "Security", href: "security.html", slug: "security" },
   { label: "Examples", href: "examples.html", slug: "examples" },
+  { label: "Style guide", href: "style-guide.html", slug: "style-guide" },
 ];
 
 // Machine-readable entry points, and the repo. Not pages this site builds, so deliberately

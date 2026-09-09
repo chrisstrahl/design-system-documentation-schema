@@ -220,6 +220,20 @@ $defs:
           - required:
               - href
         properties:
+          to:
+            type: string
+            pattern: ^[a-z0-9]+(-[a-z0-9]+)*([./][a-z0-9]+(-[a-z0-9]+)*)*(#[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)*)?$
+            description: What this points at, inside this document's own graph.
+            $comment: |-
+              A bare id points at a whole entry. Add `#itemId` (ex: `shared-a11y#focus-visible`) to point at one item inside it. The entry half accepts a token id's looser slash-separated form too (see common/id.schema.yaml's tokenId), since `to` can target a token entry.
+              This pattern only checks the target is *shaped* like an id (or id#itemId) - not that it actually exists. A capitalized display name (`to: Button`) or a value with a space in it can never be a real id, whatever else is in the document, so this catches that class of mistake with no other file needed. Whether the target actually resolves is a separate, resolution-level check (see DSDS-05 for the #itemId form).
+            example: shared-a11y#focus-visible
+          href:
+            type: string
+            format: uri-reference
+            description: What this points at, outside this document. Such as a file, URL, or package.
+            $comment: A URI. Can be a relative path (`./tests/button.a11y.test.ts`) or a pseudo-scheme like `npm:@org/ds-react`.
+            example: ./tests/button.a11y.test.ts
           rel:
             oneOf:
               - type: string
@@ -257,20 +271,6 @@ $defs:
               `contract` points at an already-generated, machine-readable API contract document (props, slots, events, etc. in some standard, tool-readable shape) - not the source `sourceFiles` extracts from, and not any one specific format: DSDS doesn't parse or validate the target's contents, only points at it. A component uses its own `specs` for this rather than `refs`, the same way it uses `sourceFiles` instead of `rel: source`.
               Namespaced custom values (ex: "acme.supersedes") are allowed too.
             example: depends-on
-          to:
-            type: string
-            pattern: ^[a-z0-9]+(-[a-z0-9]+)*([./][a-z0-9]+(-[a-z0-9]+)*)*(#[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)*)?$
-            description: What this points at, inside this document's own graph.
-            $comment: |-
-              A bare id points at a whole entry. Add `#itemId` (ex: `shared-a11y#focus-visible`) to point at one item inside it. The entry half accepts a token id's looser slash-separated form too (see common/id.schema.yaml's tokenId), since `to` can target a token entry.
-              This pattern only checks the target is *shaped* like an id (or id#itemId) - not that it actually exists. A capitalized display name (`to: Button`) or a value with a space in it can never be a real id, whatever else is in the document, so this catches that class of mistake with no other file needed. Whether the target actually resolves is a separate, resolution-level check (see DSDS-05 for the #itemId form).
-            example: shared-a11y#focus-visible
-          href:
-            type: string
-            format: uri-reference
-            description: What this points at, outside this document. Such as a file, URL, or package.
-            $comment: A URI. Can be a relative path (`./tests/button.a11y.test.ts`) or a pseudo-scheme like `npm:@org/ds-react`.
-            example: ./tests/button.a11y.test.ts
           role:
             type: string
             description: What the thing being pointed at does in this context.

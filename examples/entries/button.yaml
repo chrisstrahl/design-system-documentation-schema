@@ -50,6 +50,31 @@ sections:
             rationale: Multiple primary buttons compete for attention and force the user to guess which action is actually the recommended one.
             failureMode: A dialog ships with two primary-styled buttons (e.g. "Save" and "Save as draft"), and usability testing shows users default to the wrong one.
 
+  # Every item here carries the `accessibility` tag, which makes this a
+  # tag-scoped section: narrowest, so it follows every how-to-use section
+  # above it whatever their `for` is. `for: all` after `for: human` is not
+  # an audience inversion, because audience only sorts within one tier.
+  - kind: guidelines
+    for: all
+    title: Accessibility
+    items:
+      - level: must
+        statement: Give an icon-only button an accessible name that matches its visible tooltip.
+        checks:
+          - href: ./tests/button.a11y.test.ts
+            rel: test
+            role: vitest + axe-core
+        checkedBy: automated
+        tags: [accessibility, naming]
+      - level: must
+        statement: Keep the focus indicator visible when the button is focused by keyboard.
+        checkedBy: assisted
+        tags: [accessibility, focus]
+      - level: should-not
+        statement: Do not remove the button from the tab order to make it decorative.
+        checkedBy: manual
+        tags: [accessibility, focus]
+
   - kind: definitions
     for: all
     context: terms
@@ -98,8 +123,8 @@ sourceFiles:
     file: ./src/Button.tsx
 
 specs:
-  - rel: contract
-    href: ./contracts/button.contract.json
+  - href: ./contracts/button.contract.json
+    rel: contract
     role: DS Contracts
 
 # One field for every way the button varies: configuration the consumer
