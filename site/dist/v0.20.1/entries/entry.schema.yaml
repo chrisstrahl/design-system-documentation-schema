@@ -37,7 +37,7 @@ properties:
     $comment: Reusable content that is not an artifact at all (like a rule other entries point at instead of restating) belongs in the base document's `shared` list instead.
     oneOf:
       - type: string
-        enum: [system, component, token, theme, entry]
+        enum: [system, token, theme, component, entry]
         default: entry
       - $ref: https://designsystemdocspec.org/v0.20.1/common/id.schema.yaml#/$defs/namespaced
         description: A namespaced custom kind.
@@ -58,6 +58,18 @@ properties:
     example: Gives users a single, consistent way to trigger an action across the product.
   metadata:
     $ref: https://designsystemdocspec.org/v0.20.1/metadata/entry-metadata.schema.yaml
+  sections:
+    type: array
+    minItems: 1
+    description: Every documentation section for this entry.
+    items:
+      $ref: https://designsystemdocspec.org/v0.20.1/sections/section.schema.yaml#/$defs/dispatch
+  extends:
+    $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
+    description: "Pointers to another entry this one inherits from (rel: extends)."
+    example:
+      - to: base-dialog
+        rel: extends
   related:
     $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
     description: Pointers to another entry this one is similar to in usage or purpose.
@@ -65,24 +77,12 @@ properties:
     example:
       - to: link
         rel: alternative-to
-  extends:
-    $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
-    description: "Pointers to another entry this one inherits from (rel: extends)."
-    example:
-      - to: base-dialog
-        rel: extends
   refs:
     $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
     description: This entry's other pointers to entries and outside resources, not covered by `related` or `extends`.
     example:
       - href: https://github.com/org/ds/react/button
         rel: source
-  sections:
-    type: array
-    minItems: 1
-    description: Every documentation section for this entry.
-    items:
-      $ref: https://designsystemdocspec.org/v0.20.1/sections/section.schema.yaml#/$defs/dispatch
   $extensions:
     $ref: https://designsystemdocspec.org/v0.20.1/common/extensions.schema.yaml
 $defs:

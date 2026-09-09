@@ -4,28 +4,28 @@ name: Callout
 description: An info box with a bold, color-coded title above a plain content area — the variant's meaning lives in the title's background color, not an icon.
 
 metadata:
-  status: {status: stable}
   tags: [content, feedback]
-
-sourceFiles:
-  - platform: web-component
-    file: ../../../site/components/callout.js
+  status: {status: stable}
 
 sections:
   - kind: guidelines
     for: agent
     framing: when-to-use
     items:
-      - statement: Use to interrupt normal reading flow for something worth a reader's full attention — a key idea, a tip, or a warning about a real footgun. For routine supplementary detail that fits the surrounding prose, write it as a plain paragraph instead.
-        level: should
+      - level: should
+        statement: Use to interrupt normal reading flow for something worth a reader's full attention — a key idea, a tip, or a warning about a real footgun. For routine supplementary detail that fits the surrounding prose, write it as a plain paragraph instead.
         checkedBy: manual
 
   - kind: guidelines
     for: all
     items:
-      - statement: Content SHOULD stay short — the host is capped at 65ch, matching this site's prose measure, so a callout never becomes a second column of body text.
-        level: should
+      - level: should
+        statement: Content SHOULD stay short — the host is capped at 65ch, matching this site's prose measure, so a callout never becomes a second column of body text.
         checkedBy: manual
+
+sourceFiles:
+  - platform: web-component
+    file: ../../../site/components/callout.js
 
 imports:
   - platform: web-component
@@ -50,4 +50,3 @@ traits:
     id: titled
     description: Whether a title attribute was set. With no title, the title bar collapses entirely (display:none) and only the content box renders.
     setBy: consumer
-

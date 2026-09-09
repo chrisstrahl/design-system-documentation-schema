@@ -74,6 +74,8 @@ allOf:
               $ref: https://designsystemdocspec.org/v0.20.1/common/id.schema.yaml
               description: A stable id for this guideline, so another item, like an agent-only refinement or a checklist entry, can point at it.
               $comment: You can leave this out - a tool MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule).
+            level:
+              $ref: https://designsystemdocspec.org/v0.20.1/common/requirement-level.schema.yaml
             statement:
               $ref: https://designsystemdocspec.org/v0.20.1/common/markdown.schema.yaml
               description: An individual, concrete usage rule.
@@ -83,8 +85,6 @@ allOf:
                 same-as or external-link pointer instead (see the file
                 comment above).
               example: Limit each surface to one primary button.
-            level:
-              $ref: https://designsystemdocspec.org/v0.20.1/common/requirement-level.schema.yaml
             example:
               $ref: https://designsystemdocspec.org/v0.20.1/common/example.schema.yaml
               description: An example illustrating this rule.
@@ -101,12 +101,6 @@ allOf:
               example:
                 - href: https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html
                   rel: external-link
-            related:
-              $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
-              description: Pointers from this guideline to agent-only refinements pointing at the human rule it amends.
-              example:
-                - to: "button#loading-announcement"
-                  rel: refines
             checks:
               $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
               description: "Pointers from this guideline to the lint rule or test that proves it (rel: test, rel: lint-rule)."
@@ -135,6 +129,12 @@ allOf:
               minItems: 1
               uniqueItems: true
               example: [accessibility, focus]
+            related:
+              $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
+              description: Pointers from this guideline to agent-only refinements pointing at the human rule it amends.
+              example:
+                - to: "button#loading-announcement"
+                  rel: refines
             refs:
               $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
               description: The general-purpose fallback for any pointer that doesn't fit `alternatives`/`evidence`/`related`/`checks`.

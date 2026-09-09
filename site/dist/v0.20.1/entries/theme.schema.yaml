@@ -14,14 +14,14 @@ allOf:
         allOf:
           - $ref: https://designsystemdocspec.org/v0.20.1/metadata/entry-metadata.schema.yaml
         unevaluatedProperties: false
-      source:
-        $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml
-        description: Path to the theme's DTCG source file.
-        $comment: A bare string is a plain file path (shorthand for href); use the full ref object when role or note matters.
-        example: tokens/dark.tokens.json
       colorScheme:
         type: string
         enum: [light, dark]
         default: light
         description: Which native color-scheme setting this theme matches.
+      source:
+        $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml
+        description: Path to the theme's DTCG source file.
+        $comment: A bare string is a plain file path (shorthand for href); use the full ref object when role or note matters.
+        example: tokens/dark.tokens.json
 unevaluatedProperties: false

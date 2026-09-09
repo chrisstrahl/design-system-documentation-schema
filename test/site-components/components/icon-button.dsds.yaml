@@ -4,34 +4,34 @@ name: IconButton
 description: A minimal icon-only button — a slotted icon plus a required accessible label. No built-in positioning, color variants, or sizes; that's left to whatever's using it.
 
 metadata:
-  status: {status: stable}
   tags: [actions, button, icon]
-
-sourceFiles:
-  - platform: web-component
-    file: ../../../site/components/icon-button.js
+  status: {status: stable}
 
 sections:
   - kind: guidelines
     for: agent
     framing: when-to-use
     items:
-      - statement: Use only where space is genuinely constrained and the icon's meaning is well-established (e.g. a JSON-view toggle in a code block's corner). Where space allows a visible label, use a plain labeled button — an icon-only control always carries more ambiguity risk than one with text.
-        level: should
+      - level: should
+        statement: Use only where space is genuinely constrained and the icon's meaning is well-established (e.g. a JSON-view toggle in a code block's corner). Where space allows a visible label, use a plain labeled button — an icon-only control always carries more ambiguity risk than one with text.
         checkedBy: manual
 
   - kind: guidelines
     for: all
     items:
-      - statement: The label attribute is REQUIRED — it's the only accessible name this button has, since it renders no visible text. The component sets it as the button's aria-label on every attribute change.
-        level: must
-        checkedBy: automated
+      - level: must
+        statement: The label attribute is REQUIRED — it's the only accessible name this button has, since it renders no visible text. The component sets it as the button's aria-label on every attribute change.
         checks:
           - href: ../../../scripts/checks/axe-audit.mjs
             rel: test
-      - statement: Never duplicate the icon's meaning as visible text next to the button — if a visible label is wanted, use a plain labeled Button instead of an IconButton.
-        level: should-not
+        checkedBy: automated
+      - level: should-not
+        statement: Never duplicate the icon's meaning as visible text next to the button — if a visible label is wanted, use a plain labeled Button instead of an IconButton.
         checkedBy: manual
+
+sourceFiles:
+  - platform: web-component
+    file: ../../../site/components/icon-button.js
 
 imports:
   - platform: web-component
@@ -39,4 +39,3 @@ imports:
       <ds-icon-button label="Toggle JSON view">
         <svg>...</svg>
       </ds-icon-button>
-

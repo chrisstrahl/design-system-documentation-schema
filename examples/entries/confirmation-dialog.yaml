@@ -21,10 +21,10 @@ sections:
     framing: when-to-use
     title: When to use
     items:
-      - statement: Confirming a destructive, hard-to-reverse action (delete, revoke access).
-        level: should
-      - statement: Confirming a routine save or submit action.
-        level: should-not
+      - level: should
+        statement: Confirming a destructive, hard-to-reverse action (delete, revoke access).
+      - level: should-not
+        statement: Confirming a routine save or submit action.
         refs:
           - to: button
             rel: alternative-to

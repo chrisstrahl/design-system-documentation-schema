@@ -8,5 +8,5 @@ sections:
   - kind: guidelines
     for: all
     items:
-      - statement: Always do the thing.
-        level: Must
+      - level: Must
+        statement: Always do the thing.

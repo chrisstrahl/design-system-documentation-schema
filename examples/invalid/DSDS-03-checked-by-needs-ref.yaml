@@ -8,6 +8,6 @@ sections:
   - kind: guidelines
     for: all
     items:
-      - statement: Always do the thing.
-        level: must
+      - level: must
+        statement: Always do the thing.
         checkedBy: automated

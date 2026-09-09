@@ -3,22 +3,22 @@ kind: token
 name: Surface Default
 description: The base background color for a standard content surface.
 
-tokenType: color
-
 metadata:
-  status: {status: stable}
-  since: 1.0.0
   tags: [color, surface]
+  since: 1.0.0
+  status: {status: stable}
   group: color.surface
 
 sections:
   - kind: guidelines
     for: all
     items:
-      - statement: Use as the default page or card background - not for a surface that's already raised or sunken relative to it.
-        level: should
+      - level: should
+        statement: Use as the default page or card background - not for a surface that's already raised or sunken relative to it.
 
 refs:
   - href: ./tokens.dtcg.json
     rel: file
     role: color.surface.default
+
+tokenType: color

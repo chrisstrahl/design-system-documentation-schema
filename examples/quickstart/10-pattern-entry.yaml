@@ -9,5 +9,5 @@ sections:
     for: all
     framing: when-to-use
     items:
-      - statement: Use an empty state the first time a user visits a list or grid that has no content yet.
-        level: should
+      - level: should
+        statement: Use an empty state the first time a user visits a list or grid that has no content yet.

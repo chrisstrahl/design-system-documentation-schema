@@ -9,6 +9,14 @@ metadata:
     author: machine-generated
     note: Generated from custom-elements.json (CEM schemaVersion 2.1.0) by cem-to-dsds. Usage guidance has not been authored yet.
 
+refs:
+  - href: https://example.com/my-project/custom-elements.json
+    rel: file
+    role: Custom Elements Manifest
+  - href: https://example.com/my-project/README.md
+    rel: external-link
+    role: README
+
 sourceFiles:
   - platform: web-component
     file: ./my-element.js
@@ -17,11 +25,3 @@ imports:
   - platform: web-component
     code: import 'my-project/my-element.js';
     package: my-project
-
-refs:
-  - href: https://example.com/my-project/custom-elements.json
-    rel: file
-    role: Custom Elements Manifest
-  - href: https://example.com/my-project/README.md
-    rel: external-link
-    role: README

@@ -5,12 +5,12 @@ description: Triggers an action.
 purpose: Gives users a single, consistent way to trigger an action across the product.
 
 metadata:
-  status: {status: stable}
   tags: [actions, form]
+  status: {status: stable}
 
 sections:
   - kind: guidelines
     for: all
     items:
-      - statement: Limit each surface to one primary button.
-        level: should
+      - level: should
+        statement: Limit each surface to one primary button.

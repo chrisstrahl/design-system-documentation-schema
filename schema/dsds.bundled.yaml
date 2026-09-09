@@ -298,9 +298,9 @@ $defs:
     enum:
       - must
       - should
+      - may
       - should-not
       - must-not
-      - may
   common/showcase:
     $schema: https://json-schema.org/draft/2020-12/schema
     $id: https://designsystemdocspec.org/v0.20.1/common/showcase.schema.yaml
@@ -383,14 +383,6 @@ $defs:
                   $comment: A bare string is a plain file path (shorthand for href). Use the full ref object when role or note matters.
                   example: ./src/Button.tsx
               additionalProperties: false
-          specs:
-            $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
-            description: Machine-readable API contract(s) for this component - props, slots, events, etc. in a standard, tool-readable shape.
-            $comment: 'Different from `sourceFiles`: that points at the source a tool extracts an API *from*; this points at an already-extracted contract document, in whatever standard format your tooling produces and consumes - for example a Custom Elements Manifest (https://github.com/webcomponents/custom-elements-manifest, a community project, not a W3C specification) or a DS Contracts document (https://github.com/southleft/ds-contracts-poc). DSDS doesn''t parse or validate the target''s contents, only points at it, so any standard format works here. One entry per platform or format, if more than one exists; use `role` to name the format when it isn''t obvious from the file extension.'
-            example:
-              - rel: contract
-                href: ./contracts/button.contract.json
-                role: DS Contracts
           imports:
             type: array
             minItems: 1
@@ -415,6 +407,14 @@ $defs:
                   type: string
                   description: The package to install, exactly as named in the package manager.
                   example: '@acme/ui'
+          specs:
+            $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
+            description: Machine-readable API contract(s) for this component (props, slots, events, etc.) in a standard, tool-readable shape.
+            $comment: '`specs` is different from `sourceFiles`. This points at an already-extracted contract document. It could be a a Custom Elements Manifest (https://github.com/webcomponents/custom-elements-manifest, a DS Contracts document (https://github.com/southleft/ds-contracts-poc), or your own format. The property accepts entry per platform or format, if more than one exists; use `role` to name the format when it isn''t obvious from the file extension.'
+            example:
+              - rel: contract
+                href: ./contracts/button.contract.json
+                role: DS Contracts
           traits:
             type: array
             description: 'The component''s variants and states. Each item is tagged `kind: boolean` or `kind: enum`, since the two carry genuinely different fields - an enum''s own `values` list vs. a boolean''s plain toggle.'
@@ -557,9 +557,9 @@ $defs:
           - type: string
             enum:
               - system
-              - component
               - token
               - theme
+              - component
               - entry
             default: entry
           - $ref: https://designsystemdocspec.org/v0.20.1/common/id.schema.yaml#/$defs/namespaced
@@ -581,6 +581,18 @@ $defs:
         example: Gives users a single, consistent way to trigger an action across the product.
       metadata:
         $ref: https://designsystemdocspec.org/v0.20.1/metadata/entry-metadata.schema.yaml
+      sections:
+        type: array
+        minItems: 1
+        description: Every documentation section for this entry.
+        items:
+          $ref: https://designsystemdocspec.org/v0.20.1/sections/section.schema.yaml#/$defs/dispatch
+      extends:
+        $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
+        description: 'Pointers to another entry this one inherits from (rel: extends).'
+        example:
+          - to: base-dialog
+            rel: extends
       related:
         $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
         description: Pointers to another entry this one is similar to in usage or purpose.
@@ -588,24 +600,12 @@ $defs:
         example:
           - to: link
             rel: alternative-to
-      extends:
-        $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
-        description: 'Pointers to another entry this one inherits from (rel: extends).'
-        example:
-          - to: base-dialog
-            rel: extends
       refs:
         $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
         description: This entry's other pointers to entries and outside resources, not covered by `related` or `extends`.
         example:
           - href: https://github.com/org/ds/react/button
             rel: source
-      sections:
-        type: array
-        minItems: 1
-        description: Every documentation section for this entry.
-        items:
-          $ref: https://designsystemdocspec.org/v0.20.1/sections/section.schema.yaml#/$defs/dispatch
       $extensions:
         $ref: https://designsystemdocspec.org/v0.20.1/common/extensions.schema.yaml
     $defs:
@@ -687,11 +687,6 @@ $defs:
             allOf:
               - $ref: https://designsystemdocspec.org/v0.20.1/metadata/entry-metadata.schema.yaml
             unevaluatedProperties: false
-          source:
-            $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml
-            description: Path to the theme's DTCG source file.
-            $comment: A bare string is a plain file path (shorthand for href); use the full ref object when role or note matters.
-            example: tokens/dark.tokens.json
           colorScheme:
             type: string
             enum:
@@ -699,6 +694,11 @@ $defs:
               - dark
             default: light
             description: Which native color-scheme setting this theme matches.
+          source:
+            $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml
+            description: Path to the theme's DTCG source file.
+            $comment: A bare string is a plain file path (shorthand for href); use the full ref object when role or note matters.
+            example: tokens/dark.tokens.json
     unevaluatedProperties: false
   entries/token:
     $schema: https://json-schema.org/draft/2020-12/schema
@@ -710,6 +710,11 @@ $defs:
       - $ref: https://designsystemdocspec.org/v0.20.1/entries/entry.schema.yaml
       - type: object
         properties:
+          id:
+            $ref: https://designsystemdocspec.org/v0.20.1/common/id.schema.yaml#/$defs/tokenId
+            description: This token's unique id.
+            $comment: Looser than the standard id pattern. Allows slash separators too, to fit however a token layer or DTCG source already names things.
+            example: color.action.primary
           kind:
             const: token
             description: Marks this entry as a token.
@@ -717,22 +722,17 @@ $defs:
             allOf:
               - $ref: https://designsystemdocspec.org/v0.20.1/metadata/entry-metadata.schema.yaml
             unevaluatedProperties: false
-          id:
-            $ref: https://designsystemdocspec.org/v0.20.1/common/id.schema.yaml#/$defs/tokenId
-            description: This token's unique id.
-            $comment: Looser than the standard id pattern. Allows slash separators too, to fit however a token layer or DTCG source already names things.
-            example: color.action.primary
-          source:
-            $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml
-            description: Path to the token's DTCG source file's token reference.
-            $comment: A bare string is a plain file path (shorthand for href). Use the full ref object when role or note matters.
-            example: ./tokens.dtcg.json
           tokenType:
             type: string
             pattern: ^[a-z][a-zA-Z0-9]*$
             description: The token's type, from DTCG.
             $comment: 'Optional - a token can inherit its type from its `metadata.group` instead of stating its own. Left open as a pattern instead of a fixed list. Well-known values as of this writing: color, dimension, fontFamily, fontWeight, duration, cubicBezier, number, shadow.'
             example: color
+          source:
+            $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml
+            description: Path to the token's DTCG source file's token reference.
+            $comment: A bare string is a plain file path (shorthand for href). Use the full ref object when role or note matters.
+            example: ./tokens.dtcg.json
           combos:
             type: array
             minItems: 1
@@ -758,9 +758,16 @@ $defs:
       - $ref: https://designsystemdocspec.org/v0.20.1/metadata/metadata.schema.yaml
       - type: object
         properties:
+          preview:
+            $ref: https://designsystemdocspec.org/v0.20.1/common/showcase.schema.yaml
+            description: A visual sample of this entry, either a media file or a link.
+            $comment: For a code sample, use a section's own examples instead, which can point at a real file or story.
+          since:
+            $ref: https://designsystemdocspec.org/v0.20.1/common/since.schema.yaml
+            description: The version this entry was first introduced.
           status:
             description: A lifecycle status, optionally scoped to one platform - or a list of them, one per platform, when an entry has reached different maturity on each.
-            $comment: 'There is deliberately no `overall` field. A consumer SHOULD derive an entry''s overall status from the aggregate of its per-platform entries rather than expect a separately authored overall value: a stated overall is a second source of truth that drifts the moment one platform moves, and any consumer needing one can compute it consistently from the entries already present. How to aggregate is the consumer''s call - least-mature-wins answers "can I depend on this everywhere?", per-platform answers "can I depend on this here?". A producer using the list form SHOULD declare the system entry''s `metadata.platforms` too, so an absent platform is distinguishable from an unsupported one (DSDS-02 then closes that vocabulary). A bare object with no `platform` still means what it always did - this entry''s status, everywhere.'
+            $comment: There is deliberately no `overall` field. Entry's overall status should be based on the aggregate of all platform status entries. How to aggregate is the consumer's call. A bare object with no `platform` is the entry's overall status.
             oneOf:
               - $ref: '#/$defs/statusEntry'
               - type: array
@@ -768,9 +775,6 @@ $defs:
                 description: One status per platform.
                 items:
                   $ref: '#/$defs/statusEntry'
-          since:
-            $ref: https://designsystemdocspec.org/v0.20.1/common/since.schema.yaml
-            description: The version this entry was first introduced.
           group:
             type: string
             description: A group name this entry belongs to, for example "color.action" on a set of related tokens, or "action" on a family of related components.
@@ -784,10 +788,6 @@ $defs:
             description: Other names this entry is also known or searched by, like a past name or a common misspelling.
             example:
               - btn
-          preview:
-            $ref: https://designsystemdocspec.org/v0.20.1/common/showcase.schema.yaml
-            description: A visual sample of this entry, either a media file or a link.
-            $comment: For a code sample, use a section's own examples instead, which can point at a real file or story.
     $defs:
       statusEntry:
         description: One lifecycle status, optionally scoped to a single platform.
@@ -856,60 +856,10 @@ $defs:
         description: A plain-text note. MUST NOT contain markup.
         example: Reviewed against the latest Figma file; no changes needed.
     properties:
-      tags:
-        type: array
-        description: Keywords for grouping, search, and filtering. By convention, the first tag, if any, is the main category.
-        $comment: The first tag can be used as a category.
-        items:
-          type: string
-        minItems: 1
-        uniqueItems: true
-        example:
-          - actions
-          - button
-          - cta
-          - form-control
-      owner:
-        type: string
-        description: The owning team, role, or group.
-        $comment: Follows mailbox standard (RFC 5322).
-        example: ds@pizzapartysupertime.com
-      reviewed:
-        type: array
-        minItems: 1
-        description: Independent reviews confirming this item's documentation, each recording who confirmed it and when.
-        $comment: A list of review events so human sign-offs and automated checks can both be recorded independently.
-        items:
-          type: object
-          properties:
-            date:
-              $ref: '#/$defs/isoDate'
-              description: The date of the review.
-            by:
-              type: string
-              description: Who or what performed the review.
-              $comment: 'Follows the actor convention: `human:<id>` for a person, `<producer>/<version>` for an agent or tool, `process:<id>` for an automated process. Adapted from the Open Knowledge Format (OKF) spec.'
-              example: human:ahormati
-            note:
-              type: string
-              description: A plain-text note on the review outcome.
-              example: Copy and contrast ratios re-checked; no changes needed.
       context:
         type: string
         description: Why this entry was created, and how and why to use it.
         example: Introduced to give provide agents extra information for how to ingest/use an entry.
-      updated:
-        type: object
-        description: Tools SHOULD treat `updated.date` as the cache key for this item's documentation specifically. `updated.date` is distinct from `metadata.version`/`since` which tracks the design system's own release. Always use `updated.date` as the source of truth for when to re-fetch or re-index.
-        $comment: A bare date, or a date with a change note.
-        properties:
-          date:
-            $ref: '#/$defs/isoDate'
-            description: The date of the change.
-          note:
-            type: string
-            description: A plain-text note on what changed.
-            example: Added the loading trait and its guideline.
       origin:
         type: object
         description: How this entry's documentation came to exist, and who or what wrote it.
@@ -938,6 +888,56 @@ $defs:
             type: string
             description: Free-text context about the origin, including any exceptions to `method` or `author`.
             example: The accessibility section was reviewed by a person, unlike the rest.
+      owner:
+        type: string
+        description: The owning team, role, or group.
+        $comment: Follows mailbox standard (RFC 5322).
+        example: ds@pizzapartysupertime.com
+      updated:
+        type: object
+        description: Tools SHOULD treat `updated.date` as the cache key for this item's documentation specifically. `updated.date` is distinct from `metadata.version`/`since` which tracks the design system's own release. Always use `updated.date` as the source of truth for when to re-fetch or re-index.
+        $comment: A bare date, or a date with a change note.
+        properties:
+          date:
+            $ref: '#/$defs/isoDate'
+            description: The date of the change.
+          note:
+            type: string
+            description: A plain-text note on what changed.
+            example: Added the loading trait and its guideline.
+      reviewed:
+        type: array
+        minItems: 1
+        description: Independent reviews confirming this item's documentation, each recording who confirmed it and when.
+        $comment: A list of review events so human sign-offs and automated checks can both be recorded independently.
+        items:
+          type: object
+          properties:
+            date:
+              $ref: '#/$defs/isoDate'
+              description: The date of the review.
+            by:
+              type: string
+              description: Who or what performed the review.
+              $comment: 'Follows the actor convention: `human:<id>` for a person, `<producer>/<version>` for an agent or tool, `process:<id>` for an automated process. Adapted from the Open Knowledge Format (OKF) spec.'
+              example: human:ahormati
+            note:
+              type: string
+              description: A plain-text note on the review outcome.
+              example: Copy and contrast ratios re-checked; no changes needed.
+      tags:
+        type: array
+        description: Keywords for grouping, search, and filtering. By convention, the first tag, if any, is the main category.
+        $comment: The first tag can be used as a category.
+        items:
+          type: string
+        minItems: 1
+        uniqueItems: true
+        example:
+          - actions
+          - button
+          - cta
+          - form-control
       $extensions:
         $ref: https://designsystemdocspec.org/v0.20.1/common/extensions.schema.yaml
         description: Escape hatch for tool data scoped to just this entry's metadata, keyed by namespace.
@@ -951,9 +951,6 @@ $defs:
       - $ref: https://designsystemdocspec.org/v0.20.1/metadata/metadata.schema.yaml
       - type: object
         properties:
-          version:
-            $ref: https://designsystemdocspec.org/v0.20.1/common/since.schema.yaml
-            description: The current version of the design system.
           organization:
             type: string
             description: The team or company that owns the design system.
@@ -963,10 +960,9 @@ $defs:
             format: uri
             description: The main home page or repository for the design system.
             example: https://github.com/acme/design-system
-          license:
-            type: string
-            description: The license this design system is published under.
-            example: MIT
+          version:
+            $ref: https://designsystemdocspec.org/v0.20.1/common/since.schema.yaml
+            description: The current version of the design system.
           platforms:
             type: array
             description: The platforms this system ships on, for example "react" or "web-component".
@@ -979,6 +975,10 @@ $defs:
               - react
               - web-component
               - ios
+          license:
+            type: string
+            description: The license this design system is published under.
+            example: MIT
   sections/definitions:
     $schema: https://json-schema.org/draft/2020-12/schema
     $id: https://designsystemdocspec.org/v0.20.1/sections/definitions.schema.yaml
@@ -1088,13 +1088,13 @@ $defs:
                   $ref: https://designsystemdocspec.org/v0.20.1/common/id.schema.yaml
                   description: A stable id for this guideline, so another item, like an agent-only refinement or a checklist entry, can point at it.
                   $comment: You can leave this out - a tool MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule).
+                level:
+                  $ref: https://designsystemdocspec.org/v0.20.1/common/requirement-level.schema.yaml
                 statement:
                   $ref: https://designsystemdocspec.org/v0.20.1/common/markdown.schema.yaml
                   description: An individual, concrete usage rule.
                   $comment: When the section's framing is when-to-use, this states a user situation. Leave it out only when `refs` carries a same-as or external-link pointer instead (see the file comment above).
                   example: Limit each surface to one primary button.
-                level:
-                  $ref: https://designsystemdocspec.org/v0.20.1/common/requirement-level.schema.yaml
                 example:
                   $ref: https://designsystemdocspec.org/v0.20.1/common/example.schema.yaml
                   description: An example illustrating this rule.
@@ -1111,12 +1111,6 @@ $defs:
                   example:
                     - href: https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html
                       rel: external-link
-                related:
-                  $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
-                  description: Pointers from this guideline to agent-only refinements pointing at the human rule it amends.
-                  example:
-                    - to: button#loading-announcement
-                      rel: refines
                 checks:
                   $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
                   description: 'Pointers from this guideline to the lint rule or test that proves it (rel: test, rel: lint-rule).'
@@ -1144,6 +1138,12 @@ $defs:
                   example:
                     - accessibility
                     - focus
+                related:
+                  $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
+                  description: Pointers from this guideline to agent-only refinements pointing at the human rule it amends.
+                  example:
+                    - to: button#loading-announcement
+                      rel: refines
                 refs:
                   $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
                   description: The general-purpose fallback for any pointer that doesn't fit `alternatives`/`evidence`/`related`/`checks`.
@@ -1181,8 +1181,8 @@ $defs:
         oneOf:
           - type: string
             enum:
-              - definitions
               - guidelines
+              - definitions
               - steps
               - section
             default: section
@@ -1192,9 +1192,9 @@ $defs:
       for:
         type: string
         enum:
+          - all
           - human
           - agent
-          - all
         default: all
         description: Who or what this section is written for.
       title:
@@ -1341,6 +1341,10 @@ $defs:
                   $ref: https://designsystemdocspec.org/v0.20.1/common/id.schema.yaml
                   description: An optional stable id, so a ref or a same-as pointer can address this step directly.
                   $comment: You can leave this out - a tool MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule).
+                optional:
+                  type: boolean
+                  default: false
+                  description: Whether this entry can be skipped without breaking the procedure or checklist.
                 title:
                   type: string
                   description: A short heading for this entry, for example 'Install the package' or 'Focus ring is visible'.
@@ -1355,19 +1359,15 @@ $defs:
                   example:
                     - to: button#loading-announcement
                       rel: depends-on
+                examples:
+                  $ref: https://designsystemdocspec.org/v0.20.1/common/example.schema.yaml#/$defs/list
+                  description: A screenshot, recording, or live URL. For code, point at a file or story through the example's `ref` instead.
                 refs:
                   $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
                   description: Other pointers from this step, for example the components involved in an interaction-flow entry.
                   example:
                     - to: button
                       rel: depends-on
-                examples:
-                  $ref: https://designsystemdocspec.org/v0.20.1/common/example.schema.yaml#/$defs/list
-                  description: A screenshot, recording, or live URL. For code, point at a file or story through the example's `ref` instead.
-                optional:
-                  type: boolean
-                  default: false
-                  description: Whether this entry can be skipped without breaking the procedure or checklist.
                 $extensions:
                   $ref: https://designsystemdocspec.org/v0.20.1/common/extensions.schema.yaml
                   description: Escape hatch for tool data scoped to just this one step, keyed by namespace.
@@ -1403,18 +1403,18 @@ $defs:
         allOf:
           - $ref: https://designsystemdocspec.org/v0.20.1/metadata/metadata.schema.yaml
         unevaluatedProperties: false
-      refs:
-        $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
-        description: Pointers from this entry to other things.
-        example:
-          - href: https://www.w3.org/WAI/WCAG21/quickref/
-            rel: external-link
       sections:
         type: array
         minItems: 1
         description: The reusable content itself, in the same section structure an entry uses.
         items:
           $ref: https://designsystemdocspec.org/v0.20.1/sections/section.schema.yaml#/$defs/dispatch
+      refs:
+        $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
+        description: Pointers from this entry to other things.
+        example:
+          - href: https://www.w3.org/WAI/WCAG21/quickref/
+            rel: external-link
       $extensions:
         $ref: https://designsystemdocspec.org/v0.20.1/common/extensions.schema.yaml
         description: Escape hatch for tool data or an outside id, the same structure as an entry's own $extensions.

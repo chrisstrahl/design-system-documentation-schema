@@ -22,8 +22,8 @@ entries:
       - kind: guidelines
         for: human
         items:
-          - statement: Limit each surface to one primary button.
-            level: should
+          - level: should
+            statement: Limit each surface to one primary button.
     refs:
       - to: color.action.primary
         rel: depends-on
@@ -44,5 +44,5 @@ shared:
         for: all
         items:
           - id: touch-target
-            statement: Minimum touch target 44x44px.
             level: must
+            statement: Minimum touch target 44x44px.

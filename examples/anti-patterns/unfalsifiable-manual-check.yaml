@@ -11,6 +11,6 @@ sections:
   - kind: guidelines
     for: human
     items:
-      - statement: Card should look good on all screen sizes.
-        level: should
+      - level: should
+        statement: Card should look good on all screen sizes.
         checkedBy: manual

@@ -18,9 +18,9 @@ name: Spacing Scale
 description: The base numeric scale all spacing and sizing tokens derive from.
 
 metadata:
-  status: {status: stable}
-  since: 1.0.0
   tags: [layout]
+  since: 1.0.0
+  status: {status: stable}
 
 sections:
   - kind: guidelines

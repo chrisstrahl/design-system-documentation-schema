@@ -35,14 +35,14 @@ properties:
     $comment: One of the 3 specific content patterns, the generic `section`, or a namespaced custom kind, like "acme.custom-section".
     oneOf:
       - type: string
-        enum: [definitions, guidelines, steps, section]
+        enum: [guidelines, definitions, steps, section]
         default: section
       - $ref: https://designsystemdocspec.org/v0.20.1/common/id.schema.yaml#/$defs/namespaced
         description: A namespaced custom kind.
         example: acme.custom-section
   for:
     type: string
-    enum: [human, agent, all]
+    enum: [all, human, agent]
     default: all
     description: Who or what this section is written for.
   title:

@@ -108,13 +108,13 @@ examples:
 This is the integration that makes a guideline falsifiable rather than decorative. A guideline that claims automated verification MUST say what runs it — `DSDS-03` enforces exactly that.
 
 ```yaml
-- statement: Every icon-only button MUST have an accessible name.
-  level: must
-  checkedBy: automated
+- level: must
+  statement: Every icon-only button MUST have an accessible name.
   checks:
     - href: ./tests/button.a11y.test.ts
       rel: test
       role: vitest + axe-core
+  checkedBy: automated
 ```
 
 `rel: lint-rule` is the same idea for a static check (an ESLint or stylelint rule id). Nothing constrains the runner: DSDS names the rule and points at the thing that proves it.
@@ -124,8 +124,8 @@ This is the integration that makes a guideline falsifiable rather than decorativ
 `evidence` points a guideline at the outside standard it comes from, so a reader can tell a house preference from a WCAG requirement:
 
 ```yaml
-- statement: A focus indicator MUST remain visible for keyboard users.
-  level: must
+- level: must
+  statement: A focus indicator MUST remain visible for keyboard users.
   evidence:
     - href: https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html
       rel: external-link

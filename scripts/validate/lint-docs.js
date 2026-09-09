@@ -16,7 +16,16 @@
 
 const fs = require("fs");
 const path = require("path");
-const { rootDir, loadYaml, defaultTargets, entriesIn } = require("../lib");
+const {
+  rootDir,
+  loadYaml,
+  defaultTargets,
+  entriesIn,
+  declaredProps,
+  entryFieldOrder,
+  declaredEnum,
+  enumRanker,
+} = require("../lib");
 
 const CATALOG_PATH = path.join(rootDir, "schema/conformance-rules.yaml");
 
@@ -85,24 +94,46 @@ function eachGuidelineItem(entry, fn) {
 const LOWERCASE_RFC_REGEX = /(?<![A-Za-z])(must|should)(?: not)?(?![A-Za-z])/g;
 
 // ---------------------------------------------------------------------------
-// STYLE_GUIDE.md's canonical orders (DSDS-17/18/19/20). Kept here rather than derived from
-// the schema files, since the schema imposes no order at all - must be kept in sync by hand.
+// STYLE_GUIDE.md's canonical orders (DSDS-17/18/19/20). Field order comes from the schema
+// files; the rank tables further down do not, because they order the items inside an array
+// and no schema file has an opinion about that. Those are kept in sync with the guide by hand.
 // ---------------------------------------------------------------------------
 
-const ENTRY_FIELD_ORDER = {
-  component: ["id", "kind", "name", "description", "purpose", "metadata", "sourceFiles", "sections", "specs", "imports", "traits", "combos", "related", "extends", "refs", "$extensions"],
-  token: ["id", "kind", "name", "description", "purpose", "tokenType", "source", "metadata", "sections", "combos", "related", "extends", "refs", "$extensions"],
-  theme: ["id", "kind", "name", "description", "purpose", "colorScheme", "source", "metadata", "sections", "related", "extends", "refs", "$extensions"],
-  system: ["id", "kind", "name", "description", "purpose", "metadata", "sections", "related", "extends", "refs", "$extensions"],
-  entry: ["id", "kind", "name", "description", "purpose", "metadata", "sections", "related", "extends", "refs", "$extensions"],
-};
-const SHARED_FIELD_ORDER = ["id", "name", "description", "metadata", "sections", "refs", "$extensions"];
-const DOCUMENT_FIELD_ORDER = ["schemaVersion", "$schema", "name", "entries", "shared", "refs", "$extensions"];
-const SECTION_KIND_RANK = { guidelines: 0, definitions: 1, steps: 2, section: 3 };
-// STYLE_GUIDE.md §2's audience sort, broadest readership first. Applied only WITHIN a group
-// of guidelines sections that already tie on `framing` - specificity decides first.
-const SECTION_AUDIENCE_RANK = { all: 0, human: 1, agent: 2 };
-const GUIDELINE_LEVEL_RANK = { must: 0, should: 1, may: 2, "should-not": 3, "must-not": 4 };
+// Read out of the schema files, not transcribed from them. STYLE_GUIDE.md §1's rule is to
+// follow the order the schema lists, so reading that order at runtime is the only honest way
+// to check it - a hardcoded table here would be a second source of truth for the exact thing
+// the guide says has one, and it drifted twice before this became derived (a stale
+// `related`/`extends` order, and `imports` in the wrong place). See lib.js's
+// `entryFieldOrder` for how the two lists compose.
+const SHARED_FIELD_ORDER = declaredProps("shared.schema.yaml");
+const DOCUMENT_FIELD_ORDER = declaredProps("base.schema.yaml");
+// Read from the schema enums, in the order each one declares its values. These used to be
+// hand-kept tables here; the enums were reordered to match the guide, so the schema now
+// records these orders and this file reads them instead of holding a second copy. Each ranker
+// also picks up the `default` its schema declares, so a section that leaves `for` or `framing`
+// out is ranked as the value a validator would read it as.
+const KIND_AT = (d) => d.properties.kind.oneOf.find((m) => m.enum);
+const SECTION_KIND = declaredEnum("sections/section.schema.yaml", KIND_AT);
+// A namespaced custom kind ("acme.custom-section") isn't in the enum and has no defined place
+// in the order, so it ranks last rather than being treated as unknown-and-therefore-equal.
+const sectionKindRank = enumRanker("sections/section.schema.yaml", KIND_AT);
+
+const AUDIENCE = declaredEnum("sections/section.schema.yaml", (d) => d.properties.for);
+const audienceRank = enumRanker("sections/section.schema.yaml", (d) => d.properties.for);
+
+const FRAMING_AT = (d) => d.allOf.find((m) => m.properties).properties.framing;
+const FRAMING = declaredEnum("sections/guidelines.schema.yaml", FRAMING_AT);
+const framingRank = enumRanker("sections/guidelines.schema.yaml", FRAMING_AT);
+
+const LEVEL = declaredEnum("common/requirement-level.schema.yaml", (d) => d);
+const levelRank = enumRanker("common/requirement-level.schema.yaml", (d) => d);
+
+// How a section's audience reads once the schema's default is applied, for use in messages.
+// A section that leaves `for` out is ranked as the default, so it has to be named as the
+// default too - printing "for: undefined" would describe the document rather than the problem.
+function describeAudience(section) {
+  return section.for === undefined ? `${AUDIENCE.fallback} (defaulted)` : section.for;
+}
 
 // Returns the first out-of-order pair, or null if `actual` is already non-decreasing by
 // canonical rank - the general "is this sequence sorted" check DSDS-17/18/19/20 all reduce to.
@@ -211,13 +242,18 @@ const IMPLEMENTATIONS = {
   // STYLE_GUIDE.md §1 - only checks the relative order of fields actually present, so an
   // entry that leaves a field out is never flagged for its absence.
   "entry-field-order": (entry, emit) => {
-    const order = entry.kind === undefined ? SHARED_FIELD_ORDER : (ENTRY_FIELD_ORDER[entry.kind] || ENTRY_FIELD_ORDER.entry);
+    // A namespaced custom kind (`acme.icon-library`) has no schema file of its own, so it
+    // falls back to the bare envelope - the same fallback entry.schema.yaml's dispatch gives it.
+    const order = entry.kind === undefined ? SHARED_FIELD_ORDER : entryFieldOrder(entry.kind);
     const actual = Object.keys(entry).filter((k) => order.includes(k));
     const inversion = firstInversion(actual, (k) => order.indexOf(k));
     if (inversion) {
+      const source = entry.kind === undefined
+        ? "shared.schema.yaml"
+        : `entries/entry.schema.yaml, then entries/${entry.kind}.schema.yaml`;
       emit(
         "",
-        `"${entry.id}" has \`${inversion[0]}\` before \`${inversion[1]}\` — STYLE_GUIDE.md orders a ${entry.kind || "shared"} entry's fields as [${order.join(", ")}]. Actual order here: [${actual.join(", ")}].`,
+        `"${entry.id}" has \`${inversion[0]}\` before \`${inversion[1]}\` — STYLE_GUIDE.md §1 says match the spec's own declared order, which for a ${entry.kind || "shared"} entry (${source}) is [${order.join(", ")}]. Actual order here: [${actual.join(", ")}].`,
       );
     }
   },
@@ -230,20 +266,20 @@ const IMPLEMENTATIONS = {
   "section-order": (entry, emit) => {
     const sections = entry.sections;
     if (!Array.isArray(sections) || sections.length < 2) return;
-    const kindInversion = firstInversion(sections, (s) => SECTION_KIND_RANK[s.kind] ?? 99);
+    const kindInversion = firstInversion(sections, (s) => sectionKindRank(s.kind));
     if (kindInversion) {
       emit(
         "/sections",
-        `"${entry.id}" has a "${kindInversion[0].kind}" section before a "${kindInversion[1].kind}" section, out of STYLE_GUIDE.md's grouping — same-kind sections stay contiguous, ordered guidelines, definitions, steps, section (general to specific).`,
+        `"${entry.id}" has a "${kindInversion[0].kind}" section before a "${kindInversion[1].kind}" section, out of STYLE_GUIDE.md's grouping — same-kind sections stay contiguous, ordered ${SECTION_KIND.values.join(", ")} (general to specific).`,
       );
       return; // fix grouping first - the framing check below assumes the guidelines sections are already one contiguous run
     }
     const guidelinesRun = sections.filter((s) => s.kind === "guidelines");
-    const framingInversion = firstInversion(guidelinesRun, (s) => (s.framing === "when-to-use" ? 0 : 1));
+    const framingInversion = firstInversion(guidelinesRun, (s) => framingRank(s.framing));
     if (framingInversion) {
       emit(
         "/sections",
-        `"${entry.id}" has a how-to-use guidelines section before a when-to-use one — STYLE_GUIDE.md orders \`framing: when-to-use\` first.`,
+        `"${entry.id}" has a how-to-use guidelines section before a when-to-use one — STYLE_GUIDE.md orders \`framing\` ${FRAMING.values.join(", ")}.`,
       );
       return; // fix specificity first - the audience sort below only orders sections that TIE on framing
     }
@@ -253,16 +289,16 @@ const IMPLEMENTATIONS = {
     // those two on `for` would be a false positive.
     const byFraming = new Map();
     for (const s of guidelinesRun) {
-      const framing = s.framing || "how-to-use";
+      const framing = s.framing || FRAMING.fallback;
       if (!byFraming.has(framing)) byFraming.set(framing, []);
       byFraming.get(framing).push(s);
     }
     for (const [framing, run] of byFraming) {
-      const audienceInversion = firstInversion(run, (s) => SECTION_AUDIENCE_RANK[s.for] ?? 99);
+      const audienceInversion = firstInversion(run, (s) => audienceRank(s.for));
       if (audienceInversion) {
         emit(
           "/sections",
-          `"${entry.id}" has a \`for: ${audienceInversion[0].for}\` guidelines section before a \`for: ${audienceInversion[1].for}\` one (both ${framing}) — STYLE_GUIDE.md orders audience \`all\`, then \`human\`, then \`agent\`, broadest readership first.`,
+          `"${entry.id}" has a \`for: ${describeAudience(audienceInversion[0])}\` guidelines section before a \`for: ${describeAudience(audienceInversion[1])}\` one (both ${framing}) — STYLE_GUIDE.md orders audience ${AUDIENCE.values.join(", ")}, broadest readership first.`,
         );
         break;
       }
@@ -274,11 +310,11 @@ const IMPLEMENTATIONS = {
   "guideline-item-level-order": (entry, emit) => {
     (entry.sections || []).forEach((section, si) => {
       if (!section || section.kind !== "guidelines" || !Array.isArray(section.items)) return;
-      const inversion = firstInversion(section.items, (it) => GUIDELINE_LEVEL_RANK[it.level] ?? 99);
+      const inversion = firstInversion(section.items, (it) => levelRank(it.level));
       if (inversion) {
         emit(
           `/sections/${si}/items`,
-          `"${entry.id}" has a level: ${inversion[0].level} item before a level: ${inversion[1].level} one — STYLE_GUIDE.md orders guideline items must, should, may, should-not, must-not.`,
+          `"${entry.id}" has a level: ${inversion[0].level} item before a level: ${inversion[1].level} one — STYLE_GUIDE.md orders guideline items ${LEVEL.values.join(", ")}.`,
         );
       }
     });
@@ -297,7 +333,7 @@ const DOCUMENT_IMPLEMENTATIONS = {
     if (inversion) {
       emit(
         "",
-        `document has \`${inversion[0]}\` before \`${inversion[1]}\` — STYLE_GUIDE.md orders a base document's fields as [${DOCUMENT_FIELD_ORDER.join(", ")}]. Actual order here: [${actual.join(", ")}].`,
+        `document has \`${inversion[0]}\` before \`${inversion[1]}\` — STYLE_GUIDE.md says match the spec's own declared order, which for a base document (base.schema.yaml) is [${DOCUMENT_FIELD_ORDER.join(", ")}]. Actual order here: [${actual.join(", ")}].`,
       );
     }
   },

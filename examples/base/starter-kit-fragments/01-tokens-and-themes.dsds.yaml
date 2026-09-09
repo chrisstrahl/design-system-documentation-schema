@@ -5,8 +5,8 @@ entries:
     description: The fill color for high-emphasis interactive surfaces.
     tokenType: color
     metadata:
-      status: {status: stable}
       tags: [color]
+      status: {status: stable}
 
   - id: light
     kind: theme

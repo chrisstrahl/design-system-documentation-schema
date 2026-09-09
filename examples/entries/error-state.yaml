@@ -5,9 +5,9 @@ description: Composition of components shown when content fails to load due to a
 purpose: Tells the user something went wrong and gives them a way to retry, instead of leaving a blank or broken surface.
 
 metadata:
-  status: {status: stable}
-  since: 1.3.0
   tags: [feedback]
+  since: 1.3.0
+  status: {status: stable}
 
 sections:
   - kind: guidelines
@@ -15,10 +15,10 @@ sections:
     framing: when-to-use
     title: When to use
     items:
-      - statement: A request fails due to a network or server error.
-        level: should
-      - statement: A list or search genuinely has zero results.
-        level: should-not
+      - level: should
+        statement: A request fails due to a network or server error.
+      - level: should-not
+        statement: A list or search genuinely has zero results.
         refs:
           - to: empty-state
             rel: alternative-to
@@ -27,8 +27,8 @@ sections:
   - kind: guidelines
     for: human
     items:
-      - statement: Always include a retry action, since the underlying condition is often transient.
-        level: must
+      - level: must
+        statement: Always include a retry action, since the underlying condition is often transient.
 
 refs:
   - to: button

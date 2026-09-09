@@ -9,6 +9,7 @@
 const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
+const { declaredProps } = require("../lib");
 
 const ROOT = path.resolve(__dirname, "..", "..");
 const SCHEMA_DIR = path.join(ROOT, "schema");
@@ -21,21 +22,13 @@ const ROOT_FILES = ["base.schema.yaml", "shared.schema.yaml"];
 // DIR_GROUPS.
 const DEFAULT_SCHEMA_GROUPS = ["common", "metadata", "entries", "sections"];
 
-// The common envelope every entry shares (entries/entry.schema.yaml). A `delta` prop-table
-// omits these so a per-kind table shows only the properties unique to that kind.
-const ENTRY_ENVELOPE = [
-  "id",
-  "kind",
-  "name",
-  "description",
-  "purpose",
-  "metadata",
-  "related",
-  "extends",
-  "refs",
-  "sections",
-  "$extensions",
-];
+// The fields every entry shares. A `delta` prop-table omits these so a per-kind table shows
+// only the properties unique to that kind. Read from entries/entry.schema.yaml rather than
+// transcribed, for the reason the missing SECTION_ENVELOPE note below gives - and this list
+// had already gone stale proving the point: it still read `related, extends, refs, sections`
+// after the schema was reordered to `sections, extends, related, refs`. Nothing broke, only
+// because `omit` is used as a set, but the file was wrong about the schema either way.
+const ENTRY_ENVELOPE = declaredProps("entries/entry.schema.yaml");
 
 // There is deliberately no SECTION_ENVELOPE constant here. One existed as the
 // section-level counterpart to ENTRY_ENVELOPE above, but nothing ever consumed it
@@ -44,8 +37,8 @@ const ENTRY_ENVELOPE = [
 // which sections/section.schema.yaml has declared for a while. A dead constant that
 // disagrees with the schema is worse than no constant, because AGENTS.md pointed
 // readers at this file as the single source of truth for envelope shape. The schema
-// file is that source; if a section-level omit list is ever needed, derive it from
-// sections/section.schema.yaml rather than re-transcribing it here.
+// file is that source; if a section-level omit list is ever needed, read it with
+// `declaredProps("sections/section.schema.yaml")` rather than re-transcribing it here.
 
 // JSON_SCHEMA disables YAML's implicit !!timestamp type, which otherwise parses a bare
 // `2026-06-02` into a JS Date instead of a string - see lib.js's loadYaml.

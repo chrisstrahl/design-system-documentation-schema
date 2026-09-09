@@ -8,6 +8,11 @@ allOf:
   - $ref: https://designsystemdocspec.org/v0.20.1/entries/entry.schema.yaml
   - type: object
     properties:
+      id:
+        $ref: https://designsystemdocspec.org/v0.20.1/common/id.schema.yaml#/$defs/tokenId
+        description: This token's unique id.
+        $comment: Looser than the standard id pattern. Allows slash separators too, to fit however a token layer or DTCG source already names things.
+        example: color.action.primary
       kind:
         const: token
         description: Marks this entry as a token.
@@ -15,16 +20,6 @@ allOf:
         allOf:
           - $ref: https://designsystemdocspec.org/v0.20.1/metadata/entry-metadata.schema.yaml
         unevaluatedProperties: false
-      id:
-        $ref: https://designsystemdocspec.org/v0.20.1/common/id.schema.yaml#/$defs/tokenId
-        description: This token's unique id.
-        $comment: Looser than the standard id pattern. Allows slash separators too, to fit however a token layer or DTCG source already names things.
-        example: color.action.primary
-      source:
-        $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml
-        description: Path to the token's DTCG source file's token reference.
-        $comment: A bare string is a plain file path (shorthand for href). Use the full ref object when role or note matters.
-        example: ./tokens.dtcg.json
       tokenType:
         type: string
         pattern: "^[a-z][a-zA-Z0-9]*$"
@@ -36,6 +31,11 @@ allOf:
           writing: color, dimension, fontFamily, fontWeight, duration,
           cubicBezier, number, shadow.
         example: color
+      source:
+        $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml
+        description: Path to the token's DTCG source file's token reference.
+        $comment: A bare string is a plain file path (shorthand for href). Use the full ref object when role or note matters.
+        example: ./tokens.dtcg.json
       combos:
         type: array
         minItems: 1

@@ -19,25 +19,23 @@ allOf:
   - $ref: https://designsystemdocspec.org/v0.20.1/metadata/metadata.schema.yaml
   - type: object
     properties:
+      preview:
+        $ref: https://designsystemdocspec.org/v0.20.1/common/showcase.schema.yaml
+        description: A visual sample of this entry, either a media file or a link.
+        $comment: For a code sample, use a section's own examples instead, which can point at a real file or story.
+      since:
+        $ref: https://designsystemdocspec.org/v0.20.1/common/since.schema.yaml
+        description: The version this entry was first introduced.
       status:
         description: >-
           A lifecycle status, optionally scoped to one platform - or a list
           of them, one per platform, when an entry has reached different
           maturity on each.
         $comment: >-
-          There is deliberately no `overall` field. A consumer SHOULD derive
-          an entry's overall status from the aggregate of its per-platform
-          entries rather than expect a separately authored overall value: a
-          stated overall is a second source of truth that drifts the moment
-          one platform moves, and any consumer needing one can compute it
-          consistently from the entries already present. How to aggregate is
-          the consumer's call - least-mature-wins answers "can I depend on
-          this everywhere?", per-platform answers "can I depend on this
-          here?". A producer using the list form SHOULD declare the system
-          entry's `metadata.platforms` too, so an absent platform is
-          distinguishable from an unsupported one (DSDS-02 then closes that
-          vocabulary). A bare object with no `platform` still means what it
-          always did - this entry's status, everywhere.
+          There is deliberately no `overall` field. Entry's overall status
+          should be based on the aggregate of all platform status entries.
+          How to aggregate is the consumer's call. A bare object with no
+          `platform` is the entry's overall status.
         oneOf:
           - $ref: "#/$defs/statusEntry"
           - type: array
@@ -45,9 +43,6 @@ allOf:
             description: One status per platform.
             items:
               $ref: "#/$defs/statusEntry"
-      since:
-        $ref: https://designsystemdocspec.org/v0.20.1/common/since.schema.yaml
-        description: The version this entry was first introduced.
       group:
         type: string
         description: A group name this entry belongs to, for example "color.action" on a set of related tokens, or "action" on a family of related components.
@@ -62,10 +57,6 @@ allOf:
         uniqueItems: true
         description: Other names this entry is also known or searched by, like a past name or a common misspelling.
         example: [btn]
-      preview:
-        $ref: https://designsystemdocspec.org/v0.20.1/common/showcase.schema.yaml
-        description: A visual sample of this entry, either a media file or a link.
-        $comment: For a code sample, use a section's own examples instead, which can point at a real file or story.
 
 $defs:
   statusEntry:

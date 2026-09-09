@@ -24,5 +24,5 @@ shared:
         for: all
         items:
           - id: real-item
-            statement: A real rule.
             level: must
+            statement: A real rule.

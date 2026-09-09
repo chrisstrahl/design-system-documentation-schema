@@ -39,9 +39,9 @@ name: <PascalCase>
 description: <one-sentence summary>
 
 metadata:
-  status: {status: draft}
-  since: <version>
   tags: [<action|feedback|form|disclosure|overlay|navigation|layout>]
+  since: <version>
+  status: {status: draft}
 
 sourceFiles:
   - platform: <react|web-component|...>

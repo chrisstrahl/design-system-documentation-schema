@@ -8,7 +8,7 @@ entries:
     name: Pizza Party Design System
     description: The design system behind Pizza Party Super-time.
     metadata:
+      status: {status: alpha}
       organization: Pizza Party Super-time LLC
       version: 0.1.0
-      status: {status: alpha}
       platforms: [web-component]

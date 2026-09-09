@@ -74,9 +74,10 @@ Only the kind-specific fields beyond this envelope differ (a token's
 theme's `colorScheme`, and so on — see `entries/<kind>.schema.yaml` for
 exactly which fields each kind adds). Learn this envelope once and you can
 generalize across every entry kind without re-deriving its shape from
-scratch each time. This is the schema's `ENTRY_ENVELOPE` constant
-(`scripts/site/render-prop-table.js`) — one source of truth, not a convention you
-have to infer from examples. `sections/section.schema.yaml` has the same
+scratch each time. `entries/entry.schema.yaml` is the one source of truth for
+that shape and for the order the fields go in — the tooling reads both out of it
+instead of keeping a copy (see `declaredProps` in `scripts/lib.js`), so this is
+not a convention you have to infer from examples. `sections/section.schema.yaml` has the same
 role one level down: every section kind shares `kind`, `for`, `title`,
 `description`, `context`, `metadata`, `items`, `freeform`, `$extensions`
 — read it from that schema file, which is authoritative for both the set

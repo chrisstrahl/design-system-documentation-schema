@@ -1,245 +1,119 @@
 # DSDS authoring style guide
 
-This guide is a set of recommendations on how to order and format the schema to ensure it reads predictably and consistently across documents.  
+How to order things inside a DSDS document, so every document reads the same way no matter who wrote it.
 
-Note: All rules below are advisory only. The schema will validate if none of these guidelines are filed. `DSDS-17`–`DSDS-20` in the [advisory lint tier](https://designsystemdocspec.org/conformance#enforcement-tiers) report violations under `npm run lint`, and nothing here can fail
-`npm run check:all`. See [Tooling](#tooling) at the end for exactly which parts are mechanized and which are left to judgment.
+None of this changes whether a document is valid. The schema accepts any order. Four warning-only rules — `DSDS-17` through `DSDS-20`, in the [advisory tier](https://designsystemdocspec.org/conformance#enforcement-tiers) — point out anything out of order when you run `npm run lint`. Nothing here can fail `npm run check:all`. See [Tooling](#tooling) for what gets checked automatically and what's left to you.
+
+These guidelines are nothing more than opinions. Ignore them if a different organization reads better for your needs.
+
+## The patterns behind these rules
+
+Everything below is one of a few ideas, applied to a different part of a document. Learn these and you can usually work out the specific rule.
+
+**Field order comes from the schema. List order comes from this guide.** What order an object's fields go in is written down in the schema files, so read it there — that's [§1](#1-entry-level-field-order) and [§4](#4-field-order-inside-smaller-shapes). Which entry, section, or item comes first in a list is something a schema can't express, so this guide decides it — that's [§2](#2-section-order-within-sections) and [§3](#3-guideline-item-order-within-one-section).
+
+**Broadest first.** The widest thing leads: `guidelines` before `steps`, `when-to-use` before `how-to-use`, `for: all` before `for: agent`, a section about the whole entry before one about a single tag.
+
+**Nothing comes before the thing it's built on.** Tokens before the themes that override them, themes before the components that use them. Read top to bottom and you meet every idea before anything that depends on it.
+
+**Shared fields before specific ones.** The fields every kind has come first, then the fields one kind adds. A `metadata` block works the same way.
+
+**Catch-alls go last.** `$extensions` after every real field, the plain `section` kind after the three specific ones, custom kinds after the five known ones. Anything that exists because nothing else fit goes at the end.
+
+**Sorts stack, and each one only breaks ties in the one above it.** Sort by kind, then by how broad, then by who it's for. A later sort never moves something ahead of what an earlier one already settled.
+
+**Where no rule decides, keep the order you wrote.** Don't alphabetize. Items sharing a `level`, entries sharing a kind — leave them in whatever order reads best.
+
+One rule sits outside all of this: a `ref` puts `to` or `href` first, ahead of `rel`, which is not the order its schema file lists. [§4](#4-field-order-inside-smaller-shapes) explains why. It's the only place this guide overrides the schema.
 
 ---
 
 ## 1. Entry-level field order
 
-### The general principle
+### The schema is the style guide
 
-Fields fall into six bands, always in this order:
+**Write an entry's fields in the order the schema lists them.** The order of properties and options in the schema reflect the guidelines' recommendations on how to organize your schema documents. When in doubt, copy how the schema does it.
 
-1. **Identity** — what this thing *is*: `id`, `kind`, `name`, `description`,
-   `purpose`, plus any kind-specific field that's really just a more
-   specific answer to "what is this" (a token's `tokenType` and `source`, a
-   theme's `colorScheme` and `source`). These are the fields you'd read
-   first to know whether you're even looking at the right entry.
-2. **Metadata** — `metadata`. Facts *about* the entry (status, ownership,
-   tags) rather than facts that define it.
-3. **Primary content pointer** — a component's `sourceFiles`. The thing
-   everything else is a fact *about*. Comes right after metadata because
-   it's the closest thing to a second identity field: "here's the real
-   artifact this entry documents."
-4. **Documentation** — `sections`. The narrative: guidelines, definitions,
-   steps. See [§2](#2-section-order-within-sections) for how to order what's
-   inside it.
-5. **Structured facts** — the machine-checkable shape of the artifact:
-   a component's `specs`, `imports`, `traits`, `combos`; a token's
-   `combos`. These come *after* `sections`, not before, because they're
-   closer to code than to prose — read the human-facing story first, then
-   the structured facts a tool would actually parse.
-6. **Relationships and escape hatches** — `related`, `extends`, `refs`,
-   always in that order, then `$extensions` last, always. `$extensions` is
-   last on every object in this schema, not just entries — it's the
-   "everything else" bucket, and reads better positioned as such.
+Follow the high-level order:
 
-Why a token's `tokenType`/`source` and a theme's `colorScheme`/`source`
-land in band 1 (before `metadata`) while a component's `sourceFiles`
-lands in band 3 (after `metadata`): a token's type is as fundamental to
-what the token *is* as its `kind` — "this is a color token" is an identity
-fact, not a supporting one — and a token entry deliberately carries no
-`value`, so its `source` *is* where the thing being documented lives.
-Identity and content are the same fact for a token. A component's
-`sourceFiles`, by contrast, is where the *implementation* lives, which is
-a level removed from identity — you know it's a component named "Button"
-before you know or care which file it's built from, and the component
-entry carries plenty of its own substance (`traits`, `combos`, `sections`)
-that a token entry doesn't.
+1. **Shared entry fields _except_ `$extensions`** defined in [`entries/entry.schema.yaml`](schema/entries/entry.schema.yaml) .
+2. **Then that kind's own fields**, defined in `entries/<kind>.schema.yaml`. A custom kind has no file of its own, so should follow the high-level guidance.
+3. **Then `$extensions`.** All information that adds to the schema goes last.
 
-### Component
+If a document is ordered differently, the `DSDS-17` warning prints the whole order it expected.
 
-```
-id
-kind
-name
-description
-purpose
-metadata
-sourceFiles
-sections
-specs
-imports
-traits
-combos
-related
-extends
-refs
-$extensions
-```
+### Base documents and shared entries
 
-### Token
+Same idea, different file. A base document (one with `schemaVersion`) follows [`base.schema.yaml`](schema/base.schema.yaml). A `shared` entry follows [`shared.schema.yaml`](schema/shared.schema.yaml).
 
-```
-id
-kind
-name
-description
-purpose
-tokenType
-source
-metadata
-sections
-combos
-related
-extends
-refs
-$extensions
-```
+Each of those is one list, so there's nothing to join. And a `shared` entry genuinely has fewer fields than an entry, rather than the same list with gaps in it — it has no `kind`, `purpose`, `extends` or `related`. That file explains why.
 
-### Theme
+`DSDS-20` checks base documents. `DSDS-17` checks shared entries, falling back to `shared.schema.yaml` when an object has no `kind`.
 
-```
-id
-kind
-name
-description
-purpose
-colorScheme
-source
-metadata
-sections
-related
-extends
-refs
-$extensions
-```
+### Entry order, inside `entries[]`
 
-### System
+The rule above orders the fields of one entry. When a base document holds several entries, order the entries themselves by `kind`, in the order [`entries/entry.schema.yaml`](schema/entries/entry.schema.yaml) lists its `kind` values — which starts with the ones everything else is built on:
 
-```
-id
-kind
-name
-description
-purpose
-metadata
-sections
-related
-extends
-refs
-$extensions
-```
+1. **`system`** — always first. It isn't one of the group; it's what the document is about, and the other entries belong to it. One per document at most.
+2. **`token`** — the values everything else is built from.
+3. **`theme`** — a named set of token overrides, so it only makes sense after the tokens it overrides.
+4. **`component`** — built from tokens and themes.
+5. **`entry`**, then any custom kind — foundations, patterns and guides, which are usually built from the components above. Custom kinds go last, since a reader can't tell their shape from the spec.
 
-### Generic `entry` (and a namespaced custom kind)
+It's the same idea §2 uses for sections: broadest first, and nothing before the thing it depends on. Read top to bottom and you meet each idea before the entries that use it, instead of scrolling back to find out what some token three entries ago actually was.
 
-```
-id
-kind
-name
-description
-purpose
-metadata
-sections
-related
-extends
-refs
-$extensions
-```
+Within one kind, use whatever order reads best — usually the order someone would learn them in, not alphabetical. A scale reads better as `space-1`, `space-2`, `space-4` than as `space-1`, `space-2`, `space-24`.
 
-Only include a field if the entry actually uses it — this is an order for
-whichever fields are present, not a mandate to write every field out.
-`kind: component` with no `traits` just skips straight from `sections` to
-`related` (or wherever the next present field is).
-
-### Base documents
-
-A base document (one with `schemaVersion`) follows the same
-identity-then-content-then-relationships shape, at the document level:
-
-```
-schemaVersion
-$schema
-name
-entries
-shared
-refs
-$extensions
-```
-
-### Shared entries
-
-A `shared` entry has no `kind`, `purpose`, `extends`, or `related` (see
-`shared.schema.yaml`'s own `$comment` for why) — its order is the same
-shape with those omitted:
-
-```
-id
-name
-description
-metadata
-sections
-refs
-$extensions
+```yaml
+entries:
+  - id: acme-design-system   # kind: system   — what the document is about
+  - id: color.action.primary # kind: token
+  - id: light                # kind: theme    — overrides the tokens above
+  - id: dark                 # kind: theme
+  - id: button               # kind: component
+  - id: form-layout          # kind: entry    — a pattern built from components
 ```
 
 ---
 
 ## 2. Section order, within `sections[]`
 
-### Group by kind first
+### Keep each kind together
 
-If an entry has more than one section, **every section of the same kind
-sits together** — all `guidelines` sections as a contiguous run, then all
-`definitions` sections, then all `steps` sections, then any generic
-`section`s. Never interleave: `guidelines`, `definitions`, `guidelines` is
-wrong even if that was the order the ideas came to you in while writing.
+If an entry has more than one section, **put all the sections of the same kind side by side** — every `guidelines` section in a row, then every `definitions` section, then every `steps` section, then any plain `section`. Don't mix them up: `guidelines`, `definitions`, `guidelines` is wrong, even if that's the order you thought of them in.
 
-### Kind order: general to specific
+### Kind order: broadest first
 
-When more than one kind is present, order the kinds themselves
-general-to-specific:
+When an entry uses more than one kind, order the kinds like this:
 
-1. **`guidelines`** — the broadest question ("should I even use this, and
-   how do I use it correctly") comes first.
-2. **`definitions`** — reference material: anatomy, terms, a glossary.
-   More specific than guidelines (it's about *this entry's* parts and
-   vocabulary specifically), less specific than a procedure.
-3. **`steps`** — a concrete procedure or checklist. The most specific of
-   the three structured kinds — one exact sequence, not general guidance.
-4. **`section`** (generic) — freeform prose that didn't fit the other
-   three. Last, because it's the fallback, not a first-class kind on equal
-   footing with the others.
+1. **`guidelines`** — the broadest question. Should I use this at all, and how do I use it properly?
+2. **`definitions`** — reference material: parts, terms, a glossary. Narrower than guidelines, because it's about this entry's own parts and words. Wider than a set of steps.
+3. **`steps`** — one procedure or checklist. The narrowest of the three, because it's one exact sequence rather than general advice.
+4. **`section`** (the plain kind) — prose that didn't fit the other three. Last, because it's the fallback.
 
-### Within `guidelines`: by specificity, then by audience
+That's the order [`sections/section.schema.yaml`](schema/sections/section.schema.yaml) lists its `kind` values in. A namespaced custom kind goes last, after all four, since it isn't in that list.
 
-A component or pattern commonly has more than one `guidelines` section.
-Two sorts apply, in this order: **specificity**, then **audience**.
+### Within `guidelines`: how broad, then who it's for
 
-Specificity, general to specific:
+An entry often has more than one `guidelines` section. Sort them twice: first by **how broad** they are, then by **who they're for**.
 
-1. **`framing: when-to-use`** — the fit judgment: should you reach for
-   this at all. The most general question there is.
-2. **`framing: how-to-use`** (or no `framing`, which defaults to
-   `how-to-use`) covering the entry broadly — general implementation
-   rules that apply everywhere.
-3. **Tag-scoped `guidelines` sections** — a section whose items all carry
-   the same `metadata.tags`/item-level `tags` entry (for example, a
-   section that's really just the accessibility rules, or just the
-   mobile-specific ones). Most specific, so it goes last. Order multiple
-   tag-scoped sections alphabetically by their tag unless there's an
-   obvious narrative reason not to (for example, accessibility rules
-   conventionally lead, since they're rarely truly optional in practice).
+How broad, widest first — the order [`sections/guidelines.schema.yaml`](schema/sections/guidelines.schema.yaml) lists its `framing` values in:
 
-Audience, broadest readership first:
+1. **`framing: when-to-use`** — should you reach for this at all. The widest question there is.
+2. **`framing: how-to-use`** (or no `framing`, which means the same thing) covering the whole entry — rules that apply everywhere.
+3. **Sections about one tag** — a section where every item carries the same tag, like the accessibility rules or the mobile-only ones. Narrowest, so it goes last. If there are several, order them alphabetically by tag unless there's a good reason not to. Accessibility rules usually lead, since they're rarely optional in practice.
+
+Who it's for, widest audience first — the order [`sections/section.schema.yaml`](schema/sections/section.schema.yaml) lists its `for` values in:
 
 1. **`for: all`**
 2. **`for: human`**
 3. **`for: agent`**
 
-`for: all` leads because it's the only value every reader sees. `for:
-agent` goes last because it's the narrowest — notes a person never reads,
-which by convention extend the human-facing sections above rather than
-replacing them.
+`for: all` leads because it's the only one every reader sees. `for: agent` goes last because it's the narrowest — notes a person never reads, which normally add to the human-facing sections above rather than replace them.
 
-The two sorts compose in that order: **specificity first, audience
-second.** A `for: agent` when-to-use section still precedes a `for: all`
-how-to-use one, because specificity decides before audience is consulted.
-Audience only settles the order of sections that already tie — same
-`framing`, both un-tag-scoped.
+Both of those orders are written down in the schema, as the order each field lists its allowed values in. The checks read them from there, so this page is describing those files rather than keeping its own copy.
+
+The two sorts apply in that order: **how broad first, who it's for second.** A `for: agent` when-to-use section still comes before a `for: all` how-to-use one, because breadth is settled first. Audience only decides the order of sections that are already tied — same `framing`, and neither one about a single tag.
 
 ```yaml
 sections:
@@ -261,7 +135,7 @@ sections:
     for: all
     title: Accessibility
     items: [...]                    # every item here tagged "accessibility"
-                                    # tag-scoped, so it follows every
+                                    # about one tag, so it follows every
                                     # how-to-use section regardless of `for`
 
   - kind: definitions
@@ -277,8 +151,7 @@ sections:
 
 ## 3. Guideline item order, within one section
 
-Order items by `level`, strongest-and-most-common first, in this exact
-sequence:
+Order items by `level`, in the order [`common/requirement-level.schema.yaml`](schema/common/requirement-level.schema.yaml) lists its values in:
 
 ```
 must
@@ -288,64 +161,46 @@ should-not
 must-not
 ```
 
-This isn't RFC 2119's own presentation order (which pairs `must`/`must-not`
-and `should`/`should-not`) — it reads as a spectrum from "always do this"
-to "never do this," with the two conditional/softer levels (`should`,
-`may`) in the middle, rather than alternating strong/weak. A reader
-scanning top-to-bottom sees the non-negotiable rules first and the hard
-prohibitions last, with the judgment calls in between.
+That isn't the order [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) presents them in, which pairs each word with its opposite. This reads as a scale instead, from "always do this" to "never do this", with the two softer levels in the middle. Read top to bottom and you get the firm rules first, the judgment calls next, and the hard don'ts last. That's an editorial choice, which is why the reason for it is written here — but the order itself lives in the schema, and the check reads it from there.
 
-Within one level, keep items in whatever order tells the best story
-(usually authoring order) — this guide doesn't mandate a secondary sort.
-Don't reorder same-level items just to alphabetize them; that usually
-makes a guidelines section read worse, not better.
+Within one level, keep items in whatever order tells the best story — usually the order you wrote them in. There's no second sort. Don't alphabetize items that share a level; it normally makes the section read worse.
 
 ```yaml
 items:
-  - statement: Use semantic tokens instead of raw values.
-    level: must
-  - statement: Prefer the `primary` variant for the page's one main action.
-    level: should
-  - statement: Add a leading icon when it disambiguates the action.
-    level: may
-  - statement: Should not pair `loading` with `disabled` in the same interaction.
-    level: should-not
-  - statement: Never stack two primary-variant buttons in the same view.
-    level: must-not
+  - level: must
+    statement: Use semantic tokens instead of raw values.
+  - level: should
+    statement: Prefer the `primary` variant for the page's one main action.
+  - level: may
+    statement: Add a leading icon when it disambiguates the action.
+  - level: should-not
+    statement: Should not pair `loading` with `disabled` in the same interaction.
+  - level: must-not
+    statement: Never stack two primary-variant buttons in the same view.
 ```
 
 ---
 
-## 4. Field order inside common item shapes
+## 4. Field order inside smaller shapes
 
-The same "identity, then content, then relationships, then `$extensions`"
-logic applies one level down, inside the objects `sections[].items[]`
-holds. These follow the schema files' own declared property order
-directly — nothing to redesign, just keep it:
+[§1](#1-entry-level-field-order)'s rule goes all the way down. Order the fields of a section, an item, a `metadata` block, a `combo` or a `ref` the way its own schema file lists them.
 
-**A section itself** (any kind): `kind`, `for`, `title`, `description`,
-`context`, `metadata`, `items`, `freeform`, `$extensions`.
+Most of these shapes are a single list, so there's nothing to join and nothing for this guide to repeat.
 
-**A `guidelines` item**: `id`, `statement`, `level`, `example`,
-`alternatives`, `evidence`, `related`, `checks`, `checkedBy`, `tags`,
-`refs`, `$extensions`.
+| Shape | Its schema file |
+|---|---|
+| A `guidelines` item | [`sections/guidelines.schema.yaml`](schema/sections/guidelines.schema.yaml) |
+| A `definitions` item | [`sections/definitions.schema.yaml`](schema/sections/definitions.schema.yaml) |
+| A `steps` item | [`sections/steps.schema.yaml`](schema/sections/steps.schema.yaml) |
+| A `combo` | [`common/combo.schema.yaml`](schema/common/combo.schema.yaml) |
 
-**A `definitions` item**: `id`, `term`, `definition`, `usage`, `aliases`,
-`$extensions`.
+Two shapes are built from two files, the way an entry is, so they need a rule for joining the lists.
 
-**A `steps` item**: `id`, `title`, `description`, `checks`, `refs`,
-`examples`, `optional`, `$extensions`.
+**A `metadata` block** follows §1's rule exactly: the fields every entry's metadata shares, from [`metadata/metadata.schema.yaml`](schema/metadata/metadata.schema.yaml), then the ones for that kind of entry, from [`metadata/entry-metadata.schema.yaml`](schema/metadata/entry-metadata.schema.yaml) or [`metadata/system-metadata.schema.yaml`](schema/metadata/system-metadata.schema.yaml), then `$extensions` last.
 
-**A `ref`** (object form): `to`/`href`, `rel`, `role`, `note`. Note this
-is *not* the order `common/ref.schema.yaml` declares its own properties
-in (the schema lists `rel` first) — putting `to`/`href` first reads
-better in practice ("what does this point at" before "what kind of
-pointer is it"), and every example in this repo already does it this way.
-This guide follows established practice here rather than the schema
-file's internal declaration order.
+**A section** is the one place that rule doesn't hold. A section kind adds a single field — `framing` for `guidelines`, `ordered` for `steps` — and it goes immediately after `for`, not after the rest of the shared fields. So a `guidelines` section reads `kind`, `for`, `framing`, then `title` and whatever else it has. The field says what sort of section this is, so it belongs up with `kind` and `for` where a reader is already looking, rather than buried further down.
 
-**A `combo`**: `subject`, `items`, `level`, `note` — matches
-`common/combo.schema.yaml`'s own declared order.
+**One deliberate exception: a `ref`.** Write `to` or `href` first, then `rel`, then `role` and `note`. That's not the order [`common/ref.schema.yaml`](schema/common/ref.schema.yaml) lists them in — it puts `rel` first. "What does this point at" reads better than "what kind of pointer is it", and every example in this repo already does it this way. It's the one place this guide overrides the schema, which is why it's written down here instead of left as a habit. Nothing checks the smaller shapes, so nothing enforces the rule or the exception.
 
 ---
 
@@ -358,38 +213,35 @@ name: Badge
 description: A small status indicator, attached to another element.
 purpose: Draws attention to a count, state, or category without interrupting the layout it's attached to.
 metadata:
-  status: {status: stable}
-  since: 1.2.0
   tags: [status, indicator, count]
-sourceFiles:
-  - platform: react
-    file: ./src/Badge.tsx
+  since: 1.2.0
+  status: {status: stable}
 sections:
   - kind: guidelines
     for: all
     framing: when-to-use
     items:
-      - statement: Use to surface a count or state on another element (a notification count, an unread indicator).
-        level: should
-      - statement: Do not use as a replacement for a full status message a user needs to act on.
-        level: should-not
+      - level: should
+        statement: Use to surface a count or state on another element (a notification count, an unread indicator).
+      - level: should-not
+        statement: Do not use as a replacement for a full status message a user needs to act on.
 
   - kind: guidelines
     for: all
     items:
-      - statement: Keep label text to a single word or number.
-        level: must
-      - statement: Pair with an accessible label when the badge conveys meaning color alone cannot.
-        level: must
-      - statement: Prefer the `dot` variant when the exact count isn't meaningful to the user.
-        level: should
+      - level: must
+        statement: Keep label text to a single word or number.
+      - level: must
+        statement: Pair with an accessible label when the badge conveys meaning color alone cannot.
+      - level: should
+        statement: Prefer the `dot` variant when the exact count isn't meaningful to the user.
 
   - kind: guidelines
     for: all
     title: Accessibility
     items:
-      - statement: Expose the badge's content to assistive technology even when visually decorative.
-        level: must
+      - level: must
+        statement: Expose the badge's content to assistive technology even when visually decorative.
 
   - kind: definitions
     for: all
@@ -398,6 +250,15 @@ sections:
       - term: Dot
         definition: The minimal variant with no visible label, just a colored indicator.
 
+related:
+  - to: avatar
+    rel: pairs-with
+refs:
+  - href: https://github.com/org/ds/react/badge
+    rel: source
+sourceFiles:
+  - platform: react
+    file: ./src/Badge.tsx
 specs:
   - href: ./contracts/badge.contract.json
     rel: contract
@@ -415,54 +276,25 @@ combos:
     level: must-not
     items: [variant.count]
     note: A badge is either a dot or a count, never both at once.
-related:
-  - to: avatar
-    rel: pairs-with
-refs:
-  - href: https://github.com/org/ds/react/badge
-    rel: source
 ```
 
 ---
 
 ## Tooling
 
-Four rules in the [advisory lint tier](https://designsystemdocspec.org/conformance#enforcement-tiers)
-check this guide. They live in `scripts/validate/lint-docs.js`, are
-catalogued in `schema/conformance-rules.yaml` with
-`enforcement: advisory`, and run under `npm run lint`:
+Four warning-only rules check this guide. They live in `scripts/validate/lint-docs.js`, are listed in `schema/conformance-rules.yaml` as `enforcement: advisory`, and run with `npm run lint`:
 
 | Rule | Checks | This guide |
 |---|---|---|
-| `DSDS-17` | An entry's top-level field order | [§1](#1-entry-level-field-order) |
-| `DSDS-18` | `sections[]` grouping and kind order | [§2](#2-section-order-within-sections) |
+| `DSDS-17` | An entry's own field order | [§1](#1-entry-level-field-order) |
+| `DSDS-18` | `sections[]` grouping and order | [§2](#2-section-order-within-sections) |
 | `DSDS-19` | Guideline item order by `level` | [§3](#3-guideline-item-order-within-one-section) |
-| `DSDS-20` | A base document's own field order | [§1 Base documents](#base-documents) |
+| `DSDS-20` | A base document's own field order | [§1](#base-documents-and-shared-entries) |
 
-Reordering keys should never fail `npm run check:all`, and it can't:
-advisory rules warn and always exit 0. `lint-docs.js` does fail on
-catalog/implementation drift in either direction, so a rule can't be
-listed here without an implementation or vice versa.
+Getting the order wrong should never fail `npm run check:all`, and it can't: these rules only warn, and always exit 0. `lint-docs.js` does fail if a rule is listed without a check, or a check exists without a rule.
 
-**Deliberately not mechanized.** One sub-tier of §2's guidelines ordering
-is a judgment call a linter would get wrong more often than right, so
-`DSDS-18` skips it:
+**One thing isn't checked.** `DSDS-18` skips the "sections about one tag" part of §2. Working out that a section "is really just the accessibility rules" means reading its items, not looking at its shape — unlike `framing` and `for`, which are plain fields. It's still worth following; it just isn't checked. If it turns out to be checkable after all, the rule to extend is `section-order` in `lint-docs.js`.
 
-- **Tag-scoped sections.** Deciding that a section "is really just the
-  accessibility rules" means reading its items, not its shape — unlike
-  `framing` and `for`, which are plain fields. See `DSDS-18`'s own
-  catalog note.
+**Field order has one source: the schema files.** The tables on the [Schema page](https://designsystemdocspec.org/schema) are generated from each schema file's own order, `DSDS-17` and `DSDS-20` read that same order when they run, and [§1](#1-entry-level-field-order) tells you to follow it. So you can read the authoring order off a property table, and the other way round.
 
-It's still a convention worth following; it's just not checked. If it
-turns out to be mechanizable in practice, the rule to extend is
-`section-order` in `lint-docs.js`.
-
-**Field order here is not the same as the schema's property order.** The
-[Schema page](https://designsystemdocspec.org/schema)'s property tables are
-generated in each schema file's own declaration order — base entry fields
-first, then the kind-specific ones appended — which is the right order for
-a *reference table* you read top to bottom, and a different order from the
-one above. This guide orders the fields of an *instance document* you
-write; the schema page documents the shape of a *definition*. Neither is
-wrong, and they are not going to converge: don't infer authoring order
-from a property table, or vice versa.
+This guide used to carry its own copy of that order, written out by hand. It fell out of date twice — once with `related` and `extends` the wrong way round, once with `imports` in the wrong place — and nobody noticed until something compared the two copies. Deleting the copy is what makes the rule checkable rather than just stated. Ordering items in a list ([§2](#2-section-order-within-sections) onward) is different: the schema has no opinion about which entry or section comes first, so those rules do belong here.

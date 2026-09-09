@@ -19,8 +19,8 @@ entries:
       - kind: guidelines
         for: all
         items:
-          - statement: Icon button must carry an aria-label, since it has no visible text label.
-            level: must
+          - level: must
+            statement: Icon button must carry an aria-label, since it has no visible text label.
     refs:
       - to: button
         rel: part-of

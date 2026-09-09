@@ -4,9 +4,9 @@ name: Getting Started
 description: How to install the design system and render your first component.
 
 metadata:
-  status: {status: stable}
-  since: 1.0.0
   tags: [onboarding]
+  since: 1.0.0
+  status: {status: stable}
 
 # `imports` is a component-only field (see entries/component.schema.yaml's
 # own $comment) - a manual like this one has nothing to put it on, so the
