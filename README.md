@@ -132,7 +132,7 @@ For document structure, composing hand-split fragments (`scripts/tools/compose.j
 
 ## Cutting a release
 
-There's no single version field — every `schema/**/*.schema.yaml` file's own `$id` independently encodes the version (e.g. `.../v0.20.0/common/ref.schema.yaml`), and everything else (`nav.js`, `compile-mdx.mjs`'s `{{VERSION}}` substitution, the versioned `site/dist/v<n>/` directory) derives the current version by reading it back out of `schema/dsds.bundled.yaml`. MDX content must never hardcode a version — always use `{{VERSION}}`.
+There's no single version field — every `schema/**/*.schema.yaml` file's own `$id` independently encodes the version (e.g. `.../v<version>/common/ref.schema.yaml`), and everything else (`nav.js`, `compile-mdx.mjs`'s `{{VERSION}}` substitution, the versioned `site/dist/v<n>/` directory) derives the current version by reading it back out of `schema/dsds.bundled.yaml`. MDX content must never hardcode a version — always use `{{VERSION}}`.
 
 `scripts/tools/bump-version.js` automates the mechanical part — every schema file's `$id`, `bundle.js`'s hardcoded `$id`, every example/test fixture's `schemaVersion`, README's one hardcoded URL, and `package.json#version` — then regenerates the bundled schema and syncs `.agents/skills/dsds-*`'s version references. Pass `--tag` to have it run the rest of the sequence too — build, check, commit, and an annotated tag — in one go:
 
@@ -177,7 +177,7 @@ For a documentation-only edit (no schema/example changes), just commit the `site
 
 ## Contributing
 
-This is an early-stage specification (currently DSDS 0.20.0). Feedback and
+This is an early-stage specification (currently DSDS 0.20.1). Feedback and
 contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for what
 a rule, example, or schema change needs to land, and
 [SECURITY.md](SECURITY.md) to report a vulnerability.

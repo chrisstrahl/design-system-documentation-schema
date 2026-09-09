@@ -15,7 +15,7 @@ Run schema and semantic validation on your `.dsds.yaml` spec files.
 npx dsds-validate <files-or-globs>
 ```
 
-This validates every file given against the DSDS v0.20.0 bundled schema using Ajv2020, plus a set of semantic rules JSON Schema alone can't express — the `DSDS-01`–`DSDS-11` catalog (resolution, uniqueness, platform vocabulary, `composes`/`depends-on` cycles, and file-existence checks), each tagged `structural` or `semantic`. Pass `--strict` to promote the warning-only rules (`DSDS-05`, `DSDS-08`, `DSDS-09`, `DSDS-11`) to hard failures.
+This validates every file given against the DSDS v0.20.1 bundled schema using Ajv2020, plus a set of semantic rules JSON Schema alone can't express — the `DSDS-01`–`DSDS-11` catalog (resolution, uniqueness, platform vocabulary, `composes`/`depends-on` cycles, and file-existence checks), each tagged `structural` or `semantic`. Pass `--strict` to promote the warning-only rules (`DSDS-05`, `DSDS-08`, `DSDS-09`, `DSDS-11`) to hard failures.
 
 ## Documentation-Quality Checks (advisory)
 

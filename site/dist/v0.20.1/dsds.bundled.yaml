@@ -20,7 +20,7 @@ $defs:
         type: string
         description: The version of this spec the document follows.
         $comment: The one authoritative version marker. Distinct from `metadata.version`, which is the design system's own release version.
-        example: 0.20.0
+        example: 0.20.1
       $schema:
         type: string
         format: uri-reference
@@ -1162,7 +1162,7 @@ $defs:
     $id: https://designsystemdocspec.org/v0.20.1/sections/section.schema.yaml
     title: Section
     type: object
-    description: A logical documentation section. Supplies the fields every section kind shares — `kind`, `for`, `title`, `description`, `items`, `metadata`, `$extensions` — plus `freeform`, and is tagged with who it is for (human, agent, or all). Content always lives in `items`, never in a field named after the kind. Each sections/<kind>.schema.yaml file adds its own `kind` value (`definitions`, `guidelines`, `steps`, or the generic `section`) and its own structure for `items` on top of this shared base.
+    description: A logical documentation section. Supplies the fields every section kind shares, in declaration order — `kind`, `for`, `title`, `description`, `context`, `metadata`, `items`, `freeform`, `$extensions` — and is tagged with who it is for (human, agent, or all). Content always lives in `items`, never in a field named after the kind. Each sections/<kind>.schema.yaml file adds its own `kind` value (`definitions`, `guidelines`, `steps`, or the generic `section`) and its own structure for `items` on top of this shared base.
     $comment: |-
       `freeform` lives here on the base so every kind can carry nested, headed content alongside its own structured `items`. A `guidelines` section can pair its rules with background reading, a `steps` section can pair its checklist with extra context, and so on. A section should use either `items` or `freeform`.A section that's only `freeform` content (this used to be its own `kind: freeform`) picks whichever kind fits it best.  If nothing fits, use the generic `kind: section` instead.
       This file doesn't close its own list of properties. Each sections/<kind>.schema.yaml file adds its own extra fields on top (steps' `ordered`, definitions' term/definition items), and closes the combined structure itself, at the item level.

@@ -4,8 +4,9 @@ title: Section
 type: object
 description: >-
   A logical documentation section. Supplies the fields every section kind
-  shares — `kind`, `for`, `title`, `description`, `items`, `metadata`,
-  `$extensions` — plus `freeform`, and is tagged with who it is for
+  shares, in declaration order — `kind`, `for`, `title`, `description`,
+  `context`, `metadata`, `items`, `freeform`, `$extensions` — and is
+  tagged with who it is for
   (human, agent, or all). Content always lives in `items`, never in a
   field named after the kind. Each sections/<kind>.schema.yaml file adds
   its own `kind` value (`definitions`, `guidelines`, `steps`, or the
