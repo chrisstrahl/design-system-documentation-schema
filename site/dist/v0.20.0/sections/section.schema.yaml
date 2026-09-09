@@ -106,7 +106,7 @@ $defs:
       kind or a namespaced custom kind with no dedicated file. Used
       anywhere a section is embedded (an entry's or a shared item's own
       `sections`) instead of a bare $ref to this file, so the bundled
-      schema enforces the same per-kind shape scripts/validate/validate.js does
+      schema enforces the same per-kind shape scripts/validate.js does
       in JS.
     if:
       required: [kind]

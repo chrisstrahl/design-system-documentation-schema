@@ -4,6 +4,16 @@ All notable changes to the DSDS specification are documented in this file.
 
 ---
 
+## [0.20.1] — 2026-09-08
+
+Documentation and tooling only — no schema shape change; a 0.20.0 document is a valid 0.20.1 document.
+
+- **STYLE_GUIDE.md** — a non-normative field-order convention for authoring DSDS documents, with `DSDS-17`–`DSDS-20` reporting deviations in the advisory tier. Order never affects validity.
+- **`DSDS-16`** — advisory: flags a token description that only restates its scale position.
+- Schema `$id`s move to `/v0.20.1/`. `/v0.20.0/` stays frozen at the bytes it shipped with.
+
+---
+
 ## [0.20.0] — 2026-09-01
 
 Breaking release — a full rewrite of the schema's shape, not an incremental change. The entity/document-block model (`spec/schema/`, JSON) is replaced by an entry/section model (`schema/`, YAML). Schema files are served at `https://designsystemdocspec.org/v0.20.0/...`. See the field-by-field mapping below, [How the schema is organized](https://designsystemdocspec.org/schema.html#how-the-schema-is-organized) for the new shape's own design patterns, and [Conformance](https://github.com/somerandomdude/design-system-documentation-schema#conformance) in the README for the rule catalog.

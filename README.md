@@ -126,7 +126,7 @@ node scripts/validate/validate.js my-system.dsds.yaml
 
 If your system is split across files via `rel: file`, cross-file `to:` refs are resolved automatically, bounded to the directory of the file you validate (and its subdirectories — not a parent or cousin directory). An otherwise-unresolved target reports as a warning, not a hard failure — add `--strict` (`npm run validate -- --strict`) to promote those to failures once your project is clean.
 
-Reference `https://designsystemdocspec.org/v0.20.0/dsds.bundled.yaml` from your DSDS files via the `$schema` keyword for editor autocompletion and inline validation.
+Reference `https://designsystemdocspec.org/v0.20.1/dsds.bundled.yaml` from your DSDS files via the `$schema` keyword for editor autocompletion and inline validation.
 
 For document structure, composing hand-split fragments (`scripts/tools/compose.js`), and authoring narrative pages with schema-driven property tables, see the **[Quick Start docs page](https://designsystemdocspec.org/quickstart.html)** and [How the schema is organized](https://designsystemdocspec.org/schema.html#how-the-schema-is-organized).
 

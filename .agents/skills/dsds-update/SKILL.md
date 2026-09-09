@@ -2,7 +2,7 @@
 name: dsds-update
 description: Update an existing DSDS spec based on implementation changes, Figma updates, or written instructions. Triggers on "update spec", "modify spec", "add prop to spec", "sync spec", "spec drift".
 metadata:
-  version: 0.20.0
+  version: 0.20.1
 ---
 
 # Update a DSDS Spec
@@ -47,7 +47,7 @@ Modify an existing `.dsds.yaml` file.
 
 When adding new sections or fields, verify the exact shape:
 
-- **Bundled schema**: `https://designsystemdocspec.org/v0.20.0/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if DSDS is installed as a dependency)
+- **Bundled schema**: `https://designsystemdocspec.org/v0.20.1/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if DSDS is installed as a dependency)
 - **Section reference**: `https://designsystemdocspec.org/sections-{kind}`
 - **Entry reference**: `https://designsystemdocspec.org/entries-{kind}`
 - **Full architecture**: https://designsystemdocspec.org/schema#how-the-schema-is-organized

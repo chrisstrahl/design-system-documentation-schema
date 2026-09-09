@@ -97,7 +97,7 @@ $defs:
       kind or a namespaced custom kind with no dedicated file. Used
       anywhere an entry is embedded (base.schema.yaml's own `entries`)
       instead of a bare $ref to this file, so the bundled schema enforces
-      the same per-kind shape scripts/validate/validate.js does in JS.
+      the same per-kind shape scripts/validate.js does in JS.
     if:
       required: [kind]
       properties:

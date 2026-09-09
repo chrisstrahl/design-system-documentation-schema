@@ -33,7 +33,7 @@ sections:
 
 imports:
   - platform: web-component
-    code: '<ds-code language="yaml">schemaVersion: "0.20.0"</ds-code>'
+    code: '<ds-code language="yaml">schemaVersion: "0.20.1"</ds-code>'
 
 traits:
   - kind: boolean

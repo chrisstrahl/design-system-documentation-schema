@@ -2,7 +2,7 @@
 name: dsds-validate
 description: Validate DSDS specs against the bundled schema and check for consistency issues. Triggers on "validate specs", "check specs", "spec errors", "run validation".
 metadata:
-  version: 0.20.0
+  version: 0.20.1
 ---
 
 # Validate DSDS Specs
@@ -51,7 +51,7 @@ A second, separate tier (`DSDS-12`–`DSDS-20`) that answers "is this documentat
 
 The validation schema comes from the [DSDS project](https://github.com/somerandomdude/design-system-documentation-schema):
 
-- **Bundled schema** (used by `dsds-validate`): `https://designsystemdocspec.org/v0.20.0/dsds.bundled.schema.json`, or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if installed as a dependency
+- **Bundled schema** (used by `dsds-validate`): `https://designsystemdocspec.org/v0.20.1/dsds.bundled.schema.json`, or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if installed as a dependency
 - This is a single-file version with every schema file's own `$id` still present, so `$ref`s resolve without needing to be inlined
 
 If validation fails on a field you're unsure about, consult the relevant docs page:
