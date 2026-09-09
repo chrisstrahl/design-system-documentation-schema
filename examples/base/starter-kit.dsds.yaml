@@ -69,11 +69,8 @@ entries:
     metadata:
       status: {status: stable}
     sections:
-      - kind: guidelines
-        for: human
-        items:
-          - statement: Limit each surface to one primary button.
-            level: should
+      # `for: all` precedes `for: human` per STYLE_GUIDE.md §2's audience
+      # sort - both sections are how-to-use, so audience breaks the tie.
       - kind: guidelines
         for: all
         items:
@@ -85,6 +82,11 @@ entries:
             refs:
               - to: shared-a11y#touch-target
                 rel: same-as
+      - kind: guidelines
+        for: human
+        items:
+          - statement: Limit each surface to one primary button.
+            level: should
     refs:
       - to: color.action.primary
         rel: depends-on

@@ -99,6 +99,9 @@ const ENTRY_FIELD_ORDER = {
 const SHARED_FIELD_ORDER = ["id", "name", "description", "metadata", "sections", "refs", "$extensions"];
 const DOCUMENT_FIELD_ORDER = ["schemaVersion", "$schema", "name", "entries", "shared", "refs", "$extensions"];
 const SECTION_KIND_RANK = { guidelines: 0, definitions: 1, steps: 2, section: 3 };
+// STYLE_GUIDE.md §2's audience sort, broadest readership first. Applied only WITHIN a group
+// of guidelines sections that already tie on `framing` - specificity decides first.
+const SECTION_AUDIENCE_RANK = { all: 0, human: 1, agent: 2 };
 const GUIDELINE_LEVEL_RANK = { must: 0, should: 1, may: 2, "should-not": 3, "must-not": 4 };
 
 // Returns the first out-of-order pair, or null if `actual` is already non-decreasing by
@@ -221,8 +224,9 @@ const IMPLEMENTATIONS = {
 
   // STYLE_GUIDE.md §2 - same-kind sections must stay contiguous and general-to-specific
   // (guidelines, definitions, steps, section); among guidelines sections, framing:
-  // when-to-use comes first. Doesn't attempt the tag-scoped-guidelines sub-tier (see this
-  // rule's catalog note) - not mechanically checkable the same way.
+  // when-to-use comes first, then audience (all, human, agent) within one framing group.
+  // Doesn't attempt the tag-scoped-guidelines sub-tier (see this rule's catalog note) -
+  // "this section is really about one tag" means reading its items, not its shape.
   "section-order": (entry, emit) => {
     const sections = entry.sections;
     if (!Array.isArray(sections) || sections.length < 2) return;
@@ -241,6 +245,27 @@ const IMPLEMENTATIONS = {
         "/sections",
         `"${entry.id}" has a how-to-use guidelines section before a when-to-use one — STYLE_GUIDE.md orders \`framing: when-to-use\` first.`,
       );
+      return; // fix specificity first - the audience sort below only orders sections that TIE on framing
+    }
+    // Audience, within one framing group only. Grouping by framing rather than scanning the
+    // whole run is what keeps the two sorts composed in the right order: a `for: agent`
+    // when-to-use section legitimately precedes a `for: all` how-to-use one, so comparing
+    // those two on `for` would be a false positive.
+    const byFraming = new Map();
+    for (const s of guidelinesRun) {
+      const framing = s.framing || "how-to-use";
+      if (!byFraming.has(framing)) byFraming.set(framing, []);
+      byFraming.get(framing).push(s);
+    }
+    for (const [framing, run] of byFraming) {
+      const audienceInversion = firstInversion(run, (s) => SECTION_AUDIENCE_RANK[s.for] ?? 99);
+      if (audienceInversion) {
+        emit(
+          "/sections",
+          `"${entry.id}" has a \`for: ${audienceInversion[0].for}\` guidelines section before a \`for: ${audienceInversion[1].for}\` one (both ${framing}) — STYLE_GUIDE.md orders audience \`all\`, then \`human\`, then \`agent\`, broadest readership first.`,
+        );
+        break;
+      }
     }
   },
 

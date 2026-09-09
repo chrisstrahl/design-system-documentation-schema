@@ -1,30 +1,9 @@
 # DSDS authoring style guide
 
-The schema doesn't enforce field order — YAML/JSON Schema has no concept of
-it, and `npm run validate` will happily accept a document with every field
-shuffled. This guide is a second, human-facing layer on top of the schema:
-a single, predictable order for the fields the schema *does* allow in any
-order, so that every DSDS document in this repo (and, ideally, in yours)
-reads the same way regardless of who wrote it.
+This guide is a set of recommendations on how to order and format the schema to ensure it reads predictably and consistently across documents.  
 
-This isn't optional polish. A predictable order means:
-
-- **A reader can skim.** Once you know `sourceFiles` always comes before
-  `sections` and `sections` always comes before `traits`, you can jump
-  straight to the part of a component you care about without re-learning
-  the document's shape every time.
-- **Diffs stay small.** Two people adding a `combos` entry to the same file
-  shouldn't produce a diff that also reshuffles four unrelated fields.
-- **Generated tooling has one shape to target.** A codegen script, a
-  linter, or an agent writing a new entry has one canonical order to
-  produce, not "whatever order felt right that day."
-
-This guide is checked, but never blocking: `DSDS-17`–`DSDS-20` in the
-[advisory lint tier](https://designsystemdocspec.org/conformance#enforcement-tiers)
-report violations under `npm run lint`, and nothing here can fail
-`npm run check:all`. Field order has no effect on whether a document is
-valid. See [Tooling](#tooling) at the end for exactly which parts are
-mechanized and which are left to judgment.
+Note: All rules below are advisory only. The schema will validate if none of these guidelines are filed. `DSDS-17`–`DSDS-20` in the [advisory lint tier](https://designsystemdocspec.org/conformance#enforcement-tiers) report violations under `npm run lint`, and nothing here can fail
+`npm run check:all`. See [Tooling](#tooling) at the end for exactly which parts are mechanized and which are left to judgment.
 
 ---
 
@@ -225,11 +204,10 @@ general-to-specific:
    three. Last, because it's the fallback, not a first-class kind on equal
    footing with the others.
 
-### Within `guidelines`: when-to-use, then how-to-use, then tag-specific
+### Within `guidelines`: by specificity, then by audience
 
 A component or pattern commonly has more than one `guidelines` section.
-These are two separate sorts, not one list: order on **specificity**
-first, then break ties on **audience**.
+Two sorts apply, in this order: **specificity**, then **audience**.
 
 Specificity, general to specific:
 
@@ -246,12 +224,22 @@ Specificity, general to specific:
    obvious narrative reason not to (for example, accessibility rules
    conventionally lead, since they're rarely truly optional in practice).
 
-Then, **only between sections that tie on the above** — same `framing`,
-both un-tag-scoped — order by audience: `for: all`, then `for: human`,
-then `for: agent`. Broadest readership first. This is a tie-break, not a
-fourth tier: a `for: agent` when-to-use section still comes before a
-`for: all` how-to-use one, because specificity wins. `DSDS-18` doesn't
-check this sort (see [Tooling](#tooling)).
+Audience, broadest readership first:
+
+1. **`for: all`**
+2. **`for: human`**
+3. **`for: agent`**
+
+`for: all` leads because it's the only value every reader sees. `for:
+agent` goes last because it's the narrowest — notes a person never reads,
+which by convention extend the human-facing sections above rather than
+replacing them.
+
+The two sorts compose in that order: **specificity first, audience
+second.** A `for: agent` when-to-use section still precedes a `for: all`
+how-to-use one, because specificity decides before audience is consulted.
+Audience only settles the order of sections that already tie — same
+`framing`, both un-tag-scoped.
 
 ```yaml
 sections:
@@ -265,9 +253,16 @@ sections:
     items: [...]                    # framing: how-to-use (default)
 
   - kind: guidelines
+    for: agent
+    items: [...]                    # same framing as above, narrower
+                                    # audience — so audience breaks the tie
+
+  - kind: guidelines
     for: all
     title: Accessibility
     items: [...]                    # every item here tagged "accessibility"
+                                    # tag-scoped, so it follows every
+                                    # how-to-use section regardless of `for`
 
   - kind: definitions
     context: anatomy
@@ -449,20 +444,17 @@ advisory rules warn and always exit 0. `lint-docs.js` does fail on
 catalog/implementation drift in either direction, so a rule can't be
 listed here without an implementation or vice versa.
 
-**Deliberately not mechanized.** Two sub-tiers of §2's guidelines
-ordering are judgment calls a linter would get wrong more often than
-right, so `DSDS-18` checks neither:
+**Deliberately not mechanized.** One sub-tier of §2's guidelines ordering
+is a judgment call a linter would get wrong more often than right, so
+`DSDS-18` skips it:
 
-- **Audience order** (`for: all`, then `human`, then `agent`). Whether two
-  guidelines sections are really "the same rules for two audiences" —
-  and therefore orderable — or two unrelated sections that happen to
-  differ in `for`, isn't something the field alone tells you.
 - **Tag-scoped sections.** Deciding that a section "is really just the
-  accessibility rules" means reading its items, not its shape. See
-  `DSDS-18`'s own catalog note.
+  accessibility rules" means reading its items, not its shape — unlike
+  `framing` and `for`, which are plain fields. See `DSDS-18`'s own
+  catalog note.
 
-Both are still conventions worth following; they're just not checked. If
-either turns out to be mechanizable in practice, the rule to extend is
+It's still a convention worth following; it's just not checked. If it
+turns out to be mechanizable in practice, the rule to extend is
 `section-order` in `lint-docs.js`.
 
 **Field order here is not the same as the schema's property order.** The
