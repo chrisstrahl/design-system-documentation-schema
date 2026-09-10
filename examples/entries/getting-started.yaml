@@ -14,13 +14,6 @@ metadata:
 sections:
   - kind: steps
     for: all
-    freeform:
-      - title: Install
-        id: install
-        body: Add the package and its peer dependencies.
-      - title: Import tokens
-        id: import-tokens
-        body: Load the base theme before rendering any component.
     items:
       - title: Install the package
         description: Run npm install @org/ds-react.
@@ -28,6 +21,13 @@ sections:
         description: Import the base stylesheet in your app entry point.
       - title: Render your first component
         description: "Render a component, e.g. Button with variant set to 'primary'. A primary button appears, styled with the design system's tokens."
+    freeform:
+      - title: Install
+        id: install
+        body: Add the package and its peer dependencies.
+      - title: Import tokens
+        id: import-tokens
+        body: Load the base theme before rendering any component.
 
   # Nothing here fits guidelines/definitions/steps - it's neither a rule,
   # a term, nor a procedure, just background context - so it uses the

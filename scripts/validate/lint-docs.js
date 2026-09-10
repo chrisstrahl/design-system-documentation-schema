@@ -18,6 +18,7 @@ const fs = require("fs");
 const path = require("path");
 const {
   rootDir,
+  schemaDir,
   loadYaml,
   defaultTargets,
   entriesIn,
@@ -113,6 +114,8 @@ const DOCUMENT_FIELD_ORDER = declaredProps("base.schema.yaml");
 // also picks up the `default` its schema declares, so a section that leaves `for` or `framing`
 // out is ranked as the value a validator would read it as.
 const KIND_AT = (d) => d.properties.kind.oneOf.find((m) => m.enum);
+const ENTRY_KIND = declaredEnum("entries/entry.schema.yaml", KIND_AT);
+const entryKindRank = enumRanker("entries/entry.schema.yaml", KIND_AT);
 const SECTION_KIND = declaredEnum("sections/section.schema.yaml", KIND_AT);
 // A namespaced custom kind ("acme.custom-section") isn't in the enum and has no defined place
 // in the order, so it ranks last rather than being treated as unknown-and-therefore-equal.
@@ -166,6 +169,64 @@ const describeTier = (tier) =>
 // default too - printing "for: undefined" would describe the document rather than the problem.
 function describeAudience(section) {
   return section.for === undefined ? `${AUDIENCE.fallback} (defaulted)` : section.for;
+}
+
+// ---------------------------------------------------------------------------
+// STYLE_GUIDE.md §3/§4/§5/§6's orders, for the smaller shapes. Same approach as the entry
+// orders above: read out of the schema files, never transcribed.
+// ---------------------------------------------------------------------------
+
+const EXT_KEY = "$extensions";
+
+// A shape built from a shared file plus a more specific one, joined the way §1 joins an
+// entry's: shared fields first, then the specific file's own, then `$extensions` last.
+function composedOrder(baseFile, memberFile) {
+  const base = declaredProps(baseFile);
+  const own = declaredProps(memberFile).filter((k) => !base.includes(k));
+  return [...base.filter((k) => k !== EXT_KEY), ...own, EXT_KEY];
+}
+
+function itemOrder(kind) {
+  const doc = loadYaml(path.join(schemaDir, "sections", `${kind}.schema.yaml`));
+  const inline = (doc.allOf || []).find((m) => m.properties);
+  return Object.keys(inline.properties.items.items.properties);
+}
+
+const METADATA_ORDER = {
+  entry: composedOrder("metadata/metadata.schema.yaml", "metadata/entry-metadata.schema.yaml"),
+  system: composedOrder("metadata/metadata.schema.yaml", "metadata/system-metadata.schema.yaml"),
+};
+const ITEM_ORDER = {
+  guidelines: itemOrder("guidelines"),
+  definitions: itemOrder("definitions"),
+  steps: itemOrder("steps"),
+};
+const COMBO_ORDER = declaredProps("common/combo.schema.yaml");
+// ref.schema.yaml is a oneOf (a bare string, or the object form) - the object form is the
+// only branch with fields to order.
+const REF_ORDER = Object.keys(
+  loadYaml(path.join(schemaDir, "common", "ref.schema.yaml")).oneOf.find((m) => m.properties).properties,
+);
+
+// §4: a section leads with `kind`, `for`, then the one field its kind adds, then the rest of
+// the shared order. The only shape whose two lists interleave rather than concatenate.
+const SECTION_KIND_FIELD = { guidelines: "framing", steps: "ordered" };
+const SECTION_TAIL = declaredProps("sections/section.schema.yaml").filter(
+  (k) => k !== "kind" && k !== "for",
+);
+function sectionFieldOrder(kind) {
+  const own = SECTION_KIND_FIELD[kind];
+  return ["kind", "for", ...(own ? [own] : []), ...SECTION_TAIL];
+}
+
+// Every entity in a document, with a JSON pointer to it. A standalone entry file is its own
+// single entity; entriesIn() flattens both cases but drops the position, which the messages need.
+function entitiesWithPointers(doc) {
+  const out = [];
+  (doc.entries || []).forEach((e, i) => out.push([e, `/entries/${i}`]));
+  (doc.shared || []).forEach((e, i) => out.push([e, `/shared/${i}`]));
+  if (doc.id && !Array.isArray(doc.entries)) out.push([doc, ""]);
+  return out;
 }
 
 // Returns the first out-of-order pair, or null if `actual` is already non-decreasing by
@@ -356,6 +417,104 @@ const IMPLEMENTATIONS = {
 // Document-scoped rules run once per file, against the raw parsed document, instead of once
 // per entity - see activeRules()'s own comment.
 const DOCUMENT_IMPLEMENTATIONS = {
+  // STYLE_GUIDE.md §1 - entries[] runs system, token, theme, component, entry, then any
+  // namespaced custom kind. Order within one kind is not checked: the guide asks for
+  // "whatever order reads best" there, which is a judgment, not a computation.
+  "entry-order": (doc, emit) => {
+    const entries = doc.entries;
+    if (!Array.isArray(entries) || entries.length < 2) return;
+    const inversion = firstInversion(entries, (e) => entryKindRank(e && e.kind));
+    if (inversion) {
+      emit(
+        "/entries",
+        `"${inversion[0].id}" (kind: ${inversion[0].kind}) comes before "${inversion[1].id}" (kind: ${inversion[1].kind}) — STYLE_GUIDE.md §1 orders entries ${ENTRY_KIND.values.join(", ")}, then any custom kind, so nothing precedes what it's built on.`,
+      );
+    }
+  },
+
+  // STYLE_GUIDE.md §3/§4/§5/§6 - the field order of every shape nested inside an entry.
+  "nested-field-order": (doc, emit) => {
+    const check = (label, pointer, obj, order) => {
+      const present = Object.keys(obj).filter((k) => order.includes(k));
+      const inversion = firstInversion(present, (k) => order.indexOf(k));
+      if (inversion) {
+        emit(
+          pointer,
+          `${label} has \`${inversion[0]}\` before \`${inversion[1]}\` — its schema file declares [${order.filter((k) => present.includes(k)).join(", ")}].`,
+        );
+      }
+    };
+
+    // Refs turn up all over an entry (`refs`, `related`, `extends`, `evidence`, `checks`,
+    // `specs`, `source`, …), so they're found by shape rather than by field name. `$extensions`
+    // is skipped: it holds vendor data, and an object in there carrying `href` is not a ref.
+    const walkRefs = (node, pointer) => {
+      if (!node || typeof node !== "object") return;
+      if (Array.isArray(node)) {
+        node.forEach((v, i) => walkRefs(v, `${pointer}/${i}`));
+        return;
+      }
+      if ("to" in node || "href" in node) check("a ref", pointer, node, REF_ORDER);
+      for (const [key, value] of Object.entries(node)) {
+        if (key === EXT_KEY) continue;
+        if (value && typeof value === "object") walkRefs(value, `${pointer}/${key}`);
+      }
+    };
+
+    for (const [entity, at] of entitiesWithPointers(doc)) {
+      if (!entity || typeof entity !== "object") continue;
+      if (entity.metadata && typeof entity.metadata === "object") {
+        const order = entity.kind === "system" ? METADATA_ORDER.system : METADATA_ORDER.entry;
+        check("a `metadata` block", `${at}/metadata`, entity.metadata, order);
+      }
+      (entity.combos || []).forEach((combo, ci) => {
+        if (combo && typeof combo === "object") check("a `combo`", `${at}/combos/${ci}`, combo, COMBO_ORDER);
+      });
+      (entity.sections || []).forEach((section, si) => {
+        if (!section || typeof section !== "object") return;
+        const sectionAt = `${at}/sections/${si}`;
+        check("a section", sectionAt, section, sectionFieldOrder(section.kind));
+        if (section.metadata && typeof section.metadata === "object") {
+          check("a section's `metadata`", `${sectionAt}/metadata`, section.metadata, METADATA_ORDER.entry);
+        }
+        const order = ITEM_ORDER[section.kind];
+        if (!order) return;
+        (section.items || []).forEach((item, ii) => {
+          if (item && typeof item === "object") {
+            check(`a ${section.kind} item`, `${sectionAt}/items/${ii}`, item, order);
+          }
+        });
+      });
+    }
+    walkRefs(doc, "");
+  },
+
+  // STYLE_GUIDE.md §6 - combos[] sorts by subject, then by level within one subject.
+  "combo-order": (doc, emit) => {
+    for (const [entity, at] of entitiesWithPointers(doc)) {
+      const combos = entity && entity.combos;
+      if (!Array.isArray(combos) || combos.length < 2) continue;
+      for (let i = 1; i < combos.length; i++) {
+        const prev = combos[i - 1];
+        const next = combos[i];
+        const bySubject = String(prev && prev.subject).localeCompare(String(next && next.subject));
+        if (bySubject > 0) {
+          emit(
+            `${at}/combos`,
+            `subject "${prev.subject}" comes before "${next.subject}" — STYLE_GUIDE.md §6 sorts \`combos[]\` by \`subject\`, so every rule about one trait or token sits together.`,
+          );
+          break;
+        }
+        if (bySubject === 0 && levelRank(prev.level) > levelRank(next.level)) {
+          emit(
+            `${at}/combos`,
+            `two combos share subject "${prev.subject}" but run level: ${prev.level} before level: ${next.level} — STYLE_GUIDE.md §6 orders them ${LEVEL.values.join(", ")} within one subject.`,
+          );
+          break;
+        }
+      }
+    }
+  },
   // STYLE_GUIDE.md's "Base documents" order - only applies to a base document (has
   // schemaVersion); a standalone entry file has no document-level fields to order.
   "document-field-order": (doc, emit) => {

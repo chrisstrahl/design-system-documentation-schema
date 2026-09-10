@@ -37,7 +37,7 @@ Modify an existing `.dsds.yaml` file.
   [STYLE_GUIDE.md](https://github.com/somerandomdude/design-system-documentation-schema/blob/main/STYLE_GUIDE.md)
   position rather than appending it to the end — that guide's whole point is
   that a reader can rely on the order. Nothing in your project will check
-  this: field order never affects validity, and the `DSDS-17`–`DSDS-20`
+  this: field order never affects validity, and the `DSDS-17`–`DSDS-23`
   advisory rules that report it live in the spec repo's own `lint-docs.js`,
   which the published package doesn't ship. Follow it because the next
   reader benefits, not because a tool will catch you. Don't reshuffle

@@ -11,15 +11,17 @@ description: "How to order things inside a DSDS document, so every document read
 
 How to order things inside a DSDS document, so every document reads the same way no matter who wrote it.
 
-None of this changes whether a document is valid. The schema accepts any order. Four warning-only rules — `DSDS-17` through `DSDS-20`, in the [advisory tier](conformance.html#enforcement-tiers) — point out anything out of order when you run `npm run lint`. Nothing here can fail `npm run check:all`. See [Tooling](#tooling) for what gets checked automatically and what's left to you.
+None of this changes whether a document is valid. The schema accepts any order. Seven warning-only rules (`DSDS-17` through `DSDS-23` in the [advisory tier](conformance.html#enforcement-tiers)) point out anything out of order when you run `npm run lint`. Nothing here can fail `npm run check:all`. See [Tooling](#tooling) for what gets checked automatically and what's left to you.
 
-These guidelines are nothing more than opinions. Ignore them if a different organization reads better for your needs.
+## The schema is the style guide
+
+**Write in the order the schema lists them.** The order of properties and options in the schema reflect the guidelines' recommendations on how to organize your schema documents. When in doubt, copy how the schema does it.
 
 ## The patterns behind these rules
 
 Everything below is one of a few ideas, applied to a different part of a document. Learn these and you can usually work out the specific rule.
 
-**Field order comes from the schema. List order comes from this guide.** What order an object's fields go in is written down in the schema files, so read it there. Which entry, section, or item comes first in a list is something a schema can't express, so this guide decides it. The sections below work from the outside of a document inward, and each one answers both questions for its own level.
+**Field order comes from the schema. List order comes from this guide.** Each schema follows the style guide for field order. Which entry, section, or item comes first in a list is something a schema can't express, so this guide describes it. 
 
 **Broad to specific.** The widest thing leads: `guidelines` before `steps`, `when-to-use` before `how-to-use`, `for: all` before `for: agent`, a section about the whole entry before one about a single tag.
 
@@ -29,16 +31,7 @@ Everything below is one of a few ideas, applied to a different part of a documen
 
 **Catch-alls go last.** `$extensions` after every real field, the plain `section` kind after the three specific ones, custom kinds after the five known ones. Anything that exists because nothing else fit goes at the end.
 
-**Sorts stack, and each one only breaks ties in the one above it.** Sort by kind, then by how broad, then by who it's for. A later sort never moves something ahead of what an earlier one already settled.
-
 **Where no rule decides, keep the order you wrote.** Don't alphabetize. Items sharing a `level`, entries sharing a kind — leave them in whatever order reads best.
-
-**Order never means inclusion.** These rules say where a field goes if you use it. They never say you have to use it.
-
-
-## The schema is the style guide
-
-**Write in the order the schema lists them.** The order of properties and options in the schema reflect the guidelines' recommendations on how to organize your schema documents. When in doubt, copy how the schema does it.
 
 ---
 
@@ -210,11 +203,25 @@ items:
 
 ## 6. Refs and combos
 
-A `combo` follows [`common/combo.schema.yaml`](/v{{VERSION}}/common/combo.schema.yaml).
+### Combos: by subject, then level
 
-A `ref` follows [`common/ref.schema.yaml`](/v{{VERSION}}/common/ref.schema.yaml): `to` or `href` first, then `rel`, then `role` and `note`. "What does this point at" reads before "what kind of pointer is it".
+Combos sort by: **subject first, level second.** Every rule about one trait or token sits together, so a reader checking one of them finds the rest in the same place. Within one subject, `level` breaks the tie, in the order [§5](#5-section-items) uses for guideline items.
 
-This used to be the one place the guide overrode the schema, because the file listed `rel` first. The file was reordered to match instead, so there's no exception left. Nothing checks these smaller shapes, so the order here is a convention rather than something enforced.
+A combo reads as one sentence: this subject, at this strength, with these things. That's the order [`common/combo.schema.yaml`](/v{{VERSION}}/common/combo.schema.yaml) lists its fields in:
+
+1. **`subject`:** What is the rule about? A trait, a token, or an entry.
+2. **`level`:** Does it permit or forbid and how strictly?
+3. **`items`:** What does the rule apply to?
+4. **`note`:** Why does it hold?
+
+### Refs: what it points at, then what kind of pointer
+
+A ref answers what it points at before what kind of pointer it is. That's the order [`common/ref.schema.yaml`](/v{{VERSION}}/common/ref.schema.yaml) lists its fields in:
+
+1. **`to` or `href`:** What does this point at? `to` for something in this document, `href` for anything outside it. Exactly one of the two.
+2. **`rel`:** What kind of pointer is it?
+3. **`role`:** What does the thing being pointed at do here?
+4. **`note`:** Anything else worth saying about the connection.
 
 ---
 
@@ -296,17 +303,36 @@ combos:
 
 ## Tooling
 
-Four warning-only rules check this guide. They live in `scripts/validate/lint-docs.js`, are listed in `schema/conformance-rules.yaml` as `enforcement: advisory`, and run with `npm run lint`:
+Seven warning-only rules check this guide. They live in `scripts/validate/lint-docs.js`, are listed in `schema/conformance-rules.yaml` as `enforcement: advisory`, and run with `npm run lint`.
 
-| Rule | Checks | This guide |
+### What's checked, and what isn't
+
+Every rule in this guide is checked except one, and that one can't be. The right-hand column is the warning you'd get.
+
+| Rule | Where | Checked by |
 |---|---|---|
-| `DSDS-17` | An entry's own field order | [§2](#2-entries) |
-| `DSDS-18` | `sections[]` grouping and order | [§4](#4-sections) |
-| `DSDS-19` | Guideline item order by `level` | [§5](#5-section-items) |
-| `DSDS-20` | A base document's own field order | [§1](#1-base-documents-and-shared-entries) |
+| A base document's own fields | [§1](#1-base-documents-and-shared-entries) | `DSDS-20` |
+| A `shared` entry's own fields | [§1](#1-base-documents-and-shared-entries) | `DSDS-17` |
+| Entry order inside `entries[]` | [§1](#1-base-documents-and-shared-entries) | `DSDS-21` |
+| An entry's own fields | [§2](#2-entries) | `DSDS-17` |
+| A `metadata` block's fields | [§3](#3-metadata) | `DSDS-22` |
+| A section's own fields | [§4](#4-sections) | `DSDS-22` |
+| Same-kind sections kept together | [§4](#4-sections) | `DSDS-18` |
+| Section kind order | [§4](#4-sections) | `DSDS-18` |
+| Breadth, then audience, among `guidelines` | [§4](#4-sections) | `DSDS-18` |
+| An item's own fields | [§5](#5-section-items) | `DSDS-22` |
+| Guideline items by `level` | [§5](#5-section-items) | `DSDS-19` |
+| A combo's own fields | [§6](#6-refs-and-combos) | `DSDS-22` |
+| `combos[]` sorted by subject, then level | [§6](#6-refs-and-combos) | `DSDS-23` |
+| A ref's own fields | [§6](#6-refs-and-combos) | `DSDS-22` |
+| Order within one entry kind, or one `level` | [§1](#1-base-documents-and-shared-entries), [§5](#5-section-items) | can't be — it's a judgment call |
+
+The last row is the exception, and a permanent one: "whatever order reads best" has no right answer a tool could compute, so nothing will ever check it. Order items sharing a `level`, or entries sharing a kind, the way that reads best and don't expect a warning either way.
+
+The rest were unchecked until recently, and the gap was not theoretical. Nine violations had built up across this repo's own examples before anyone looked: seven combos with `level` and `items` the wrong way round, one `ref` leading with `rel`, and one section with `freeform` before `items`. Every rule that existed at the time was passing the whole while. That's what `DSDS-21`, `DSDS-22` and `DSDS-23` now cover.
 
 Getting the order wrong should never fail `npm run check:all`. These rules only warn, and always exit 0. `lint-docs.js` does fail if a rule is listed without a check, or a check exists without a rule.
 
 **The tag tier reads the items.** Every other sort here looks at a field. `DSDS-18` decides whether a section is "about one tag" by intersecting its items' `tags`, which is the one judgment it makes from content rather than shape. It needs two items to say yes, so a section with a single tagged item is left alone.
 
-**Field order has one source: the schema files.** The tables on the [Schema page](schema.html) are generated from each schema file's own order, `DSDS-17` and `DSDS-20` read that same order when they run, and [§2](#2-entries) tells you to follow it. So you can read the authoring order off a property table, and the other way round.
+**Field order has one source: the schema files.** The tables on the [Schema page](schema.html) are generated from each schema file's own order, `DSDS-17`, `DSDS-20` and `DSDS-22` read that same order when they run, and [§2](#2-entries) tells you to follow it. So you can read the authoring order off a property table, and the other way round.

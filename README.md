@@ -12,7 +12,7 @@ DSDS defines a YAML-based format for documenting a design system as a graph of *
 - **Tokens:** Documents the purpose, guidelines, and organization of a design token. Values and types live in the DTCG source file each token entry points at.
 - **Themes:** A named set of token overrides, pointing at its own DTCG source file.
 - **Components:** Reusable UI elements, with their own `sourceFiles`/`imports` (pointing at real source instead of hand-typing an interface), `traits` (variants and states, boolean or enum), and `combos` (pairing rules).
-- **Entries** — An open kind for anything else. Link a foundation, pattern, or guide. Custom kinds can also be namespaced (ex: `acme.icon-library`) for teams that want recognizable custom entries.
+- **Entries:** An open kind for anything else. Link a foundation, pattern, or guide. Custom kinds can also be namespaced (ex: `acme.icon-library`) for teams that want recognizable custom entries.
 
 Every entry's structured documentation lives in a **sections** array. Each section is a typed object with a `kind` tag (`definitions`, `guidelines`, `steps`, or the generic `section`). Sections also include `freeform` for nestable content that sits alongside its own structured `items`. Any entry kind can use any section kind. A section also carries a `for` field (`human`, `agent`, or `all`) naming its audience, so audience-specific content can be displayed when appropriate.
 
@@ -52,12 +52,12 @@ Full detail, with a worked example for each, is on the site's **[Interoperabilit
 
 Two pages on the site cover what it takes to follow the spec:
 
-- **[Conformance](https://designsystemdocspec.org/conformance)** — the four conformance classes, the three enforcement tiers, all 20 rules, how a project's scope gets worked out, and how a component's status works when it ships on more than one platform.
+- **[Conformance](https://designsystemdocspec.org/conformance)** — the four conformance classes, the three enforcement tiers, all 23 rules, how a project's scope gets worked out, and how a component's status works when it ships on more than one platform.
 - **[Stability](https://designsystemdocspec.org/stability)** — what's safe to build tooling on, what can still change before 1.0, how to bring a 0.15.2 document up to date, and what has to be true before 1.0 ships.
 
 If you're writing a tool, read the rules from [`schema/conformance-rules.yaml`](schema/conformance-rules.yaml) rather than from a page. `npm run check` keeps that file honest: for the semantic rules, every rule in the file has to exist in `scripts/validate/validate.js`, and every rule in the validator has to exist in the file.
 
-The last four rules are focused on style/organization. `DSDS-17` through `DSDS-20` are suggestions on the ordering conventions in the **[Style guide](https://designsystemdocspec.org/style-guide)**, or [STYLE_GUIDE.md](STYLE_GUIDE.md) if you'd rather read it in the repo. What order an object's fields go in, and what order entries, sections, and guideline items come in. These four rules only warn. `npm run lint` prints them and still exits 0. Ignore all four and your document still conforms.
+The last seven rules are focused on style/organization. `DSDS-17` through `DSDS-23` are suggestions on the ordering conventions in the **[Style guide](https://designsystemdocspec.org/style-guide)**, or [STYLE_GUIDE.md](STYLE_GUIDE.md) if you'd rather read it in the repo. What order an object's fields go in, and what order entries, sections, and guideline items come in. These four rules only warn. `npm run lint` prints them and still exits 0. Ignore all seven and your document still conforms.
 
 > [!NOTE]
 > **Credit where due:** DSDS's conformance design follows thinking from the [Adobe Spectrum Design Data specification](https://opensource.adobe.com/spectrum-design-data/spec/). Props to them.
@@ -81,7 +81,7 @@ That page is generated from [STYLE_GUIDE.md](STYLE_GUIDE.md), so edit the root f
 
 ## Repository layout
 
-- **`schema/`** — The split JSON Schema source (`common/`, `metadata/`, `entries/`, `sections/`), plus the auto-generated `dsds.bundled.yaml` / `dsds.bundled.schema.json` and the `DSDS-01`–`DSDS-20` `conformance-rules.yaml` catalog.
+- **`schema/`** — The split JSON Schema source (`common/`, `metadata/`, `entries/`, `sections/`), plus the auto-generated `dsds.bundled.yaml` / `dsds.bundled.schema.json` and the `DSDS-01`–`DSDS-23` `conformance-rules.yaml` catalog.
 - **`examples/`** — Validated example documents: full base documents, standalone entries per kind, quickstart snippets, interop pairs, and one `invalid/` fixture per semantic rule.
 - **`test/site-components/`** — A regression corpus documenting this repo's own `site/components/` web components as DSDS entries (dogfooding), checked on every `npm run check`.
 - **`scripts/`** — Bundling, validation, composition, and the static site generator.

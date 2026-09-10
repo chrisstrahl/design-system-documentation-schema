@@ -280,3 +280,47 @@
     `name`, `entries`, `shared`, `refs`, `$extensions`. Checked once per
     base document (a file with a `schemaVersion`), separately from
     DSDS-17's per-entry check.
+
+- id: DSDS-21
+  name: entry-order
+  enforcement: advisory
+  title: A base document's `entries[]` aren't ordered by `kind`.
+  description: >-
+    Per STYLE_GUIDE.md §1, entries are ordered by `kind`, in the order
+    entries/entry.schema.yaml lists its `kind` values: `system`, `token`,
+    `theme`, `component`, then `entry`. A namespaced custom kind is not in
+    that list and sorts after all five.
+  note: >-
+    Order within one kind is deliberately not checked. STYLE_GUIDE.md asks
+    for "whatever order reads best" there, which has no answer a tool could
+    compute, so only a kind-to-kind inversion is reported.
+
+- id: DSDS-22
+  name: nested-field-order
+  enforcement: advisory
+  title: A nested object's fields don't follow the order its own schema file declares.
+  description: >-
+    Per STYLE_GUIDE.md §3, §4, §5 and §6, the fields of a `metadata` block,
+    a section, a `guidelines`/`definitions`/`steps` item, a `combo` and a
+    `ref` each go in the order that shape's own schema file lists them. A
+    section is the one composition: `kind`, `for`, then the single field its
+    kind adds (`framing` for guidelines, `ordered` for steps), then the rest
+    of sections/section.schema.yaml's order.
+  note: >-
+    Reads every order out of the schema files at runtime, the way DSDS-17
+    and DSDS-20 do, so this rule keeps no second copy of any order. Skips
+    `$extensions` subtrees: their contents are vendor data, not DSDS shapes,
+    and an object in there that happens to carry `href` is not a ref.
+
+- id: DSDS-23
+  name: combo-order
+  enforcement: advisory
+  title: An entry's `combos[]` aren't sorted by `subject`, then by `level`.
+  description: >-
+    Per STYLE_GUIDE.md §6, `combos[]` is sorted by `subject`, then by
+    `level` within one subject, so every rule about the same trait or token
+    sits together.
+  note: >-
+    `subject` sorts as a plain string comparison. `level` uses the order
+    common/requirement-level.schema.yaml declares, the same order DSDS-19
+    applies to guideline items.

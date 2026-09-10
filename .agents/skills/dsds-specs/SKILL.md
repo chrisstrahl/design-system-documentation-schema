@@ -21,7 +21,7 @@ When you need precise field-level details beyond this skill, consult these in or
    — and [STYLE_GUIDE.md](https://github.com/somerandomdude/design-system-documentation-schema/blob/main/STYLE_GUIDE.md)
    for the field order every example follows. The schema permits any order;
    the style guide picks one. It is a convention, not a constraint — the
-   `DSDS-17`–`DSDS-20` rules that report deviations run only in the spec
+   `DSDS-17`–`DSDS-23` rules that report deviations run only in the spec
    repo itself.
 4. **GitHub source** (split schema + examples): https://github.com/somerandomdude/design-system-documentation-schema/tree/main/schema
 
@@ -109,7 +109,7 @@ The bundled schema is published at `https://designsystemdocspec.org/v0.20.1/dsds
 npx dsds-validate <files-or-globs>
 ```
 
-See the `dsds-validate` skill for the full rule catalog (`DSDS-01`–`DSDS-20`) and how to interpret failures.
+See the `dsds-validate` skill for the full rule catalog (`DSDS-01`–`DSDS-23`) and how to interpret failures.
 
 ## Deep-Dive References
 
