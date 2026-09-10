@@ -115,6 +115,9 @@ const sources = [
   // anchor, so a page restructure can rot it the same way it can rot README.
   { label: "STYLE_GUIDE.md", path: path.join(ROOT, "STYLE_GUIDE.md"), page: null },
   { label: "schema/conformance-rules.yaml", path: path.join(ROOT, "schema/conformance-rules.yaml"), page: null },
+  // Cites site pages when a release changed one, so a page rename can rot it the same way it
+  // rots README. Its many /v<n>/ links are versioned artifacts, which isSiteDocLink() skips.
+  { label: "CHANGELOG", path: path.join(ROOT, "CHANGELOG"), page: null },
   ...collectMdxFiles(CONTENT_DIR).map((rel) => ({
     label: `site/content/${rel}`,
     path: path.join(CONTENT_DIR, rel),

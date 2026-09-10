@@ -8,8 +8,12 @@ All notable changes to the DSDS specification are documented in this file.
 
 Documentation and tooling only — no schema shape change; a 0.20.0 document is a valid 0.20.1 document.
 
-- **STYLE_GUIDE.md** — a non-normative field-order convention for authoring DSDS documents, with `DSDS-17`–`DSDS-20` reporting deviations in the advisory tier. Order never affects validity.
+- **STYLE_GUIDE.md** — a non-normative ordering convention for authoring DSDS documents, with `DSDS-17`–`DSDS-23` reporting deviations in the advisory tier. Order never affects validity.
+- **[Style guide page](https://designsystemdocspec.org/style-guide)** — the guide is now published on the site, generated from STYLE_GUIDE.md so the two can't drift.
 - **`DSDS-16`** — advisory: flags a token description that only restates its scale position.
+- **`DSDS-18`** — also reports a tag-scoped `guidelines` section placed before a broader one.
+- **`DSDS-21`–`DSDS-23`** — advisory: entry order in `entries[]`, field order inside a nested shape (`metadata`, a section, an item, a `combo`, a `ref`), and `combos[]` sorted by subject then level.
+- Property and enum declaration order changed across several schema files to match the guide: `kind` leads every entry, a `ref` lists `to`/`href` before `rel`, and the `metadata` shapes regrouped. Declaration order only — no document's validity changes.
 - Schema `$id`s move to `/v0.20.1/`. `/v0.20.0/` stays frozen at the bytes it shipped with.
 
 ---

@@ -305,7 +305,7 @@ combos:
 
 Seven warning-only rules check this guide. They live in `scripts/validate/lint-docs.js`, are listed in `schema/conformance-rules.yaml` as `enforcement: advisory`, and run with `npm run lint`.
 
-### What's checked, and what isn't
+### What's checked
 
 Every rule in this guide is checked except one, and that one can't be. The right-hand column is the warning you'd get.
 
@@ -326,12 +326,6 @@ Every rule in this guide is checked except one, and that one can't be. The right
 | `combos[]` sorted by subject, then level | [§6](#6-refs-and-combos) | `DSDS-23` |
 | A ref's own fields | [§6](#6-refs-and-combos) | `DSDS-22` |
 | Order within one entry kind, or one `level` | [§1](#1-base-documents-and-shared-entries), [§5](#5-section-items) | can't be — it's a judgment call |
-
-The last row is the exception, and a permanent one: "whatever order reads best" has no right answer a tool could compute, so nothing will ever check it. Order items sharing a `level`, or entries sharing a kind, the way that reads best and don't expect a warning either way.
-
-The rest were unchecked until recently, and the gap was not theoretical. Nine violations had built up across this repo's own examples before anyone looked: seven combos with `level` and `items` the wrong way round, one `ref` leading with `rel`, and one section with `freeform` before `items`. Every rule that existed at the time was passing the whole while. That's what `DSDS-21`, `DSDS-22` and `DSDS-23` now cover.
-
-Getting the order wrong should never fail `npm run check:all`. These rules only warn, and always exit 0. `lint-docs.js` does fail if a rule is listed without a check, or a check exists without a rule.
 
 **The tag tier reads the items.** Every other sort here looks at a field. `DSDS-18` decides whether a section is "about one tag" by intersecting its items' `tags`, which is the one judgment it makes from content rather than shape. It needs two items to say yes, so a section with a single tagged item is left alone.
 
