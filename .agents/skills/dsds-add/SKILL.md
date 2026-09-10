@@ -2,7 +2,7 @@
 name: dsds-add
 description: Author a new Design System Doc Spec (DSDS) spec from component implementation, Figma design, or written requirements. Triggers on "add spec", "create spec", "new spec", "author spec", "spec from component", "spec from Figma".
 metadata:
-  version: 0.20.0
+  version: 0.20.1
 ---
 
 # Add a DSDS Spec
@@ -16,7 +16,8 @@ Create a new standalone `.dsds.yaml` entry file in your project's spec directory
 3. Create `{directory}/{id}.dsds.yaml` using the template below.
 4. Add a `refs` entry (`rel: file`) in `index.dsds.yaml` pointing at the new file.
 5. Run `npx dsds-validate {directory}/{id}.dsds.yaml` — fix errors until it passes.
-6. If your project generates its own index or catalog from spec files, regenerate it now.
+6. Order the entry's fields per [STYLE_GUIDE.md](https://github.com/somerandomdude/design-system-documentation-schema/blob/main/STYLE_GUIDE.md): identity (`id`, `kind`, `name`, `description`, `purpose`, plus a token's `tokenType`/`source`), then `metadata`, then a component's `sourceFiles`, then `sections`, then structured facts (`specs`, `imports`, `traits`, `combos`), then `related`/`extends`/`refs`, with `$extensions` always last. Order never affects validity, and nothing in your project checks it: `npx dsds-validate` won't mention it, and the `DSDS-17`–`DSDS-23` advisory rules that report it live in the spec repo's own tooling, which the published package doesn't ship. The template below already follows the order — keep it and you're done.
+7. If your project generates its own index or catalog from spec files, regenerate it now.
 
 ## File Placement
 
@@ -32,15 +33,15 @@ Create a new standalone `.dsds.yaml` entry file in your project's spec directory
 ## Template (Component)
 
 ```yaml
-id: <filename-without-extension>
 kind: component
+id: <filename-without-extension>
 name: <PascalCase>
 description: <one-sentence summary>
 
 metadata:
-  status: {status: draft}
-  since: <version>
   tags: [<action|feedback|form|disclosure|overlay|navigation|layout>]
+  since: <version>
+  status: {status: draft}
 
 sourceFiles:
   - platform: <react|web-component|...>
@@ -72,7 +73,7 @@ Include at minimum: a `guidelines` section (`context: how-to-use`) covering usag
 
 When unsure about field shapes or required properties, consult:
 
-- **Bundled schema**: `https://designsystemdocspec.org/v0.20.0/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if DSDS is installed as a dependency)
+- **Bundled schema**: `https://designsystemdocspec.org/v0.20.1/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if DSDS is installed as a dependency)
 - **Entry docs**: `https://designsystemdocspec.org/entries-{kind}` (e.g. `/entries-component`)
 - **Section docs**: `https://designsystemdocspec.org/sections-{kind}` (e.g. `/sections-guidelines`)
 - **Quick start examples**: https://designsystemdocspec.org/quickstart

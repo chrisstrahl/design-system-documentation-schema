@@ -253,6 +253,25 @@ processFile(BUNDLE_SCRIPT, [
   },
 ]);
 
+// 2b. migrate-to-0.20.js's TARGET_VERSION - the `schemaVersion` it stamps onto every
+//     document it converts. It is a bare literal, not a URL, so nothing above caught it:
+//     the 0.20.1 bump left it at "0.20.0" and freshly-migrated documents claimed a version
+//     older than the spec they were migrated to. Harmless for validity (no shape change
+//     between those two) but wrong, and silently so.
+const MIGRATE_SCRIPT = path.join(ROOT, "scripts", "tools", "migrate-to-0.20.js");
+const MIGRATE_TARGET_REGEX = /(const TARGET_VERSION = ")[A-Za-z0-9.\-]+(")/;
+processFile(MIGRATE_SCRIPT, [
+  (text) => {
+    let count = 0;
+    const updated = text.replace(MIGRATE_TARGET_REGEX, (match, before, after) => {
+      if (match === before + NEW_VERSION + after) return match;
+      count++;
+      return before + NEW_VERSION + after;
+    });
+    return { updated, count };
+  },
+]);
+
 // 3. Every examples/**/*.yaml and test/**/*.yaml base document's schemaVersion value, plus
 //    any $schema URL hint they carry.
 for (const file of dsdsDocFiles) {

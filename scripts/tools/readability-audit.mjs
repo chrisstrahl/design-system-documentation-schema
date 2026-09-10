@@ -41,6 +41,7 @@ const LONG_FORM_PATHS = [
   "CHANGELOG",
   "CONTRIBUTING.md",
   "SECURITY.md",
+  "STYLE_GUIDE.md",
   "COMPATIBILITY_REPORT.md",
   "recommendations.md",
   ...findContentPages("site/content"),

@@ -4,13 +4,13 @@
 # points at the document that owns the entries it builds on via an
 # ordinary `refs` entry (rel: file), the same pointer type used
 # everywhere else.
-schemaVersion: "0.20.0"
+schemaVersion: "0.20.1"
 
 name: Acme Design System
 
 entries:
-  - id: icon-button
-    kind: component
+  - kind: component
+    id: icon-button
     name: Icon Button
     description: A button variant that renders a single icon with no visible label.
     metadata:
@@ -19,8 +19,8 @@ entries:
       - kind: guidelines
         for: all
         items:
-          - statement: Icon button must carry an aria-label, since it has no visible text label.
-            level: must
+          - level: must
+            statement: Icon button must carry an aria-label, since it has no visible text label.
     refs:
       - to: button
         rel: part-of

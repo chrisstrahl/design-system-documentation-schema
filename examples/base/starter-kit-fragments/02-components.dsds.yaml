@@ -1,16 +1,13 @@
 entries:
-  - id: button
-    kind: component
+  - kind: component
+    id: button
     name: Button
     description: An interactive element that triggers an action when activated.
     metadata:
       status: {status: stable}
     sections:
-      - kind: guidelines
-        for: human
-        items:
-          - statement: Limit each surface to one primary button.
-            level: should
+      # `for: all` precedes `for: human` per STYLE_GUIDE.md §4's audience
+      # sort - both sections are how-to-use, so audience breaks the tie.
       - kind: guidelines
         for: all
         items:
@@ -22,6 +19,11 @@ entries:
             refs:
               - to: shared-a11y#touch-target
                 rel: same-as
+      - kind: guidelines
+        for: human
+        items:
+          - level: should
+            statement: Limit each surface to one primary button.
     refs:
       - to: color.action.primary
         rel: depends-on
@@ -42,5 +44,5 @@ shared:
         for: all
         items:
           - id: touch-target
-            statement: Minimum touch target 44x44px.
             level: must
+            statement: Minimum touch target 44x44px.

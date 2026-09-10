@@ -1,12 +1,12 @@
-id: empty-state
 kind: entry
+id: empty-state
 name: Empty State
 description: Composition of components shown when a view has no content to display yet.
 
 metadata:
-  status: {status: stable}
-  since: 1.3.0
   tags: [feedback]
+  since: 1.3.0
+  status: {status: stable}
 
 sections:
   # A "when to use" guidelines section - "recommended" is level: should,
@@ -17,10 +17,10 @@ sections:
     framing: when-to-use
     title: When to use
     items:
-      - statement: A list or table has zero results after filtering.
-        level: should
-      - statement: A page fails to load due to a network error.
-        level: should-not
+      - level: should
+        statement: A list or table has zero results after filtering.
+      - level: should-not
+        statement: A page fails to load due to a network error.
         refs:
           - to: error-state
             rel: alternative-to
@@ -29,8 +29,8 @@ sections:
   - kind: guidelines
     for: human
     items:
-      - statement: Always pair the message with a next action when one exists.
-        level: should
+      - level: should
+        statement: Always pair the message with a next action when one exists.
 
   - kind: steps
     for: all

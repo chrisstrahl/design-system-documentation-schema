@@ -1,3 +1,4 @@
+kind: entry
 # Two section kinds this example used to demonstrate are gone, replaced by
 # things that already existed:
 #   - principles -> a guidelines section titled "Principles", carrying only
@@ -13,14 +14,13 @@
 #     Step order, resolved values, and per-step usage notes live on the
 #     tokens themselves, not duplicated here. See space-4.yaml for one.
 id: spacing-scale
-kind: entry
 name: Spacing Scale
 description: The base numeric scale all spacing and sizing tokens derive from.
 
 metadata:
-  status: {status: stable}
-  since: 1.0.0
   tags: [layout]
+  since: 1.0.0
+  status: {status: stable}
 
 sections:
   - kind: guidelines

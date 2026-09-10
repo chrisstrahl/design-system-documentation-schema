@@ -41,6 +41,7 @@ const PAGE_MD_PATH = new Map([
   ["/interoperability", "/interoperability.md"],
   ["/security", "/security.md"],
   ["/examples", "/examples.md"],
+  ["/style-guide", "/style-guide.md"],
 ]);
 
 const NOT_FOUND_MD_PATH = "/404.md";

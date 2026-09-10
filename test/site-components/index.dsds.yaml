@@ -1,10 +1,10 @@
-schemaVersion: "0.20.0"
+schemaVersion: "0.20.1"
 
 name: DSDS Site Components
 
 entries:
-  - id: dsds-site-components
-    kind: system
+  - kind: system
+    id: dsds-site-components
     name: DSDS Site Components
     description: A lightweight DSDS regression corpus documenting the web components that render the DSDS spec site itself (site/components/).
     metadata:

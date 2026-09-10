@@ -1,18 +1,34 @@
-id: dialog
 kind: component
+id: dialog
 name: Dialog
 description: A modal surface that interrupts the current task until the user responds or dismisses it.
 
 metadata:
-  status: {status: stable}
-  since: 1.0.0
   tags: [overlay, modal]
+  since: 1.0.0
+  status: {status: stable}
 
 sections:
   - kind: guidelines
     for: all
     items:
-      - statement: Move focus to the dialog when it opens, and return it to the triggering element when it closes.
-        level: must
-      - statement: Dismiss on Escape unless the dialog is blocking on an action the user must explicitly choose.
-        level: should
+      - level: must
+        statement: Move focus to the dialog when it opens, and return it to the triggering element when it closes.
+      - level: should
+        statement: Dismiss on Escape unless the dialog is blocking on an action the user must explicitly choose.
+
+  # A tag-scoped section: every item names `accessibility`, so it sorts after
+  # the untagged how-to-use section above it. This is the narrowest tier in
+  # STYLE_GUIDE.md §4's breadth sort, whatever the section's `for` or `framing`.
+  - kind: guidelines
+    for: all
+    title: Accessibility
+    items:
+      - level: must
+        statement: Give the dialog an accessible name that matches its visible heading.
+        checkedBy: assisted
+        tags: [accessibility, naming]
+      - level: must
+        statement: Constrain focus to the dialog while it is open, and document how to leave it.
+        checkedBy: manual
+        tags: [accessibility, focus]

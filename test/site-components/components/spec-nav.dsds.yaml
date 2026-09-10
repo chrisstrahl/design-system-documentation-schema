@@ -1,31 +1,37 @@
-id: spec-nav
 kind: component
+id: spec-nav
 name: SpecNav
 description: The specification site's top bar navigation. Reads its structure from declarative light-DOM `<a>` children instead of a JSON attribute — a flat top bar, not a sidebar, since every schema definition lives on one Schema page instead of its own.
 
 metadata:
-  status: {status: stable}
   tags: [navigation, layout]
-
-sourceFiles:
-  - platform: web-component
-    file: ../../../site/components/spec-nav.js
+  status: {status: stable}
 
 sections:
   - kind: guidelines
     for: agent
     framing: when-to-use
     items:
-      - statement: Use exactly once per page, as the top bar. It is deliberately flat rather than a sidebar — appropriate only while the site has a handful of top-level pages; a deeper page tree would need a different navigation shape entirely, not more nesting inside this component.
-        level: should
+      - level: should
+        statement: Use exactly once per page, as the top bar. It is deliberately flat rather than a sidebar — appropriate only while the site has a handful of top-level pages; a deeper page tree would need a different navigation shape entirely, not more nesting inside this component.
         checkedBy: manual
 
   - kind: guidelines
     for: agent
     items:
-      - statement: Every light-DOM `<a>` intended to highlight as active MUST carry a slug attribute — highlighting matches slug against the active attribute, not the href or link text.
-        level: must
+      - level: must
+        statement: Every light-DOM `<a>` intended to highlight as active MUST carry a slug attribute — highlighting matches slug against the active attribute, not the href or link text.
         checkedBy: manual
+
+refs:
+  - to: logo
+    rel: composes
+    note: Rendered at 2rem in the title area, replaced by the mobile menu toggle at narrow widths.
+
+
+sourceFiles:
+  - platform: web-component
+    file: ../../../site/components/spec-nav.js
 
 imports:
   - platform: web-component
@@ -40,9 +46,3 @@ traits:
     id: open
     description: Whether the mobile links dropdown (a native popover, at ≤900px) is expanded. The bar itself never hides; only the links row changes presentation.
     setBy: component
-
-refs:
-  - to: logo
-    rel: composes
-    note: Rendered at 2rem in the title area, replaced by the mobile menu toggle at narrow widths.
-

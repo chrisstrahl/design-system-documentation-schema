@@ -1,34 +1,43 @@
-id: prop-list
 kind: component
+id: prop-list
 name: PropList
 description: A schema definition's property list. Two elements from one module — `<ds-prop-table>` (the list, sorted required-first) and its declarative child `<ds-prop>` (one property row) — documented as a single entry since one always implies the other.
 
 metadata:
-  status: {status: stable}
   tags: [schema-reference]
-
-sourceFiles:
-  - platform: web-component
-    file: ../../../site/components/prop-list.js
+  status: {status: stable}
 
 sections:
   - kind: guidelines
     for: agent
     framing: when-to-use
     items:
-      - statement: Use to document a schema definition's own fields — one ds-prop per field, inside a ds-prop-table, inside a def-section. Not a general-purpose two-column list; for prose-only guidance with no field-level API, use a guidelines or definitions section instead.
-        level: should
+      - level: should
+        statement: Use to document a schema definition's own fields — one ds-prop per field, inside a ds-prop-table, inside a def-section. Not a general-purpose two-column list; for prose-only guidance with no field-level API, use a guidelines or definitions section instead.
         checkedBy: manual
 
   - kind: guidelines
     for: agent
     items:
-      - statement: Each rendered property anchor id is derived from the enclosing element's own id (as a scope prefix) plus the slugified property name — two properties named the same thing in different scopes never collide.
-        level: must
+      - level: must
+        statement: Each rendered property anchor id is derived from the enclosing element's own id (as a scope prefix) plus the slugified property name — two properties named the same thing in different scopes never collide.
         checkedBy: manual
-      - statement: Rows sort required-first, then conditional, then plain, and re-sorting happens automatically at render time — do not pre-sort ds-prop children before authoring them.
-        level: may
+      - level: may
+        statement: Rows sort required-first, then conditional, then plain, and re-sorting happens automatically at render time — do not pre-sort ds-prop children before authoring them.
         checkedBy: manual
+
+refs:
+  - to: def-section
+    rel: part-of
+    note: Renders each schema definition's own property table.
+  - to: badge
+    rel: composes
+    note: The "at least 1 required" marker on a conditional prop reuses ds-badge's experimental variant styling.
+
+
+sourceFiles:
+  - platform: web-component
+    file: ../../../site/components/prop-list.js
 
 imports:
   - platform: web-component
@@ -53,12 +62,3 @@ combos:
     level: must-not
     items: [conditional]
     note: A property is either unconditionally required or conditionally required, never both — the renderer checks required before conditional and would silently ignore the second attribute if both were set.
-
-refs:
-  - to: def-section
-    rel: part-of
-    note: Renders each schema definition's own property table.
-  - to: badge
-    rel: composes
-    note: The "at least 1 required" marker on a conditional prop reuses ds-badge's experimental variant styling.
-

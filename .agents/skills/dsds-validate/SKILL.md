@@ -2,7 +2,7 @@
 name: dsds-validate
 description: Validate DSDS specs against the bundled schema and check for consistency issues. Triggers on "validate specs", "check specs", "spec errors", "run validation".
 metadata:
-  version: 0.20.0
+  version: 0.20.1
 ---
 
 # Validate DSDS Specs
@@ -15,17 +15,17 @@ Run schema and semantic validation on your `.dsds.yaml` spec files.
 npx dsds-validate <files-or-globs>
 ```
 
-This validates every file given against the DSDS v0.20.0 bundled schema using Ajv2020, plus a set of semantic rules JSON Schema alone can't express — the `DSDS-01`–`DSDS-11` catalog (resolution, uniqueness, platform vocabulary, `composes`/`depends-on` cycles, and file-existence checks), each tagged `structural` or `semantic`. Pass `--strict` to promote the warning-only rules (`DSDS-05`, `DSDS-08`, `DSDS-09`, `DSDS-11`) to hard failures.
+This validates every file given against the DSDS v0.20.1 bundled schema using Ajv2020, plus a set of semantic rules JSON Schema alone can't express — the `DSDS-01`–`DSDS-11` catalog (resolution, uniqueness, platform vocabulary, `composes`/`depends-on` cycles, and file-existence checks), each tagged `structural` or `semantic`. Pass `--strict` to promote the warning-only rules (`DSDS-05`, `DSDS-08`, `DSDS-09`, `DSDS-11`) to hard failures.
 
 ## Documentation-Quality Checks (advisory)
 
-A second, separate tier (`DSDS-12`–`DSDS-20`) that answers "is this documentation good?" rather than "is this document allowed?" — RFC 2119 keyword casing, a token description that just restates its id or its scale position, a hard-requirement guideline with no `checkedBy`, a component with no `when-to-use` guidance, and (`DSDS-17`–`DSDS-20`) whether an entry/document follows [STYLE_GUIDE.md](../../../STYLE_GUIDE.md)'s field order, section grouping, and guideline-item ordering. Warnings only; never blocks a build on their own. Not part of the published `dsds-validate` package — it runs from a clone of the DSDS repo itself: `node scripts/validate/lint-docs.js <files-or-globs>`.
+A second, separate tier (`DSDS-12`–`DSDS-23`) that answers "is this documentation good?" rather than "is this document allowed?" — RFC 2119 keyword casing, a token description that just restates its id or its scale position, a hard-requirement guideline with no `checkedBy`, a component with no `when-to-use` guidance, and (`DSDS-17`–`DSDS-23`) whether an entry/document follows [STYLE_GUIDE.md](../../../STYLE_GUIDE.md)'s field order, section grouping, and guideline-item ordering. Warnings only; never blocks a build on their own. Not part of the published `dsds-validate` package — it runs from a clone of the DSDS repo itself: `node scripts/validate/lint-docs.js <files-or-globs>`.
 
 ## Full Validation
 
 1. Schema compliance (every file validates against the bundled schema)
 2. Semantic rules (`DSDS-01`–`DSDS-11`, via `npx dsds-validate`)
-3. Documentation-quality advisories (`DSDS-12`–`DSDS-20`, informational, repo-only — see above)
+3. Documentation-quality advisories (`DSDS-12`–`DSDS-23`, informational, repo-only — see above)
 
 ## Interpreting Failures
 
@@ -51,7 +51,7 @@ A second, separate tier (`DSDS-12`–`DSDS-20`) that answers "is this documentat
 
 The validation schema comes from the [DSDS project](https://github.com/somerandomdude/design-system-documentation-schema):
 
-- **Bundled schema** (used by `dsds-validate`): `https://designsystemdocspec.org/v0.20.0/dsds.bundled.schema.json`, or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if installed as a dependency
+- **Bundled schema** (used by `dsds-validate`): `https://designsystemdocspec.org/v0.20.1/dsds.bundled.schema.json`, or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if installed as a dependency
 - This is a single-file version with every schema file's own `$id` still present, so `$ref`s resolve without needing to be inlined
 
 If validation fails on a field you're unsure about, consult the relevant docs page:

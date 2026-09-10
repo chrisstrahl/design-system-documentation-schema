@@ -16,7 +16,17 @@
 
 const fs = require("fs");
 const path = require("path");
-const { rootDir, loadYaml, defaultTargets, entriesIn } = require("../lib");
+const {
+  rootDir,
+  schemaDir,
+  loadYaml,
+  defaultTargets,
+  entriesIn,
+  declaredProps,
+  entryFieldOrder,
+  declaredEnum,
+  enumRanker,
+} = require("../lib");
 
 const CATALOG_PATH = path.join(rootDir, "schema/conformance-rules.yaml");
 
@@ -85,21 +95,139 @@ function eachGuidelineItem(entry, fn) {
 const LOWERCASE_RFC_REGEX = /(?<![A-Za-z])(must|should)(?: not)?(?![A-Za-z])/g;
 
 // ---------------------------------------------------------------------------
-// STYLE_GUIDE.md's canonical orders (DSDS-17/18/19/20). Kept here rather than derived from
-// the schema files, since the schema imposes no order at all - must be kept in sync by hand.
+// STYLE_GUIDE.md's canonical orders (DSDS-17/18/19/20). Field order comes from the schema
+// files; the rank tables further down do not, because they order the items inside an array
+// and no schema file has an opinion about that. Those are kept in sync with the guide by hand.
 // ---------------------------------------------------------------------------
 
-const ENTRY_FIELD_ORDER = {
-  component: ["id", "kind", "name", "description", "purpose", "metadata", "sourceFiles", "sections", "specs", "imports", "traits", "combos", "related", "extends", "refs", "$extensions"],
-  token: ["id", "kind", "name", "description", "purpose", "tokenType", "source", "metadata", "sections", "combos", "related", "extends", "refs", "$extensions"],
-  theme: ["id", "kind", "name", "description", "purpose", "colorScheme", "source", "metadata", "sections", "related", "extends", "refs", "$extensions"],
-  system: ["id", "kind", "name", "description", "purpose", "metadata", "sections", "related", "extends", "refs", "$extensions"],
-  entry: ["id", "kind", "name", "description", "purpose", "metadata", "sections", "related", "extends", "refs", "$extensions"],
+// Read out of the schema files, not transcribed from them. STYLE_GUIDE.md's rule is to
+// follow the order the schema lists, so reading that order at runtime is the only honest way
+// to check it - a hardcoded table here would be a second source of truth for the exact thing
+// the guide says has one, and it drifted twice before this became derived (a stale
+// `related`/`extends` order, and `imports` in the wrong place). See lib.js's
+// `entryFieldOrder` for how the two lists compose.
+const SHARED_FIELD_ORDER = declaredProps("shared.schema.yaml");
+const DOCUMENT_FIELD_ORDER = declaredProps("base.schema.yaml");
+// Read from the schema enums, in the order each one declares its values. These used to be
+// hand-kept tables here; the enums were reordered to match the guide, so the schema now
+// records these orders and this file reads them instead of holding a second copy. Each ranker
+// also picks up the `default` its schema declares, so a section that leaves `for` or `framing`
+// out is ranked as the value a validator would read it as.
+const KIND_AT = (d) => d.properties.kind.oneOf.find((m) => m.enum);
+const ENTRY_KIND = declaredEnum("entries/entry.schema.yaml", KIND_AT);
+const entryKindRank = enumRanker("entries/entry.schema.yaml", KIND_AT);
+const SECTION_KIND = declaredEnum("sections/section.schema.yaml", KIND_AT);
+// A namespaced custom kind ("acme.custom-section") isn't in the enum and has no defined place
+// in the order, so it ranks last rather than being treated as unknown-and-therefore-equal.
+const sectionKindRank = enumRanker("sections/section.schema.yaml", KIND_AT);
+
+const AUDIENCE = declaredEnum("sections/section.schema.yaml", (d) => d.properties.for);
+const audienceRank = enumRanker("sections/section.schema.yaml", (d) => d.properties.for);
+
+const FRAMING_AT = (d) => d.allOf.find((m) => m.properties).properties.framing;
+const FRAMING = declaredEnum("sections/guidelines.schema.yaml", FRAMING_AT);
+const framingRank = enumRanker("sections/guidelines.schema.yaml", FRAMING_AT);
+
+const LEVEL = declaredEnum("common/requirement-level.schema.yaml", (d) => d);
+const levelRank = enumRanker("common/requirement-level.schema.yaml", (d) => d);
+
+// STYLE_GUIDE.md §4's breadth scale has three tiers, not two: `when-to-use`, then
+// `how-to-use`, then a section that is really about one tag. The third isn't a field - it is
+// true when every item names the same tag - so unlike the other sorts it has to be read out of
+// the items rather than off the section's own shape.
+const TAG_TIER = FRAMING.values.length;
+
+// The tag a section is entirely about, or null. Two items minimum: a one-item section shares a
+// tag with itself no matter what, and treating that as "about one tag" would sort every single
+// tagged item to the end of the run for a reason no reader would recognize.
+function sharedTag(section) {
+  const items = section.items;
+  if (!Array.isArray(items) || items.length < 2) return null;
+  if (!items.every((it) => it && Array.isArray(it.tags) && it.tags.length)) return null;
+  const shared = items
+    .map((it) => new Set(it.tags))
+    .reduce((a, b) => new Set([...a].filter((tag) => b.has(tag))));
+  return shared.size ? [...shared].sort()[0] : null;
+}
+
+// A tag-scoped section is the narrowest tier whatever its `framing`, so this replaces the
+// framing rank rather than composing with it.
+const breadthRank = (section) => (sharedTag(section) ? TAG_TIER : framingRank(section.framing));
+
+function describeBreadth(section) {
+  const tag = sharedTag(section);
+  return tag
+    ? `a section about one tag (\`${tag}\`)`
+    : `a \`framing: ${section.framing || FRAMING.fallback}\` section`;
+}
+
+const describeTier = (tier) =>
+  tier === TAG_TIER ? "both about one tag" : `both ${FRAMING.values[tier]}`;
+
+// How a section's audience reads once the schema's default is applied, for use in messages.
+// A section that leaves `for` out is ranked as the default, so it has to be named as the
+// default too - printing "for: undefined" would describe the document rather than the problem.
+function describeAudience(section) {
+  return section.for === undefined ? `${AUDIENCE.fallback} (defaulted)` : section.for;
+}
+
+// ---------------------------------------------------------------------------
+// STYLE_GUIDE.md §3/§4/§5/§6's orders, for the smaller shapes. Same approach as the entry
+// orders above: read out of the schema files, never transcribed.
+// ---------------------------------------------------------------------------
+
+const EXT_KEY = "$extensions";
+
+// A shape built from a shared file plus a more specific one, joined the way §1 joins an
+// entry's: shared fields first, then the specific file's own, then `$extensions` last.
+function composedOrder(baseFile, memberFile) {
+  const base = declaredProps(baseFile);
+  const own = declaredProps(memberFile).filter((k) => !base.includes(k));
+  return [...base.filter((k) => k !== EXT_KEY), ...own, EXT_KEY];
+}
+
+function itemOrder(kind) {
+  const doc = loadYaml(path.join(schemaDir, "sections", `${kind}.schema.yaml`));
+  const inline = (doc.allOf || []).find((m) => m.properties);
+  return Object.keys(inline.properties.items.items.properties);
+}
+
+const METADATA_ORDER = {
+  entry: composedOrder("metadata/metadata.schema.yaml", "metadata/entry-metadata.schema.yaml"),
+  system: composedOrder("metadata/metadata.schema.yaml", "metadata/system-metadata.schema.yaml"),
 };
-const SHARED_FIELD_ORDER = ["id", "name", "description", "metadata", "sections", "refs", "$extensions"];
-const DOCUMENT_FIELD_ORDER = ["schemaVersion", "$schema", "name", "entries", "shared", "refs", "$extensions"];
-const SECTION_KIND_RANK = { guidelines: 0, definitions: 1, steps: 2, section: 3 };
-const GUIDELINE_LEVEL_RANK = { must: 0, should: 1, may: 2, "should-not": 3, "must-not": 4 };
+const ITEM_ORDER = {
+  guidelines: itemOrder("guidelines"),
+  definitions: itemOrder("definitions"),
+  steps: itemOrder("steps"),
+};
+const COMBO_ORDER = declaredProps("common/combo.schema.yaml");
+// ref.schema.yaml is a oneOf (a bare string, or the object form) - the object form is the
+// only branch with fields to order.
+const REF_ORDER = Object.keys(
+  loadYaml(path.join(schemaDir, "common", "ref.schema.yaml")).oneOf.find((m) => m.properties).properties,
+);
+
+// §4: a section leads with `kind`, `for`, then the one field its kind adds, then the rest of
+// the shared order. The only shape whose two lists interleave rather than concatenate.
+const SECTION_KIND_FIELD = { guidelines: "framing", steps: "ordered" };
+const SECTION_TAIL = declaredProps("sections/section.schema.yaml").filter(
+  (k) => k !== "kind" && k !== "for",
+);
+function sectionFieldOrder(kind) {
+  const own = SECTION_KIND_FIELD[kind];
+  return ["kind", "for", ...(own ? [own] : []), ...SECTION_TAIL];
+}
+
+// Every entity in a document, with a JSON pointer to it. A standalone entry file is its own
+// single entity; entriesIn() flattens both cases but drops the position, which the messages need.
+function entitiesWithPointers(doc) {
+  const out = [];
+  (doc.entries || []).forEach((e, i) => out.push([e, `/entries/${i}`]));
+  (doc.shared || []).forEach((e, i) => out.push([e, `/shared/${i}`]));
+  if (doc.id && !Array.isArray(doc.entries)) out.push([doc, ""]);
+  return out;
+}
 
 // Returns the first out-of-order pair, or null if `actual` is already non-decreasing by
 // canonical rank - the general "is this sequence sorted" check DSDS-17/18/19/20 all reduce to.
@@ -205,55 +333,81 @@ const IMPLEMENTATIONS = {
     }
   },
 
-  // STYLE_GUIDE.md §1 - only checks the relative order of fields actually present, so an
+  // STYLE_GUIDE.md §2 - only checks the relative order of fields actually present, so an
   // entry that leaves a field out is never flagged for its absence.
   "entry-field-order": (entry, emit) => {
-    const order = entry.kind === undefined ? SHARED_FIELD_ORDER : (ENTRY_FIELD_ORDER[entry.kind] || ENTRY_FIELD_ORDER.entry);
+    // A namespaced custom kind (`acme.icon-library`) has no schema file of its own, so it
+    // falls back to the bare envelope - the same fallback entry.schema.yaml's dispatch gives it.
+    const order = entry.kind === undefined ? SHARED_FIELD_ORDER : entryFieldOrder(entry.kind);
     const actual = Object.keys(entry).filter((k) => order.includes(k));
     const inversion = firstInversion(actual, (k) => order.indexOf(k));
     if (inversion) {
+      const source = entry.kind === undefined
+        ? "shared.schema.yaml"
+        : `entries/entry.schema.yaml, then entries/${entry.kind}.schema.yaml`;
       emit(
         "",
-        `"${entry.id}" has \`${inversion[0]}\` before \`${inversion[1]}\` — STYLE_GUIDE.md orders a ${entry.kind || "shared"} entry's fields as [${order.join(", ")}]. Actual order here: [${actual.join(", ")}].`,
+        `"${entry.id}" has \`${inversion[0]}\` before \`${inversion[1]}\` — STYLE_GUIDE.md §2 says match the spec's own declared order, which for a ${entry.kind || "shared"} entry (${source}) is [${order.join(", ")}]. Actual order here: [${actual.join(", ")}].`,
       );
     }
   },
 
-  // STYLE_GUIDE.md §2 - same-kind sections must stay contiguous and general-to-specific
-  // (guidelines, definitions, steps, section); among guidelines sections, framing:
-  // when-to-use comes first. Doesn't attempt the tag-scoped-guidelines sub-tier (see this
-  // rule's catalog note) - not mechanically checkable the same way.
+  // STYLE_GUIDE.md §4 - same-kind sections must stay contiguous and general-to-specific
+  // (guidelines, definitions, steps, section); among guidelines sections, breadth decides
+  // first (when-to-use, how-to-use, then about-one-tag), then audience (all, human, agent)
+  // within one breadth tier.
   "section-order": (entry, emit) => {
     const sections = entry.sections;
     if (!Array.isArray(sections) || sections.length < 2) return;
-    const kindInversion = firstInversion(sections, (s) => SECTION_KIND_RANK[s.kind] ?? 99);
+    const kindInversion = firstInversion(sections, (s) => sectionKindRank(s.kind));
     if (kindInversion) {
       emit(
         "/sections",
-        `"${entry.id}" has a "${kindInversion[0].kind}" section before a "${kindInversion[1].kind}" section, out of STYLE_GUIDE.md's grouping — same-kind sections stay contiguous, ordered guidelines, definitions, steps, section (general to specific).`,
+        `"${entry.id}" has a "${kindInversion[0].kind}" section before a "${kindInversion[1].kind}" section, out of STYLE_GUIDE.md's grouping — same-kind sections stay contiguous, ordered ${SECTION_KIND.values.join(", ")} (general to specific).`,
       );
       return; // fix grouping first - the framing check below assumes the guidelines sections are already one contiguous run
     }
     const guidelinesRun = sections.filter((s) => s.kind === "guidelines");
-    const framingInversion = firstInversion(guidelinesRun, (s) => (s.framing === "when-to-use" ? 0 : 1));
-    if (framingInversion) {
+    const breadthInversion = firstInversion(guidelinesRun, breadthRank);
+    if (breadthInversion) {
       emit(
         "/sections",
-        `"${entry.id}" has a how-to-use guidelines section before a when-to-use one — STYLE_GUIDE.md orders \`framing: when-to-use\` first.`,
+        `"${entry.id}" has ${describeBreadth(breadthInversion[0])} before ${describeBreadth(breadthInversion[1])} — STYLE_GUIDE.md §4 orders guidelines sections ${FRAMING.values.join(", ")}, then sections about one tag.`,
       );
+      return; // fix breadth first - the audience sort below only orders sections that TIE on breadth
+    }
+    // Audience, within one breadth tier only. Grouping first is what keeps the two sorts
+    // composed in the right order: a `for: agent` when-to-use section legitimately precedes a
+    // `for: all` how-to-use one, and a `for: all` tag-scoped section legitimately follows a
+    // `for: human` one, so comparing across tiers on `for` would be a false positive.
+    const byBreadth = new Map();
+    for (const s of guidelinesRun) {
+      const tier = breadthRank(s);
+      if (!byBreadth.has(tier)) byBreadth.set(tier, []);
+      byBreadth.get(tier).push(s);
+    }
+    for (const [tier, run] of byBreadth) {
+      const audienceInversion = firstInversion(run, (s) => audienceRank(s.for));
+      if (audienceInversion) {
+        emit(
+          "/sections",
+          `"${entry.id}" has a \`for: ${describeAudience(audienceInversion[0])}\` guidelines section before a \`for: ${describeAudience(audienceInversion[1])}\` one (${describeTier(tier)}) — STYLE_GUIDE.md orders audience ${AUDIENCE.values.join(", ")}, broadest readership first.`,
+        );
+        break;
+      }
     }
   },
 
-  // STYLE_GUIDE.md §3 - must, should, may, should-not, must-not. Items sharing a level keep
+  // STYLE_GUIDE.md §5 - must, should, may, should-not, must-not. Items sharing a level keep
   // their relative order; only a strict level-to-level inversion is flagged.
   "guideline-item-level-order": (entry, emit) => {
     (entry.sections || []).forEach((section, si) => {
       if (!section || section.kind !== "guidelines" || !Array.isArray(section.items)) return;
-      const inversion = firstInversion(section.items, (it) => GUIDELINE_LEVEL_RANK[it.level] ?? 99);
+      const inversion = firstInversion(section.items, (it) => levelRank(it.level));
       if (inversion) {
         emit(
           `/sections/${si}/items`,
-          `"${entry.id}" has a level: ${inversion[0].level} item before a level: ${inversion[1].level} one — STYLE_GUIDE.md orders guideline items must, should, may, should-not, must-not.`,
+          `"${entry.id}" has a level: ${inversion[0].level} item before a level: ${inversion[1].level} one — STYLE_GUIDE.md orders guideline items ${LEVEL.values.join(", ")}.`,
         );
       }
     });
@@ -263,6 +417,104 @@ const IMPLEMENTATIONS = {
 // Document-scoped rules run once per file, against the raw parsed document, instead of once
 // per entity - see activeRules()'s own comment.
 const DOCUMENT_IMPLEMENTATIONS = {
+  // STYLE_GUIDE.md §1 - entries[] runs system, token, theme, component, entry, then any
+  // namespaced custom kind. Order within one kind is not checked: the guide asks for
+  // "whatever order reads best" there, which is a judgment, not a computation.
+  "entry-order": (doc, emit) => {
+    const entries = doc.entries;
+    if (!Array.isArray(entries) || entries.length < 2) return;
+    const inversion = firstInversion(entries, (e) => entryKindRank(e && e.kind));
+    if (inversion) {
+      emit(
+        "/entries",
+        `"${inversion[0].id}" (kind: ${inversion[0].kind}) comes before "${inversion[1].id}" (kind: ${inversion[1].kind}) — STYLE_GUIDE.md §1 orders entries ${ENTRY_KIND.values.join(", ")}, then any custom kind, so nothing precedes what it's built on.`,
+      );
+    }
+  },
+
+  // STYLE_GUIDE.md §3/§4/§5/§6 - the field order of every shape nested inside an entry.
+  "nested-field-order": (doc, emit) => {
+    const check = (label, pointer, obj, order) => {
+      const present = Object.keys(obj).filter((k) => order.includes(k));
+      const inversion = firstInversion(present, (k) => order.indexOf(k));
+      if (inversion) {
+        emit(
+          pointer,
+          `${label} has \`${inversion[0]}\` before \`${inversion[1]}\` — its schema file declares [${order.filter((k) => present.includes(k)).join(", ")}].`,
+        );
+      }
+    };
+
+    // Refs turn up all over an entry (`refs`, `related`, `extends`, `evidence`, `checks`,
+    // `specs`, `source`, …), so they're found by shape rather than by field name. `$extensions`
+    // is skipped: it holds vendor data, and an object in there carrying `href` is not a ref.
+    const walkRefs = (node, pointer) => {
+      if (!node || typeof node !== "object") return;
+      if (Array.isArray(node)) {
+        node.forEach((v, i) => walkRefs(v, `${pointer}/${i}`));
+        return;
+      }
+      if ("to" in node || "href" in node) check("a ref", pointer, node, REF_ORDER);
+      for (const [key, value] of Object.entries(node)) {
+        if (key === EXT_KEY) continue;
+        if (value && typeof value === "object") walkRefs(value, `${pointer}/${key}`);
+      }
+    };
+
+    for (const [entity, at] of entitiesWithPointers(doc)) {
+      if (!entity || typeof entity !== "object") continue;
+      if (entity.metadata && typeof entity.metadata === "object") {
+        const order = entity.kind === "system" ? METADATA_ORDER.system : METADATA_ORDER.entry;
+        check("a `metadata` block", `${at}/metadata`, entity.metadata, order);
+      }
+      (entity.combos || []).forEach((combo, ci) => {
+        if (combo && typeof combo === "object") check("a `combo`", `${at}/combos/${ci}`, combo, COMBO_ORDER);
+      });
+      (entity.sections || []).forEach((section, si) => {
+        if (!section || typeof section !== "object") return;
+        const sectionAt = `${at}/sections/${si}`;
+        check("a section", sectionAt, section, sectionFieldOrder(section.kind));
+        if (section.metadata && typeof section.metadata === "object") {
+          check("a section's `metadata`", `${sectionAt}/metadata`, section.metadata, METADATA_ORDER.entry);
+        }
+        const order = ITEM_ORDER[section.kind];
+        if (!order) return;
+        (section.items || []).forEach((item, ii) => {
+          if (item && typeof item === "object") {
+            check(`a ${section.kind} item`, `${sectionAt}/items/${ii}`, item, order);
+          }
+        });
+      });
+    }
+    walkRefs(doc, "");
+  },
+
+  // STYLE_GUIDE.md §6 - combos[] sorts by subject, then by level within one subject.
+  "combo-order": (doc, emit) => {
+    for (const [entity, at] of entitiesWithPointers(doc)) {
+      const combos = entity && entity.combos;
+      if (!Array.isArray(combos) || combos.length < 2) continue;
+      for (let i = 1; i < combos.length; i++) {
+        const prev = combos[i - 1];
+        const next = combos[i];
+        const bySubject = String(prev && prev.subject).localeCompare(String(next && next.subject));
+        if (bySubject > 0) {
+          emit(
+            `${at}/combos`,
+            `subject "${prev.subject}" comes before "${next.subject}" — STYLE_GUIDE.md §6 sorts \`combos[]\` by \`subject\`, so every rule about one trait or token sits together.`,
+          );
+          break;
+        }
+        if (bySubject === 0 && levelRank(prev.level) > levelRank(next.level)) {
+          emit(
+            `${at}/combos`,
+            `two combos share subject "${prev.subject}" but run level: ${prev.level} before level: ${next.level} — STYLE_GUIDE.md §6 orders them ${LEVEL.values.join(", ")} within one subject.`,
+          );
+          break;
+        }
+      }
+    }
+  },
   // STYLE_GUIDE.md's "Base documents" order - only applies to a base document (has
   // schemaVersion); a standalone entry file has no document-level fields to order.
   "document-field-order": (doc, emit) => {
@@ -272,7 +524,7 @@ const DOCUMENT_IMPLEMENTATIONS = {
     if (inversion) {
       emit(
         "",
-        `document has \`${inversion[0]}\` before \`${inversion[1]}\` — STYLE_GUIDE.md orders a base document's fields as [${DOCUMENT_FIELD_ORDER.join(", ")}]. Actual order here: [${actual.join(", ")}].`,
+        `document has \`${inversion[0]}\` before \`${inversion[1]}\` — STYLE_GUIDE.md says match the spec's own declared order, which for a base document (base.schema.yaml) is [${DOCUMENT_FIELD_ORDER.join(", ")}]. Actual order here: [${actual.join(", ")}].`,
       );
     }
   },

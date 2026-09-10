@@ -1,23 +1,19 @@
-id: badge
 kind: component
+id: badge
 name: Badge
 description: A small chip with a color-coded icon block, used for kind/status/experimental labels. The icon is decorative — the variant's meaning is redundant with the visible label text next to it.
 
 metadata:
-  status: {status: stable}
   tags: [labels, status]
-
-sourceFiles:
-  - platform: web-component
-    file: ../../../site/components/badge.js
+  status: {status: stable}
 
 sections:
   - kind: guidelines
     for: agent
     framing: when-to-use
     items:
-      - statement: Use to label an entry's kind, status, or experimental state (the roles its three variants exist for). For a plain keyword or category label with no built-in meaning, use tag instead.
-        level: should
+      - level: should
+        statement: Use to label an entry's kind, status, or experimental state (the roles its three variants exist for). For a plain keyword or category label with no built-in meaning, use tag instead.
         alternatives:
           - to: tag
             rel: alternative-to
@@ -26,12 +22,25 @@ sections:
   - kind: guidelines
     for: all
     items:
-      - statement: The variant icon is decorative and MUST stay aria-hidden — its meaning is always paired with adjacent visible text, never conveyed by color/icon alone.
-        level: must
-        checkedBy: automated
+      - level: must
+        statement: The variant icon is decorative and MUST stay aria-hidden — its meaning is always paired with adjacent visible text, never conveyed by color/icon alone.
         checks:
           - href: ../../../scripts/checks/axe-audit.mjs
             rel: test
+        checkedBy: automated
+
+refs:
+  - to: def-section
+    rel: part-of
+    note: Renders the type badge next to each schema definition's heading.
+  - to: prop-list
+    rel: part-of
+    note: Renders the "at least one required" conditional marker on a prop row.
+
+
+sourceFiles:
+  - platform: web-component
+    file: ../../../site/components/badge.js
 
 imports:
   - platform: web-component
@@ -49,12 +58,3 @@ traits:
         description: Used by def-section's type badge — an info icon on the text color.
       - id: experimental
         description: Used by prop-list's "at least one" conditional marker — a flask icon on the warning color.
-
-refs:
-  - to: def-section
-    rel: part-of
-    note: Renders the type badge next to each schema definition's heading.
-  - to: prop-list
-    rel: part-of
-    note: Renders the "at least one required" conditional marker on a prop row.
-

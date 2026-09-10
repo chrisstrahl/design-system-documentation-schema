@@ -1,3 +1,4 @@
+kind: entry
 # Valid but wrong: DSDS has no `token-group` entry kind - a group is
 # `metadata.group` on the tokens themselves (see
 # metadata/entry-metadata.schema.yaml). Nothing in the schema can catch
@@ -5,7 +6,6 @@
 # markdown, so this validates cleanly while pointing a reader at
 # something that was never real to begin with.
 id: color-tokens
-kind: entry
 name: Color Tokens
 description: How this system's color tokens are organized.
 sections:

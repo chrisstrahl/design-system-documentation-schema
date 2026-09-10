@@ -1,6 +1,6 @@
 # Contributing to DSDS
 
-This is an early-stage, pre-1.0 specification (currently 0.20.0), maintained
+This is an early-stage, pre-1.0 specification (currently 0.20.1), maintained
 by one person. Feedback and contributions are welcome — this file says what
 a contribution needs to land and stay landed.
 
@@ -143,7 +143,7 @@ a wrapper for its own sake — if a script isn't listed, it doesn't exist.
 | --- | --- |
 | `npm run generate` | Rewrites every generated artifact: example includes, the schema bundle, the normative index, the rule-catalog table, the examples index, the conformance suite. Run it after editing schema `description`/`$comment` text. |
 | `npm run generate:check` | Asserts those artifacts are current without rewriting them. Part of `check`; useful alone when a check fails and you want to know whether it's just staleness. |
-| `npm run migrate` | Converts a 0.15.2 `.dsds.json` document to 0.20.0 `.dsds.yaml`: `npm run migrate -- <files-or-dirs…> [--dry-run]`. Best-effort — run `validate` on the output. |
+| `npm run migrate` | Converts a 0.15.2 `.dsds.json` document to 0.20.1 `.dsds.yaml`: `npm run migrate -- <files-or-dirs…> [--dry-run]`. Best-effort — run `validate` on the output. |
 | `npm run compose` | Concatenates hand-split `.dsds.yaml` fragments into one document before validation. |
 | `npm run bump-version` | The release driver. Rewrites every version reference, regenerates, builds, checks, commits, tags. |
 | `npm run og:generate` | Regenerates `site/assets/og-image.png`. Needs Chromium. Run it and commit the result only when the logo or the accent/text tokens change — the build does not do this for you. |

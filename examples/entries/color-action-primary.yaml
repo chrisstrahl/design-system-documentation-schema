@@ -1,24 +1,31 @@
-id: color.action.primary
 kind: token
+id: color.action.primary
 name: Action Primary
 description: The fill color for high-emphasis interactive surfaces.
 
-tokenType: color
-
 metadata:
-  status: {status: stable}
-  since: 1.0.0
   tags: [color, action, primary]
+  since: 1.0.0
+  status: {status: stable}
   group: color.action
 
 sections:
   - kind: guidelines
     for: all
     items:
-      - statement: Use for the single primary call-to-action on a surface.
-        level: should
-      - statement: Do not apply to destructive actions - use color.action.danger instead.
-        level: must-not
+      - level: should
+        statement: Use for the single primary call-to-action on a surface.
+      - level: must-not
+        statement: Do not apply to destructive actions - use color.action.danger instead.
+
+refs:
+  - to: color.action.primary.hover
+    rel: relates-to
+  - href: ./tokens.dtcg.json
+    rel: file
+    role: color.action.primary.*
+
+tokenType: color
 
 # must: an exhaustive allowlist - this fill color has only been
 # contrast-tested against these two surfaces, so anything else is
@@ -28,10 +35,3 @@ combos:
     level: must
     items: ["{color.surface.default}", "{color.surface.raised}"]
     note: Contrast is verified only against these surfaces; on any other background the label ratio is unproven.
-
-refs:
-  - to: color.action.primary.hover
-    rel: relates-to
-  - href: ./tokens.dtcg.json
-    rel: file
-    role: color.action.primary.*

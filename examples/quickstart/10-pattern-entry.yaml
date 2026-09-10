@@ -1,5 +1,5 @@
-id: empty-state
 kind: entry
+id: empty-state
 name: Empty State
 description: A pattern shown in place of a list or grid that has no content yet.
 purpose: Tells the user why an area is empty and what to do next, instead of leaving a blank surface.
@@ -9,5 +9,5 @@ sections:
     for: all
     framing: when-to-use
     items:
-      - statement: Use an empty state the first time a user visits a list or grid that has no content yet.
-        level: should
+      - level: should
+        statement: Use an empty state the first time a user visits a list or grid that has no content yet.

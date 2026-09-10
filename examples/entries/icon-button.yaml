@@ -1,3 +1,4 @@
+kind: component
 # Two hard cases in one small file:
 #   - No sourceFiles. This component is designed but not yet built - the
 #     spec has no position on documentation-before-implementation, and
@@ -8,23 +9,22 @@
 #     the shape of one (examples/invalid/DSDS-03-checked-by-needs-ref.yaml
 #     shows the failure case; this is the same rule done right).
 id: icon-button
-kind: component
 name: Icon Button
 description: A button variant that renders a single icon with no visible label.
 metadata:
-  status: {status: planned}
   tags: [actions, button]
+  status: {status: planned}
 
 sections:
   - kind: guidelines
     for: all
     items:
-      - statement: Icon button MUST carry an aria-label, since it has no visible text label.
-        level: must
-        checkedBy: automated
+      - level: must
+        statement: Icon button MUST carry an aria-label, since it has no visible text label.
         checks:
           - href: ./tests/icon-button.a11y.test.ts
             rel: test
+        checkedBy: automated
       # Borrowed from the same shared rule button.yaml points at - shows
       # more than one entry citing the same shared item instead of
       # restating it, and resolves across files (this file and

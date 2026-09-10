@@ -75,7 +75,7 @@ published as a versioned artifact at
 alongside the schema bundle, for a tool that wants to read the rule
 descriptions programmatically instead of scraping this page.
 
-<ds-callout variant="warning" title="DSDS-01–DSDS-16 is a reset id space, not a continuation of pre-0.20.0's:">
+<ds-callout variant="warning" title="DSDS-01–DSDS-23 is a reset id space, not a continuation of pre-0.20.0's:">
 
 Versions through 0.15.2 used a three-digit catalog (`DSDS-001`–`DSDS-006` and similar, in `rules/rules.yaml`) covering a different rewrite of the model entirely. 0.20.0 restarted numbering at `DSDS-01` for a genuinely different rule set — `DSDS-02` here has nothing to do with whatever `DSDS-002` meant before. (0.15.2's own `DSDS-002` was, fittingly, the rule against reusing an identifier — a reminder this reset itself is worth naming explicitly rather than leaving implicit.) If you're citing a rule id from before 0.15.2, say which catalog it's from; a bare `DSDS-0N` is ambiguous across the two.
 
@@ -105,6 +105,9 @@ Versions through 0.15.2 used a three-digit catalog (`DSDS-001`–`DSDS-006` and 
 | `DSDS-18` | An entry's `sections[]` doesn't follow STYLE_GUIDE.md's grouping and ordering. |
 | `DSDS-19` | A `guidelines` section's items aren't ordered must, should, may, should-not, must-not. |
 | `DSDS-20` | A base document's own top-level fields don't follow STYLE_GUIDE.md's field order. |
+| `DSDS-21` | A base document's `entries[]` aren't ordered by `kind`. |
+| `DSDS-22` | A nested object's fields don't follow the order its own schema file declares. |
+| `DSDS-23` | An entry's `combos[]` aren't sorted by `subject`, then by `level`. |
 
 {/* /dsds:rule-catalog */}
 

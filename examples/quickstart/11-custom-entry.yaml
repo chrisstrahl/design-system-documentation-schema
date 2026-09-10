@@ -1,4 +1,4 @@
-id: material-icons
 kind: acme.icon-library
+id: material-icons
 name: Material Icons
 description: The icon set Acme's products ship with.

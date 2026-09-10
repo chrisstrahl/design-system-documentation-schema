@@ -1,23 +1,23 @@
-schemaVersion: "0.20.0"
+schemaVersion: "0.20.1"
 
 name: Acme Design System
 
 entries:
-  - id: acme-design-system
-    kind: system
+  - kind: system
+    id: acme-design-system
     name: Acme Design System
     description: Acme's cross-platform design system.
     metadata:
-      version: 1.4.0
+      status: {status: stable}
       organization: Acme Corp
       url: https://design.acme.example
-      license: MIT
+      version: 1.4.0
       platforms: [react, web-component]
-      status: {status: stable}
+      license: MIT
     sections:
       - kind: guidelines
         for: all
         title: Versioning
         items:
-          - statement: This design system follows semver; breaking token renames bump the major version.
-            level: must
+          - level: must
+            statement: This design system follows semver; breaking token renames bump the major version.

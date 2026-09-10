@@ -1,22 +1,20 @@
-id: color.surface.raised
 kind: token
+id: color.surface.raised
 name: Surface Raised
 description: The background color for a surface that sits visually above the default surface, like a card or menu.
 
-tokenType: color
-
 metadata:
-  status: {status: stable}
-  since: 1.0.0
   tags: [color, surface]
+  since: 1.0.0
+  status: {status: stable}
   group: color.surface
 
 sections:
   - kind: guidelines
     for: all
     items:
-      - statement: Pair with a shadow or border to reinforce the elevation change - color alone is not always sufficient contrast.
-        level: should
+      - level: should
+        statement: Pair with a shadow or border to reinforce the elevation change - color alone is not always sufficient contrast.
 
 refs:
   - to: color.surface.default
@@ -24,3 +22,5 @@ refs:
   - href: ./tokens.dtcg.json
     rel: file
     role: color.surface.raised
+
+tokenType: color

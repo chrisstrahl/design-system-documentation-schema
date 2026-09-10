@@ -11,49 +11,49 @@
 # relationship nested-color.tokens.json's own `$value` expresses structurally
 # is restated here as an explicit `depends-on` ref between two flat token
 # entries instead of a parent/child tree.
-schemaVersion: "0.20.0"
+schemaVersion: "0.20.1"
 
 name: Nested Color Tokens
 
 entries:
-  - id: color.palette.blue-500
-    kind: token
+  - kind: token
+    id: color.palette.blue-500
     name: Blue 500
     description: A primitive blue value in the palette scale. No usage meaning of its own — semantic tokens like color.action.primary alias it.
     tokenType: color
     source: ./nested-color.tokens.json
 
-  - id: color.palette.blue-600
-    kind: token
+  - kind: token
+    id: color.palette.blue-600
     name: Blue 600
     description: A primitive blue value in the palette scale, one step darker than blue-500. No usage meaning of its own.
     tokenType: color
     source: ./nested-color.tokens.json
 
-  - id: color.action.primary
-    kind: token
+  - kind: token
+    id: color.action.primary
     name: Action Primary
     description: Background for the single primary action on a surface. Its value is a DTCG alias into the palette (`{color.palette.blue-500}`) — the primitive and the semantic meaning live in two different places on purpose, so the palette can be re-themed without touching what "primary action" means.
-    tokenType: color
-    source: ./nested-color.tokens.json
     sections:
       - kind: guidelines
         for: all
         items:
-          - statement: Use for at most one action per surface — two competing primary actions split the user's attention and dilute the visual hierarchy the color exists to create.
-            level: should
+          - level: should
+            statement: Use for at most one action per surface — two competing primary actions split the user's attention and dilute the visual hierarchy the color exists to create.
     refs:
       - to: color.palette.blue-500
         rel: depends-on
         note: Resolves its value from this primitive via the DTCG file's own alias syntax, not a separate DSDS-level indirection.
-
-  - id: color.action.primary-hover
-    kind: token
-    name: Action Primary Hover
-    description: Hover state for the primary action background.
     tokenType: color
     source: ./nested-color.tokens.json
+
+  - kind: token
+    id: color.action.primary-hover
+    name: Action Primary Hover
+    description: Hover state for the primary action background.
     refs:
       - to: color.palette.blue-600
         rel: depends-on
         note: Resolves its value from this primitive via the DTCG file's own alias syntax.
+    tokenType: color
+    source: ./nested-color.tokens.json

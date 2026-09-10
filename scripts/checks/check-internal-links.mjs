@@ -27,6 +27,7 @@ const PAGE_FOR_SOURCE = {
   "conformance.mdx": "conformance",
   "stability.mdx": "stability",
   "interoperability.mdx": "interoperability",
+  "style-guide.mdx": "style-guide",
   "fragments/404.mdx": "404",
   "fragments/schema-intro.mdx": "schema",
 };
@@ -109,7 +110,14 @@ function collectMdxFiles(dir, base = "") {
 const sources = [
   { label: "README.md", path: path.join(ROOT, "README.md"), page: null },
   { label: "AGENTS.md", path: path.join(ROOT, "AGENTS.md"), page: null },
+  // Read on GitHub like README/AGENTS (page: null), but it is a primary
+  // authoring doc that links out to the Conformance page's enforcement-tier
+  // anchor, so a page restructure can rot it the same way it can rot README.
+  { label: "STYLE_GUIDE.md", path: path.join(ROOT, "STYLE_GUIDE.md"), page: null },
   { label: "schema/conformance-rules.yaml", path: path.join(ROOT, "schema/conformance-rules.yaml"), page: null },
+  // Cites site pages when a release changed one, so a page rename can rot it the same way it
+  // rots README. Its many /v<n>/ links are versioned artifacts, which isSiteDocLink() skips.
+  { label: "CHANGELOG", path: path.join(ROOT, "CHANGELOG"), page: null },
   ...collectMdxFiles(CONTENT_DIR).map((rel) => ({
     label: `site/content/${rel}`,
     path: path.join(CONTENT_DIR, rel),

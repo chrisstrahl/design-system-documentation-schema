@@ -1,3 +1,4 @@
+kind: entry
 # Was previously modeled as its own "chunk" node kind, with a bespoke
 # data.code shape (inline {code, language} or referenced {src, language}).
 # Both turned out to duplicate things this spec already has: inline code
@@ -8,7 +9,6 @@
 # is built from other components), a status, and some sections - is just a
 # pattern.
 id: confirmation-dialog
-kind: entry
 name: Confirmation Dialog
 description: A pre-composed destructive-action confirmation, built from Dialog, Button, and Icon.
 
@@ -21,10 +21,10 @@ sections:
     framing: when-to-use
     title: When to use
     items:
-      - statement: Confirming a destructive, hard-to-reverse action (delete, revoke access).
-        level: should
-      - statement: Confirming a routine save or submit action.
-        level: should-not
+      - level: should
+        statement: Confirming a destructive, hard-to-reverse action (delete, revoke access).
+      - level: should-not
+        statement: Confirming a routine save or submit action.
         refs:
           - to: button
             rel: alternative-to

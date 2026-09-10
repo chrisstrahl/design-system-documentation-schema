@@ -1,15 +1,15 @@
 entries:
-  - id: color.action.primary
-    kind: token
+  - kind: token
+    id: color.action.primary
     name: Action Primary
     description: The fill color for high-emphasis interactive surfaces.
     tokenType: color
     metadata:
-      status: {status: stable}
       tags: [color]
+      status: {status: stable}
 
-  - id: light
-    kind: theme
+  - kind: theme
+    id: light
     name: Light
     description: The default theme - standard luminance for well-lit surfaces.
     colorScheme: light
@@ -20,8 +20,8 @@ entries:
         rel: file
         note: DTCG source for this theme's own token values.
 
-  - id: dark
-    kind: theme
+  - kind: theme
+    id: dark
     name: Dark
     description: Inverted-luminance theme for low-light surfaces and user preference.
     colorScheme: dark

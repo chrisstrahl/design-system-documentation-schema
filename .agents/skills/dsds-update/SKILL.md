@@ -2,7 +2,7 @@
 name: dsds-update
 description: Update an existing DSDS spec based on implementation changes, Figma updates, or written instructions. Triggers on "update spec", "modify spec", "add prop to spec", "sync spec", "spec drift".
 metadata:
-  version: 0.20.0
+  version: 0.20.1
 ---
 
 # Update a DSDS Spec
@@ -33,6 +33,16 @@ Modify an existing `.dsds.yaml` file.
 
 - Never remove existing content unless explicitly instructed — specs are additive by default.
 - Preserve the existing order of `sections` and `traits` items.
+- When you add a *new* top-level field, insert it at its
+  [STYLE_GUIDE.md](https://github.com/somerandomdude/design-system-documentation-schema/blob/main/STYLE_GUIDE.md)
+  position rather than appending it to the end — that guide's whole point is
+  that a reader can rely on the order. Nothing in your project will check
+  this: field order never affects validity, and the `DSDS-17`–`DSDS-23`
+  advisory rules that report it live in the spec repo's own `lint-docs.js`,
+  which the published package doesn't ship. Follow it because the next
+  reader benefits, not because a tool will catch you. Don't reshuffle
+  fields that were already there just to comply; that turns a one-line edit
+  into an unreviewable diff.
 - When adding trait values, place them in logical order (not necessarily alphabetical) — the first value is implied as the default.
 - Update `metadata.status` if the change constitutes a breaking API modification.
 - If adding a new relationship, use `common/ref`'s one shape: `{to: "<id>", rel: "<depends-on|extends|alternative-to|composes|...>"}` for something in this document's own graph, or `{href: "<url>", rel: "..."}` for something outside it.
@@ -41,7 +51,7 @@ Modify an existing `.dsds.yaml` file.
 
 When adding new sections or fields, verify the exact shape:
 
-- **Bundled schema**: `https://designsystemdocspec.org/v0.20.0/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if DSDS is installed as a dependency)
+- **Bundled schema**: `https://designsystemdocspec.org/v0.20.1/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if DSDS is installed as a dependency)
 - **Section reference**: `https://designsystemdocspec.org/sections-{kind}`
 - **Entry reference**: `https://designsystemdocspec.org/entries-{kind}`
 - **Full architecture**: https://designsystemdocspec.org/schema#how-the-schema-is-organized

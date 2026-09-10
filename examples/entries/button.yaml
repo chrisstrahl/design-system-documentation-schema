@@ -1,28 +1,21 @@
-id: button
 kind: component
+id: button
 name: Button
 description: An interactive element that triggers an action when activated.
 metadata:
-  status: {status: stable}
-  since: 1.4.0
   updated: {date: 2026-06-02}
   tags: [actions, button, cta, form-control]
+  since: 1.4.0
+  status: {status: stable}
   aliases: [btn]
-
-# A tool extracts the full interface (variant/size/disabled/loading/
-# onClick/fullWidth) straight from this file - JSDoc/TSDoc in the code
-# itself, not hand-typed here.
-sourceFiles:
-  - platform: react
-    file: ./src/Button.tsx
 
 sections:
   - kind: guidelines
     for: agent
     framing: when-to-use
     items:
-      - statement: Do not use button when the action navigates to a new URL; use the link entry instead.
-        level: must-not
+      - level: must-not
+        statement: Do not use button when the action navigates to a new URL; use the link entry instead.
         alternatives:
           - to: link
             rel: alternative-to
@@ -30,8 +23,8 @@ sections:
   - kind: guidelines
     for: human
     items:
-      - statement: Use buttons only for in-page actions, never navigation.
-        level: must
+      - level: must
+        statement: Use buttons only for in-page actions, never navigation.
       # No statement here - this requirement is owned and tracked in the
       # team's own requirements system, not restated in this document. See
       # guidelines.schema.yaml's own $comment for why external-link
@@ -40,8 +33,8 @@ sections:
         refs:
           - href: https://example.atlassian.net/browse/DS-482
             rel: external-link
-      - statement: Limit each surface to one primary button.
-        level: should
+      - level: should
+        statement: Limit each surface to one primary button.
         example:
           title: One primary action per surface
           showcase:
@@ -56,6 +49,31 @@ sections:
           com.acme:
             rationale: Multiple primary buttons compete for attention and force the user to guess which action is actually the recommended one.
             failureMode: A dialog ships with two primary-styled buttons (e.g. "Save" and "Save as draft"), and usability testing shows users default to the wrong one.
+
+  # Every item here carries the `accessibility` tag, which makes this a
+  # tag-scoped section: narrowest, so it follows every how-to-use section
+  # above it whatever their `for` is. `for: all` after `for: human` is not
+  # an audience inversion, because audience only sorts within one tier.
+  - kind: guidelines
+    for: all
+    title: Accessibility
+    items:
+      - level: must
+        statement: Give an icon-only button an accessible name that matches its visible tooltip.
+        checks:
+          - href: ./tests/button.a11y.test.ts
+            rel: test
+            role: vitest + axe-core
+        checkedBy: automated
+        tags: [accessibility, naming]
+      - level: must
+        statement: Keep the focus indicator visible when the button is focused by keyboard.
+        checkedBy: assisted
+        tags: [accessibility, focus]
+      - level: should-not
+        statement: Do not remove the button from the tab order to make it decorative.
+        checkedBy: manual
+        tags: [accessibility, focus]
 
   - kind: definitions
     for: all
@@ -73,12 +91,40 @@ sections:
     items:
       - title: Focus ring is visible in both light and dark themes.
       - title: Loading state announces to screen readers.
-      - title: Works with a custom icon in the leading-icon slot.
-        optional: true
+      - optional: true
+        title: Works with a custom icon in the leading-icon slot.
+
+refs:
+  - to: button-group
+    rel: part-of
+  - to: icon-button
+    rel: alternative-to
+  - to: link
+    rel: alternative-to
+  - to: color.action.primary
+    rel: depends-on
+  - href: https://github.com/org/ds/react/button
+    rel: source
+  - href: https://storybook.org/ds/button
+    rel: storybook
+    role: hosted docs
+  - href: ./stories/button.stories.tsx
+    rel: storybook
+    role: CSF story source
+    note: Component Story Format (CSF3) - the source the hosted docs above are built from.
+  - href: npm:@org/ds-react
+    rel: package
+
+# A tool extracts the full interface (variant/size/disabled/loading/
+# onClick/fullWidth) straight from this file - JSDoc/TSDoc in the code
+# itself, not hand-typed here.
+sourceFiles:
+  - platform: react
+    file: ./src/Button.tsx
 
 specs:
-  - rel: contract
-    href: ./contracts/button.contract.json
+  - href: ./contracts/button.contract.json
+    rel: contract
     role: DS Contracts
 
 # One field for every way the button varies: configuration the consumer
@@ -132,27 +178,6 @@ combos:
     level: must-not
     items: [variant.danger]
     note: Destructive actions need the full-size touch target; a small danger button invites mis-taps on the most costly action.
-
-refs:
-  - to: button-group
-    rel: part-of
-  - to: icon-button
-    rel: alternative-to
-  - to: link
-    rel: alternative-to
-  - to: color.action.primary
-    rel: depends-on
-  - href: https://github.com/org/ds/react/button
-    rel: source
-  - href: https://storybook.org/ds/button
-    rel: storybook
-    role: hosted docs
-  - href: ./stories/button.stories.tsx
-    rel: storybook
-    role: CSF story source
-    note: Component Story Format (CSF3) - the source the hosted docs above are built from.
-  - href: npm:@org/ds-react
-    rel: package
 
 $extensions:
   com.figma:

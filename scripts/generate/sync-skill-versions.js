@@ -142,6 +142,16 @@ for (const file of skillFiles) {
   let text = original;
   let count = 0;
 
+  // What version was this file's prose written against? Read from its own
+  // frontmatter BEFORE the rewrite below overwrites it. This is the only
+  // record of the outgoing version once bump-version.js has already
+  // regenerated the bundle — see the catch-all's comment below for why
+  // reading it from the bundle instead made that replacement dead code.
+  const frontmatterMatch = original.match(FRONTMATTER_VERSION_REGEX);
+  const PREVIOUS_VERSION = frontmatterMatch
+    ? frontmatterMatch[0].slice(frontmatterMatch[1].length).trim()
+    : null;
+
   // Frontmatter metadata.version → target version.
   text = text.replace(FRONTMATTER_VERSION_REGEX, (m, prefix) => {
     if (m.slice(prefix.length) === TARGET_VERSION) return m;
@@ -156,12 +166,28 @@ for (const file of skillFiles) {
   r = rewriteSchemaVersionLiterals(text);
   text = r.updated; count += r.count;
 
-  // Catch-all: remaining literal version strings the regexes don't cover.
-  if (CURRENT_SCHEMA_VERSION && CURRENT_SCHEMA_VERSION !== TARGET_VERSION) {
+  // Catch-all: remaining literal version strings the regexes don't cover —
+  // bare prose like "the DSDS v0.20.0 bundled schema".
+  //
+  // PREVIOUS_VERSION, not CURRENT_SCHEMA_VERSION. This was gated on
+  // `CURRENT_SCHEMA_VERSION !== TARGET_VERSION`, which made it dead code in
+  // the one path that matters: bump-version.js runs `npm run bundle` BEFORE
+  // it runs this script, so by the time we get here the bundle already says
+  // the new version, both values are the target, and the guard skipped every
+  // replacement. It only ever fired when someone passed an explicit version
+  // that happened to differ from the bundle — i.e. not during a real bump.
+  // That is how "the DSDS v0.20.0 bundled schema" survived the 0.20.1 bump
+  // in dsds-validate/SKILL.md with `--check` reporting clean.
+  //
+  // PREVIOUS_VERSION is read from the skill files themselves (their
+  // frontmatter `metadata.version`, captured before any rewriting), which is
+  // the only place that still knows what version the prose was written
+  // against.
+  if (PREVIOUS_VERSION && PREVIOUS_VERSION !== TARGET_VERSION) {
     const before = text;
-    text = text.replaceAll(CURRENT_SCHEMA_VERSION, TARGET_VERSION);
+    text = text.replaceAll(PREVIOUS_VERSION, TARGET_VERSION);
     if (text !== before) {
-      count += before.split(CURRENT_SCHEMA_VERSION).length - 1;
+      count += before.split(PREVIOUS_VERSION).length - 1;
     }
   }
 
