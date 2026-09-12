@@ -70,7 +70,7 @@ allOf:
               example: "@acme/ui"
       specs:
         $ref: https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list
-        description: Machine-readable API contract(s) for this component (props, slots, events, etc.) in a standard, tool-readable format.
+        description: Machine-readable API contract(s) for this component (props, slots, events, etc.) in a standard, tool-readable shape.
         $comment: >-
           `specs` is different from `sourceFiles`. This points at an already-extracted
           contract document. It could be a a Custom Elements Manifest
@@ -79,8 +79,8 @@ allOf:
           The property accepts entry per platform or format, if more than one exists; use
           `role` to name the format when it isn't obvious from the file extension.
         example:
-          - href: ./contracts/button.contract.json
-            rel: contract
+          - rel: contract
+            href: ./contracts/button.contract.json
             role: DS Contracts
 
       traits:
@@ -91,11 +91,11 @@ allOf:
           different fields - an enum's own `values` list vs. a boolean's
           plain toggle.
         $comment: >-
-          Tagged with `kind` (`anyOf`) because the two kinds genuinely
+          Tagged with `kind` (`anyOf`) because the two shapes genuinely
           differ, not just which optional fields happen to be filled in -
           compare `sections/steps.schema.yaml`'s and
           `sections/guidelines.schema.yaml`'s own items, which stay one
-          flexible form with no `kind` tag for exactly that reason.
+          flexible shape with no `kind` tag for exactly that reason.
         minItems: 1
         items:
           anyOf:

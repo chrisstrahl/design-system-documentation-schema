@@ -59,15 +59,40 @@ binding.
   `mcp` field) — or validate directly against the bundled schema or
   `scripts/validate/validate.js` either way.
 
+## The words this spec uses
+
+Use the left column when you write prose about a DSDS document. The right column is the synonyms to avoid — they read the same to a person and differently to a search.
+
+<!-- dsds:terms -->
+
+| Use | For | Not |
+|---|---|---|
+| **entry** | One documented thing in the design system graph - a component, token, theme, or anything else. | entity, record, item, node |
+| **document** | One `.dsds.yaml` or `.dsds.json` file, whether it holds a whole system or a single entry. | spec, spec file, doc |
+| **spec** | The DSDS specification itself - this repo, the schema files, and the site that publishes them. | (never a document) |
+| **section** | One member of an entry's `sections[]`. | block, documentBlock, chunk |
+| **field** | A named slot on an object. | property, key, attribute |
+| **kind** | The discriminator value that says which shape an entry or section is. | type, variant |
+| **item** | One member of a section's `items[]`. | entry, rule, criterion |
+| **conforming consumer** | Anything that reads a document - a renderer, an agent, a site generator. | tool, reader, client, parser, renderer |
+| **conforming producer** | Anything that writes a document. | generator, author tool, writer |
+| **conforming validator** | Anything that checks a document against the schema and the rule catalog. | linter, checker |
+
+<!-- /dsds:terms -->
+
 ## The entry envelope
 
 Every entry — a system, a component, a token, a theme, or the generic
 `entry` kind (foundations, patterns, guides, and anything else) — shares one
 open base:
 
+<!-- dsds:entry-envelope -->
+
 ```
-id, kind, name, description, purpose, metadata, related, extends, refs, sections, $extensions
+kind, id, name, description, purpose, metadata, sections, extends, related, refs, $extensions
 ```
+
+<!-- /dsds:entry-envelope -->
 
 Only the kind-specific fields beyond this envelope differ (a token's
 `tokenType`/`source`, a component's `sourceFiles`/`imports`/`traits`, a
@@ -76,12 +101,23 @@ exactly which fields each kind adds). Learn this envelope once and you can
 generalize across every entry kind without re-deriving its fields from
 scratch each time. `entries/entry.schema.yaml` is the one source of truth for
 those fields and the order they go in — the tooling reads both out of it
-instead of keeping a copy (see `declaredProps` in `scripts/lib.js`), so this is
-not a convention you have to infer from examples. `sections/section.schema.yaml` has the same
-role one level down: every section kind shares `kind`, `for`, `title`,
-`description`, `context`, `metadata`, `items`, `freeform`, `$extensions`
-— read it from that schema file, which is authoritative for both the set
-and the order.
+instead of keeping a copy (see `declaredProps` in `scripts/lib.js`), and so
+does the list above, which `scripts/generate/sync-envelopes.mjs` writes from
+that file. This is not a convention you have to infer from examples.
+
+`sections/section.schema.yaml` has the same role one level down. Every
+section kind shares:
+
+<!-- dsds:section-envelope -->
+
+```
+kind, for, title, description, context, metadata, items, freeform, $extensions
+```
+
+<!-- /dsds:section-envelope -->
+
+That list is generated from that schema file too, which is authoritative for
+both the set and the order.
 
 Each well-known entry kind also has a canonical, standalone identifier at
 `/id/entry/<kind>` (e.g. `/id/entry/component`) — the same data as that
@@ -117,15 +153,22 @@ these owns into a DSDS document** — if you're about to write a property
 table, a token value, or a story's code into an entry, use the pointer field
 instead.
 
-| Format | Owns | Point at it with |
+<!-- dsds:interop-map -->
+
+| Format | Layer it owns | Point at it with |
 |---|---|---|
-| DTCG (W3C Design Tokens) | Token values, types, aliases | A token/theme entry's `source` |
-| Custom Elements Manifest, or any contract document | A component's generated API | A component's `specs` (`rel: contract`) |
-| Source files, framework typings | The real interface | A component's `sourceFiles`, per platform |
-| CSF / Storybook | Stories and demos | `refs`/`examples` with `rel: storybook` |
-| A test or lint rule | Whether a guideline holds | A guideline's `checks` (`rel: test`, `rel: lint-rule`) |
-| WCAG, ARIA APG, MDN | Why a guideline exists | A guideline's `evidence` |
-| Figma, npm, any vendor | Design artifacts, distribution, tool data | `rel: design`, `imports[].package`, `$extensions` |
+| [DTCG](https://www.w3.org/community/reports/design-tokens/CG-FINAL-format-20251028/) (W3C Design Tokens) | Token values, types, aliases | A token entry's `source`; a theme's `source` |
+| [Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest) (CEM), or any standard contract document | Component API contract, already generated | A component's `specs` (`rel: contract`) |
+| `.tsx`, `.vue`, `.swift`, framework typings — whatever a generator reads | Component source, per platform | A component's `sourceFiles` |
+| [Component Story Format](https://storybook.js.org/docs/api/csf) (CSF), Storybook, or an equivalent | Stories and live demos | A `refs`/`examples` entry with `rel: storybook` |
+| A test or lint rule — vitest, axe-core, stylelint, ESLint | Whether a guideline actually holds | A guideline's `checks` (`rel: test`, `rel: lint-rule`) |
+| WCAG, ARIA APG, MDN, an internal RFC | Why a guideline exists | A guideline's `evidence` (`rel: external-link`) |
+| Figma or another design tool | Design artifacts | A `refs` entry with `rel: design`, or `metadata.preview` |
+| npm, or any package registry | Distribution | A component's `imports[].package`, or `rel: package` |
+| [JSON Schema](https://json-schema.org/) draft 2020-12 | Editor validation of the DSDS file itself | The document's own `$schema` key |
+| Any vendor or tool | Anything not listed | `$extensions`, keyed by namespace |
+
+<!-- /dsds:interop-map -->
 
 DSDS does not parse what a pointer points at — `specs` accepts any standard
 contract format, so read the target with whatever parser it needs. `DSDS-11`

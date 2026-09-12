@@ -45,6 +45,27 @@ A tool, renderer, or AI agent that reads DSDS documents. A conforming consumer:
 
 A tool that checks documents. A conforming validator MUST enforce both the schema itself (with format checks on) and the extra rules below (`DSDS-01`–`DSDS-11`). `scripts/validate/validate.js` is the reference implementation. Its [`examples/invalid/`](examples.html#invalid) folder holds one broken example per semantic rule (`DSDS-XX-*.yaml`) plus a set of plain schema fixtures (`schema-*.yaml`, no rule id — a pure JSON Schema rejection) pinning constraints like enum casing, empty arrays, and `$extensions` namespacing. Every fixture declares its own contract in a leading comment — `# rejectedBy: schema|semantic`, plus `# expect: DSDS-XX` or `# errorAt: /json/pointer` as applicable — and `scripts/validate/conformance-test.js` confirms each one fails for the exact reason and at the exact layer it claims to, not just that it fails at all.
 
+## The words this spec uses
+
+One term per concept, so a reader and a generator mean the same thing by it. The right-hand column is what a reviewer should flag — each of those synonyms was in use somewhere before this table existed.
+
+{/* dsds:terms */}
+
+| Use | For | Not | Defined in |
+|---|---|---|---|
+| **entry** | One documented thing in the design system graph - a component, token, theme, or anything else. | entity, record, item, node | `entries/entry.schema.yaml` |
+| **document** | One `.dsds.yaml` or `.dsds.json` file, whether it holds a whole system or a single entry. | spec, spec file, doc | `base.schema.yaml` |
+| **spec** | The DSDS specification itself - this repo, the schema files, and the site that publishes them. | (never a document) |  |
+| **section** | One member of an entry's `sections[]`. | block, documentBlock, chunk | `sections/section.schema.yaml` |
+| **field** | A named slot on an object. | property, key, attribute | (property table is the one allowed exception - it names the generated tables) |
+| **kind** | The discriminator value that says which shape an entry or section is. | type, variant | `entry.kind`, `section.kind` |
+| **item** | One member of a section's `items[]`. | entry, rule, criterion |  |
+| **conforming consumer** | Anything that reads a document - a renderer, an agent, a site generator. | tool, reader, client, parser, renderer | [Conformance](https://designsystemdocspec.org/conformance#conformance-classes) |
+| **conforming producer** | Anything that writes a document. | generator, author tool, writer | [Conformance](https://designsystemdocspec.org/conformance#conformance-classes) |
+| **conforming validator** | Anything that checks a document against the schema and the rule catalog. | linter, checker | [Conformance](https://designsystemdocspec.org/conformance#conformance-classes) |
+
+{/* /dsds:terms */}
+
 ## Enforcement tiers
 
 Every rule is enforced one of three ways:
@@ -184,17 +205,60 @@ A document with zero errors and zero warnings can still be bad documentation —
 
 ## Index of every normative statement
 
-Every RFC 2119 sentence (MUST, MUST NOT, SHOULD, SHOULD NOT, MAY) inside the schema's own `description` text, extracted and indexed by `scripts/generate/extract-normative.mjs` directly from `schema/**/*.schema.yaml` — not hand-copied, and regenerated on every build (`npm run generate`, checked via `--check` in `postvalidate`). Each statement's id is location-based (`<dir>/<file>§<jsonPath>.<n>`), so citing one and having the schema move underneath it is a visible, checkable break rather than a silent one.
+Every RFC 2119 sentence (MUST, MUST NOT, SHOULD, SHOULD NOT, MAY) in the schema's own text — both `description` and `$comment` — extracted and indexed by `scripts/generate/extract-normative.mjs` directly from `schema/**/*.schema.yaml`, not hand-copied, and regenerated on every build (`npm run generate`, checked with `--check` in `generate:check`). A statement marked *(in `$comment`)* still binds, but it's in the container this spec reserves for reasoning rather than rules; those are the ones to move. Each statement's id is location-based (`<dir>/<file>§<jsonPath>.<n>`), so citing one and having the schema move underneath it is a visible, checkable break rather than a silent one.
 
 {/* dsds:normative-index */}
 
-*Generated from the v{{VERSION}} schemas by `scripts/generate/extract-normative.mjs` — do not edit by hand. 2 statements: 0 MUST, 1 MUST NOT, 1 SHOULD, 0 SHOULD NOT, 0 MAY.*
+*Generated from the v{{VERSION}} schemas by `scripts/generate/extract-normative.mjs` — do not edit by hand. 15 statements: 12 MUST, 1 MUST NOT, 2 SHOULD, 0 SHOULD NOT, 0 MAY.*
+
+### common
+
+#### common/extensions
+
+- **MUST** — Each top-level key MUST be a dotted namespace, like `com.acme`, matching the Design Tokens Community Group's own `$extensions` convention. <small>`common/extensions§(root).1`</small> <small>(in `$comment`)</small>
+
+#### common/id
+
+- **MUST** — A section item's own `id` is always optional to write, but a conforming consumer MUST be able to address every item. <small>`common/id§(root).1`</small> <small>(in `$comment`)</small>
+- **MUST** — When an item has no `id`, a conforming consumer MUST derive one so content has a consistent id. <small>`common/id§(root).2`</small> <small>(in `$comment`)</small>
+
+### entries
+
+#### entries/component
+
+- **MUST** — When the document declares a `metadata.platforms` list, this MUST be one of its entries. <small>`entries/component§[allOf][1].sourceFiles.items.platform.1`</small> <small>(in `$comment`)</small>
+- **MUST** — When the document declares a `metadata.platforms` list, this MUST be one of its entries. <small>`entries/component§[allOf][1].imports.items.platform.1`</small> <small>(in `$comment`)</small>
 
 ### metadata
 
 #### metadata/metadata
 
 - **MUST NOT** — MUST NOT contain markup. <small>`metadata/metadata§note.1`</small>
-- **SHOULD** — Tools SHOULD treat `updated.date` as the cache key for this item's documentation specifically. <small>`metadata/metadata§.updated.1`</small>
+- **SHOULD** — A conforming consumer SHOULD treat `updated.date` as the cache key for this item's documentation specifically. <small>`metadata/metadata§.updated.1`</small>
+
+#### metadata/system-metadata
+
+- **MUST** — When this list is present, every other `platform` value used anywhere in the document MUST match one of these. <small>`metadata/system-metadata§[allOf][1].platforms.1`</small> <small>(in `$comment`)</small>
+
+### sections
+
+#### sections/definitions
+
+- **MUST** — You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule). <small>`sections/definitions§[allOf][1].items.items.id.1`</small> <small>(in `$comment`)</small>
+
+#### sections/guidelines
+
+- **SHOULD** — A conforming consumer SHOULD show the level and the link clearly (not hide a level-with-nothing-under-it as if it were empty content), and an author who expects a person to read the guideline without following the link SHOULD add a `statement` instead of leaving this form as the only text. <small>`sections/guidelines§(root).1`</small> <small>(in `$comment`)</small>
+- **MUST** — You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule). <small>`sections/guidelines§[allOf][1].items.items.id.1`</small> <small>(in `$comment`)</small>
+- **MUST** — MUST reflect `level`. <small>`sections/guidelines§[allOf][1].items.items.example.1`</small> <small>(in `$comment`)</small>
+- **MUST** — A `must-not` item's example MUST show what not to do. <small>`sections/guidelines§[allOf][1].items.items.example.2`</small> <small>(in `$comment`)</small>
+
+#### sections/section
+
+- **MUST** — You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule). <small>`sections/section§freeformEntry.id.1`</small> <small>(in `$comment`)</small>
+
+#### sections/steps
+
+- **MUST** — You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule). <small>`sections/steps§[allOf][1].items.items.id.1`</small> <small>(in `$comment`)</small>
 
 {/* /dsds:normative-index */}

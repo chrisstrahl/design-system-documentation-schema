@@ -36,15 +36,22 @@ The W3C Design Tokens Community Group defines a format for trading token **value
 
 DSDS is built to sit alongside the formats that already own a layer. **If another format owns a fact, DSDS points at it rather than restating it**. A token entry has a `source` and no `value`; a component entry has `sourceFiles` and `specs` and no property table.
 
-| Format | What it owns | The DSDS field |
+<!-- dsds:interop-map -->
+
+| Format | Layer it owns | The DSDS field |
 |---|---|---|
-| [DTCG](https://www.w3.org/community/reports/design-tokens/CG-FINAL-format-20251028/) | Token values, types, aliases | A token or theme entry's `source` |
-| [Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest) and other contract formats | A component's generated API | A component's `specs` (`rel: contract`) |
-| [CSF](https://storybook.js.org/docs/api/csf) / Storybook | Stories and live demos | A `refs`/`examples` entry with `rel: storybook` |
-| Source files, framework typings | The real interface | A component's `sourceFiles` |
-| vitest, axe-core, stylelint, ESLint | Whether a guideline actually holds | A guideline's `checks` (`rel: test`, `rel: lint-rule`) |
-| WCAG, ARIA APG, MDN | Why a guideline exists | A guideline's `evidence` |
-| Figma, npm, anything else | Design artifacts, distribution, vendor data | `rel: design`, `imports[].package`, `$extensions` |
+| [DTCG](https://www.w3.org/community/reports/design-tokens/CG-FINAL-format-20251028/) (W3C Design Tokens) | Token values, types, aliases | A token entry's `source`; a theme's `source` |
+| [Custom Elements Manifest](https://github.com/webcomponents/custom-elements-manifest) (CEM), or any standard contract document | Component API contract, already generated | A component's `specs` (`rel: contract`) |
+| `.tsx`, `.vue`, `.swift`, framework typings — whatever a generator reads | Component source, per platform | A component's `sourceFiles` |
+| [Component Story Format](https://storybook.js.org/docs/api/csf) (CSF), Storybook, or an equivalent | Stories and live demos | A `refs`/`examples` entry with `rel: storybook` |
+| A test or lint rule — vitest, axe-core, stylelint, ESLint | Whether a guideline actually holds | A guideline's `checks` (`rel: test`, `rel: lint-rule`) |
+| WCAG, ARIA APG, MDN, an internal RFC | Why a guideline exists | A guideline's `evidence` (`rel: external-link`) |
+| Figma or another design tool | Design artifacts | A `refs` entry with `rel: design`, or `metadata.preview` |
+| npm, or any package registry | Distribution | A component's `imports[].package`, or `rel: package` |
+| [JSON Schema](https://json-schema.org/) draft 2020-12 | Editor validation of the DSDS file itself | The document's own `$schema` key |
+| Any vendor or tool | Anything not listed | `$extensions`, keyed by namespace |
+
+<!-- /dsds:interop-map -->
 
 Full detail, with a worked example for each, is on the site's **[Interoperability](https://designsystemdocspec.org/interoperability)** page. Validated example pairs live in [`examples/interop/`](examples/interop/).
 
@@ -61,6 +68,27 @@ The last seven rules are focused on style/organization. `DSDS-17` through `DSDS-
 
 > [!NOTE]
 > **Credit where due:** DSDS's conformance design follows thinking from the [Adobe Spectrum Design Data specification](https://opensource.adobe.com/spectrum-design-data/spec/). Props to them.
+
+### The words this spec uses
+
+One term per concept, so a reader and a generator mean the same thing by it. The right-hand column is what a reviewer should flag. The full table, with where each term is defined, is on the [Conformance](https://designsystemdocspec.org/conformance) page.
+
+<!-- dsds:terms -->
+
+| Use | For | Not |
+|---|---|---|
+| **entry** | One documented thing in the design system graph - a component, token, theme, or anything else. | entity, record, item, node |
+| **document** | One `.dsds.yaml` or `.dsds.json` file, whether it holds a whole system or a single entry. | spec, spec file, doc |
+| **spec** | The DSDS specification itself - this repo, the schema files, and the site that publishes them. | (never a document) |
+| **section** | One member of an entry's `sections[]`. | block, documentBlock, chunk |
+| **field** | A named slot on an object. | property, key, attribute |
+| **kind** | The discriminator value that says which shape an entry or section is. | type, variant |
+| **item** | One member of a section's `items[]`. | entry, rule, criterion |
+| **conforming consumer** | Anything that reads a document - a renderer, an agent, a site generator. | tool, reader, client, parser, renderer |
+| **conforming producer** | Anything that writes a document. | generator, author tool, writer |
+| **conforming validator** | Anything that checks a document against the schema and the rule catalog. | linter, checker |
+
+<!-- /dsds:terms -->
 
 ## Documentation
 
@@ -106,7 +134,7 @@ node scripts/validate/validate.js my-system.dsds.yaml
 
 If your system is split across files via `rel: file`, cross-file `to:` refs are resolved automatically, bounded to the directory of the file you validate (and its subdirectories — not a parent or cousin directory). An otherwise-unresolved target reports as a warning, not a hard failure — add `--strict` (`npm run validate -- --strict`) to promote those to failures once your project is clean.
 
-Reference `https://designsystemdocspec.org/v0.20.1/dsds.bundled.yaml` from your DSDS files via the `$schema` keyword for editor autocompletion and inline validation.
+Reference `https://designsystemdocspec.org/v0.20.2/dsds.bundled.yaml` from your DSDS files via the `$schema` keyword for editor autocompletion and inline validation.
 
 For document structure, composing hand-split fragments (`scripts/tools/compose.js`), and authoring narrative pages with schema-driven property tables, see the **[Quick Start docs page](https://designsystemdocspec.org/quickstart.html)** and [How the schema is organized](https://designsystemdocspec.org/schema.html#how-the-schema-is-organized).
 
@@ -120,19 +148,19 @@ There's no single version field — every `schema/**/*.schema.yaml` file's own `
 # 1. Make schema changes under schema/, add examples/ + examples/invalid/ fixtures as needed.
 # 2. Add a CHANGELOG entry.
 # 3. Commit both — --tag below requires a clean working tree.
-npm run bump-version 0.20.1 -- --tag   # rewrite, bundle, sync skills, build, check, commit, tag
-git push && git push origin v0.20.1     # review first, then push
+npm run bump-version 0.20.3 -- --tag   # rewrite, bundle, sync skills, build, check, commit, tag
+git push && git push origin v0.20.3     # review first, then push
 ```
 
 Without `--tag`, the same steps run one at a time, manually:
 
 ```bash
-npm run bump-version 0.20.1     # rewrites every version reference, bundles, syncs skill versions
+npm run bump-version 0.20.3     # rewrites every version reference, bundles, syncs skill versions
 npm run build                   # publishes a new site/dist/v<new-version>/
 npm run check                   # must pass before committing
-git add -A && git commit -m "v0.20.1"
-git tag -a v0.20.1 -m "v0.20.1"
-git push && git push origin v0.20.1
+git add -A && git commit -m "v0.20.3"
+git tag -a v0.20.3 -m "v0.20.3"
+git push && git push origin v0.20.3
 ```
 
 Use `npm run bump-version <version> -- --dry-run` to preview changes first, or `--help` for the rest of the flags.
@@ -149,7 +177,7 @@ For a documentation-only edit (no schema/example changes), just commit the `site
 
 ## Contributing
 
-This is an early-stage specification (currently DSDS 0.20.1). Feedback and contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for what a rule, example, or schema change needs to land, and [SECURITY.md](SECURITY.md) to report a vulnerability.
+This is an early-stage specification (currently DSDS 0.20.2). Feedback and contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for what a rule, example, or schema change needs to land, and [SECURITY.md](SECURITY.md) to report a vulnerability.
 
 ### Contributors
 

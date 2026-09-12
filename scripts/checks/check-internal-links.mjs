@@ -2,7 +2,8 @@
 /**
  * Regression guard for this repo's own internal links: every markdown `[text](target)` link
  * and bare `https://designsystemdocspec.org/...` URL in README.md, AGENTS.md,
- * site/content/**\/*.mdx, and schema/conformance-rules.yaml, resolved against the already-built
+ * site/content/**\/*.mdx, schema/conformance-rules.yaml, and .agents/skills/*\/SKILL.md,
+ * resolved against the already-built
  * site/dist/ (run `npm run build` first). Exists because a page restructure silently breaks
  * links nothing else catches. Does not check external links, versioned schema/bundle artifact
  * URLs (/v<n>/...), or README/AGENTS.md's own bare `#anchor` links (those are GitHub's own
@@ -17,6 +18,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..", "..");
 const DIST_DIR = path.join(ROOT, "site", "dist");
 const CONTENT_DIR = path.join(ROOT, "site", "content");
+const SKILLS_DIR = path.join(ROOT, ".agents", "skills");
 
 // Which built page a source file's own bare `#anchor` links resolve against. site/content/*.mdx
 // files compile 1:1 to a page of the same name except these entries.
@@ -96,6 +98,18 @@ function anchorExists(file, anchor) {
   return html.includes(`id="${anchor}"`) || html.includes(`anchor="${anchor}"`);
 }
 
+// Every SKILL.md under .agents/skills/. A skill directory with no SKILL.md is skipped rather
+// than reported: this guard is about links, and skill structure is sync-skill-versions.js's job.
+function collectSkillFiles() {
+  if (!fs.existsSync(SKILLS_DIR)) return [];
+  return fs
+    .readdirSync(SKILLS_DIR, { withFileTypes: true })
+    .filter((e) => e.isDirectory())
+    .map((e) => `${e.name}/SKILL.md`)
+    .filter((rel) => fs.existsSync(path.join(SKILLS_DIR, rel)))
+    .sort();
+}
+
 function collectMdxFiles(dir, base = "") {
   const out = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -118,6 +132,15 @@ const sources = [
   // Cites site pages when a release changed one, so a page rename can rot it the same way it
   // rots README. Its many /v<n>/ links are versioned artifacts, which isSiteDocLink() skips.
   { label: "CHANGELOG", path: path.join(ROOT, "CHANGELOG"), page: null },
+  // The agent skills. Read from a checkout or from GitHub, never rendered by this site
+  // (page: null), but every "consult the schema" pointer they give an agent is a
+  // designsystemdocspec.org URL, and nothing was checking them: all four shipped
+  // /entries-<kind> and /sections-<kind> links to pages this site has never published.
+  ...collectSkillFiles().map((rel) => ({
+    label: `.agents/skills/${rel}`,
+    path: path.join(SKILLS_DIR, rel),
+    page: null,
+  })),
   ...collectMdxFiles(CONTENT_DIR).map((rel) => ({
     label: `site/content/${rel}`,
     path: path.join(CONTENT_DIR, rel),

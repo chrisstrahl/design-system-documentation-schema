@@ -63,7 +63,7 @@ $defs:
     description: One lifecycle status, optionally scoped to a single platform.
     $comment: >-
       Factored out of `status` so the single-object and one-per-platform
-      list forms enforce exactly the same rules, including the
+      list forms enforce exactly the same shape, including the
       deprecated-needs-a-notice conditional below.
     allOf:
       - type: object

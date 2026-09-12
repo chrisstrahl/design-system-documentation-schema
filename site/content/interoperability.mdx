@@ -22,6 +22,8 @@ That is why a token entry has a `source` and no `value`, and why a component ent
 
 Every integration below is a field that exists today, not a plan. `rel` values come from [`common/ref`](schema.html#common-ref); the whole list is open, so an unlisted format still has a home.
 
+{/* dsds:interop-map */}
+
 | Layer | Format it interoperates with | The DSDS field |
 |---|---|---|
 | Token values, types, aliases | [DTCG](https://www.w3.org/community/reports/design-tokens/CG-FINAL-format-20251028/) (W3C Design Tokens) | A token entry's `source`; a theme's `source` |
@@ -34,6 +36,8 @@ Every integration below is a field that exists today, not a plan. `rel` values c
 | Distribution | npm, or any package registry | A component's `imports[].package`, or `rel: package` |
 | Editor validation of the DSDS file itself | [JSON Schema](https://json-schema.org/) draft 2020-12 | The document's own `$schema` key |
 | Anything not listed | Any vendor or tool | `$extensions`, keyed by namespace |
+
+{/* /dsds:interop-map */}
 
 ## Tokens — DTCG
 

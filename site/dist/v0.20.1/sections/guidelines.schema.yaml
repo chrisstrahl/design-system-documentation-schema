@@ -148,7 +148,7 @@ allOf:
               $comment: >-
                 A custom `kind` (ex: "acme.rule") can add its own typed
                 fields directly. A well-known kind like `guidelines` can't —
-                its items are closed so every tool that understands
+                its item shape is closed so every tool that understands
                 `guidelines` keeps understanding it — so this is the one way
                 to attach org-specific data (a rationale, a failure mode, an
                 internal ticket) to a single item without forking the kind.

@@ -4,6 +4,21 @@ All notable changes to the DSDS specification are documented in this file.
 
 ---
 
+## [0.20.2] — 2026-09-12
+
+Documentation, tooling and vocabulary — no schema shape change; a 0.20.1 document is a valid 0.20.2 document.
+
+- **[Style guide page](https://designsystemdocspec.org/style-guide)**, generated from STYLE_GUIDE.md.
+- **`DSDS-21`–`DSDS-23`** — advisory: entry order in `entries[]`, field order inside a nested shape, and `combos[]` grouped by subject then ordered by level.
+- **`dsds-lint`** — the advisory tier now ships in the published package, so a consumer gets documentation-quality feedback and not just pass/fail.
+- **One source per repeated table.** `schema/interop-map.yaml` feeds the interoperability table in README, AGENTS.md and the site; `schema/terms.yaml` feeds a new terms table in the same three places; AGENTS.md's two field envelopes are generated from the schema. `npm run check` fails if any copy drifts.
+- **Every schema definition is now routed to.** All 23 per-definition markdown mirrors are listed in `manifest.json` and `llms.txt`; previously 9 were and 14 were reachable from nothing.
+- **"Index of every normative statement" now holds every one** (2 → 15). It read `description` only; 14 statements lived in `$comment`.
+- Normative sentences name a declared conformance class instead of an undeclared "tool" or "renderer".
+- Schema `$id`s move to `/v0.20.2/`. `/v0.20.0/` and `/v0.20.1/` stay frozen at the bytes they shipped with.
+
+---
+
 ## [0.20.1] — 2026-09-08
 
 Documentation and tooling only — no schema shape change; a 0.20.0 document is a valid 0.20.1 document.

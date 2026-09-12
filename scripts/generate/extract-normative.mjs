@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Generates the normative-statements index for the site's Conformance page. DSDS keeps its
- * normative language (RFC 2119 MUST/SHOULD/MAY sentences) inside schema `description` strings,
+ * normative language (RFC 2119 MUST/SHOULD/MAY sentences) inside the schema's own text,
  * next to the structures that enforce it - deliberate, since prose separated from structure
  * drifts - but a citable spec still needs one place where every statement can be found. This
  * script derives that place: it walks every split schema, extracts each sentence carrying an
@@ -22,15 +22,14 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const yaml = require("js-yaml");
 
+import { syncRegion } from "./regions.mjs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..", "..");
 const SCHEMA_DIR = path.join(ROOT, "schema");
 const PAGE = path.join(ROOT, "site", "content", "conformance.mdx");
 
-// MDX comment syntax, not `<!-- -->` - this is substituted into conformance.mdx source before
-// MDX compilation, and a plain HTML comment isn't valid MDX.
-const BEGIN = "{/* dsds:normative-index */}";
-const END = "{/* /dsds:normative-index */}";
+const REGION = "normative-index";
 
 // Strongest keyword present classifies the statement; order matters so "MUST NOT" isn't
 // classified as "MUST".
@@ -54,6 +53,10 @@ function classify(sentence) {
 }
 
 // Walk a schema object collecting (jsonPath, description) pairs.
+// Collects both `description` and `$comment`. The page's heading promises "every normative
+// statement"; 11 of the 13 in the schema sat in `$comment`, invisible to an index that read
+// only `description`. Which container each came from is kept and rendered, because the two
+// mean different things - `description` is the spec text, `$comment` the reasoning beside it.
 function collectDescriptions(node, jsonPath, out) {
   if (Array.isArray(node)) {
     node.forEach((v, i) => collectDescriptions(v, `${jsonPath}/${i}`, out));
@@ -61,10 +64,13 @@ function collectDescriptions(node, jsonPath, out) {
   }
   if (!node || typeof node !== "object") return;
   if (typeof node.description === "string") {
-    out.push({ jsonPath, description: node.description });
+    out.push({ jsonPath, container: "description", description: node.description });
+  }
+  if (typeof node.$comment === "string") {
+    out.push({ jsonPath, container: "$comment", description: node.$comment });
   }
   for (const [k, v] of Object.entries(node)) {
-    if (k === "description") continue;
+    if (k === "description" || k === "$comment") continue;
     collectDescriptions(v, `${jsonPath}/${k}`, out);
   }
 }
@@ -104,7 +110,7 @@ function extract() {
     const descs = [];
     collectDescriptions(parsed, "", descs);
     const statements = [];
-    for (const { jsonPath, description } of descs) {
+    for (const { jsonPath, container, description } of descs) {
       let n = 0;
       for (const sentence of sentences(description)) {
         const level = classify(sentence);
@@ -115,6 +121,7 @@ function extract() {
           id: `${rel}§${loc}.${n}`,
           level,
           sentence,
+          container,
         });
         counts[level] += 1;
       }
@@ -139,8 +146,6 @@ function mdxEscape(text) {
 function renderIndex({ groups, counts }) {
   const total = Object.values(counts).reduce((a, b) => a + b, 0);
   const lines = [];
-  lines.push(BEGIN);
-  lines.push("");
   lines.push(
     `*Generated from the v{{VERSION}} schemas by \`scripts/generate/extract-normative.mjs\` — do not edit by hand. ` +
       `${total} statements: ${counts["MUST"]} MUST, ${counts["MUST NOT"]} MUST NOT, ` +
@@ -158,45 +163,28 @@ function renderIndex({ groups, counts }) {
     lines.push(`#### ${rel}`);
     lines.push("");
     for (const s of statements) {
-      lines.push(`- **${s.level}** — ${mdxEscape(s.sentence)} <small>\`${s.id}\`</small>`);
+      // Mark the container. A statement in `$comment` is still normative and still binds, but
+      // the spec's own rule is that `description` is where the rules live - so the index shows
+      // which ones are sitting in the wrong one rather than quietly flattening the difference.
+      const where = s.container === "$comment" ? " <small>(in `$comment`)</small>" : "";
+      lines.push(`- **${s.level}** — ${mdxEscape(s.sentence)} <small>\`${s.id}\`</small>${where}`);
     }
     lines.push("");
   }
-  lines.push(END);
   return lines.join("\n");
 }
 
 function main() {
   const check = process.argv.includes("--check");
-  if (!fs.existsSync(PAGE)) {
-    console.error(`✗ ${path.relative(ROOT, PAGE)} not found — create the Conformance page first.`);
-    process.exit(1);
-  }
-  const page = fs.readFileSync(PAGE, "utf-8");
-  const begin = page.indexOf(BEGIN);
-  const end = page.indexOf(END);
-  if (begin === -1 || end === -1) {
-    console.error(`✗ Marker comments missing in ${path.relative(ROOT, PAGE)}.`);
-    process.exit(1);
-  }
-  const generated = renderIndex(extract());
-  const updated = page.slice(0, begin) + generated + page.slice(end + END.length);
-
-  if (check) {
-    if (updated !== page) {
-      console.error(
-        "✗ Normative-statements index is out of date. Run `npm run generate` to regenerate.",
-      );
-      process.exit(1);
-    }
-    console.log("✓ Normative-statements index is up to date.");
-    return;
-  }
-  fs.writeFileSync(PAGE, updated, "utf-8");
-  const total = generated.split("\n- **").length - 1;
-  console.log(
-    `✓ Normative-statements index regenerated (${total} statements) in ${path.relative(ROOT, PAGE)}.`,
-  );
+  const rendered = renderIndex(extract());
+  const total = rendered.split("\n- **").length - 1;
+  syncRegion({
+    file: PAGE,
+    name: REGION,
+    render: () => rendered,
+    check,
+    label: `Normative-statements index (${total} statements)`,
+  });
 }
 
 main();

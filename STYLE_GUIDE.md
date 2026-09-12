@@ -6,13 +6,13 @@ None of this changes whether a document is valid. The schema accepts any order. 
 
 ## The schema is the style guide
 
-**Write in the order the schema lists them.** The order of properties and options in the schema reflect the guidelines' recommendations on how to organize your schema documents. When in doubt, copy how the schema does it.
+**Write in the order the schema lists them.** The order of fields and options in the schema reflects this guide's recommendation for how to organize a document. When in doubt, copy how the schema does it.
 
 ## The patterns behind these rules
 
 Everything below is one of a few ideas, applied to a different part of a document. Learn these and you can usually work out the specific rule.
 
-**Field order comes from the schema. List order comes from this guide.** Each schema follows the style guide for field order. Which entry, section, or item comes first in a list is something a schema can't express, so this guide describes it. 
+**Field order comes from the schema. List order comes from this guide.** Each schema follows the style guide for field order. Which entry, section, or item comes first in a list is something a schema can't express, so this guide describes it.
 
 **Broad to specific.** The widest thing leads: `guidelines` before `steps`, `when-to-use` before `how-to-use`, `for: all` before `for: agent`, a section about the whole entry before one about a single tag.
 
@@ -40,7 +40,7 @@ When a base document holds several entries, order the entries themselves by `kin
 2. **`token`:** Defines the attributes that themes and components are created from.
 3. **`theme`:** Built from tokens, so only makes sense to come after.
 4. **`component`:** Built from tokens and themes.
-5. **`entry`:** Always last since it can cover a broad set of topics. Feel free to add general onboarding docs after `system`.
+5. **`entry`:** Always last since it can cover a broad set of topics. Onboarding and overview content that wants to be read first belongs in the `system` entry's own sections — putting an `entry` ahead of the tokens and components is what `DSDS-21` reports.
 
 This follows the same idea as [§4](#4-sections): Broadest first, and follow the dependency chain. This _theoretically_ means that all prerequisite information is provided up front for an entry.
 
@@ -160,7 +160,7 @@ sections:
 
 ### An item's own fields
 
-Order an item's fields the way its own schema file lists them. 
+Order an item's fields the way its own schema file lists them.
 
 | Shape | Its schema file |
 |---|---|
@@ -180,7 +180,7 @@ should-not
 must-not
 ```
 
-Order items at the same level in whatever way aids comprehension. Ideally, group subject matter of the same level together. Don't alphabetize items that share a level—that's dumb.
+Order items at the same level in whatever way aids comprehension. Ideally, group subject matter of the same level together. Don't alphabetize items that share a level — that's an arbitrary order dressed up as a rule.
 
 ```yaml
 items:

@@ -2,7 +2,7 @@
 name: dsds-specs
 description: Everything about Design System Doc Spec (DSDS) — entry kinds, sections, schema structure, and how it fits into the ecosystem. Use when authoring, reviewing, or reasoning about DSDS specs and `*.dsds.yaml` files.
 metadata:
-  version: 0.20.1
+  version: 0.20.2
 ---
 
 # Design System Doc Spec (DSDS)
@@ -15,7 +15,7 @@ DSDS documents a graph of **entries** (a system, a component, a token, a theme, 
 
 When you need precise field-level details beyond this skill, consult these in order:
 
-1. **Bundled schema**: `https://designsystemdocspec.org/v0.20.1/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if installed as a dependency)
+1. **Bundled schema**: `https://designsystemdocspec.org/v0.20.2/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if installed as a dependency)
 2. **Schema architecture reference**: https://designsystemdocspec.org/schema#how-the-schema-is-organized (and [Conformance](https://designsystemdocspec.org/conformance) for conformance classes and the full rule catalog)
 3. **Quick start with examples**: https://designsystemdocspec.org/quickstart
    — and [STYLE_GUIDE.md](https://github.com/somerandomdude/design-system-documentation-schema/blob/main/STYLE_GUIDE.md)
@@ -27,9 +27,19 @@ When you need precise field-level details beyond this skill, consult these in or
 
 Key pages for field-level detail:
 
-- Entry docs: https://designsystemdocspec.org/entries-component, `/entries-token`, `/entries-theme`, `/entries-system`, `/entries-entry`
-- Section docs: https://designsystemdocspec.org/sections-definitions, `/sections-guidelines`, `/sections-steps`, `/sections-section`
-- Shared building blocks: https://designsystemdocspec.org/common-ref (the one pointer type), `/common-combo`, `/common-example`
+Each definition has its own small markdown mirror under `/schema/` — a few KB of field names,
+types, requiredness and descriptions for that one shape, in the order the schema declares them.
+Fetch one of these rather than the whole bundle when you need a single shape.
+
+- Entry kinds: https://designsystemdocspec.org/schema/entries-component.md, and the same path for
+  `entries-token`, `entries-theme`, `entries-system`, `entries-entry`
+- Section kinds: https://designsystemdocspec.org/schema/sections-guidelines.md, and the same for
+  `sections-definitions`, `sections-steps`, `sections-section`
+- Shared building blocks: https://designsystemdocspec.org/schema/common-ref.md (the one pointer
+  type), and the same for `common-combo`, `common-example`
+
+The Schema page carries the same content for a human reader, one anchor per definition — for
+example [/schema#entries-component](https://designsystemdocspec.org/schema#entries-component).
 
 ## Entry Kinds
 
@@ -57,7 +67,7 @@ description: A styled checkbox input for boolean or indeterminate selection.
 A **base document** (the root `index.dsds.yaml`, or any file meant to hold more than one entry) requires `schemaVersion`, `name`, and a non-empty `entries` array. System-wide facts live on that list's own `kind: system` entry:
 
 ```yaml
-schemaVersion: "0.20.1"
+schemaVersion: "0.20.2"
 name: Acme Design System
 
 entries:
@@ -103,7 +113,7 @@ Mark a section `for: agent` for firm, ready-to-act notes a person wouldn't need 
 
 ## Schema Validation
 
-The bundled schema is published at `https://designsystemdocspec.org/v0.20.1/dsds.bundled.schema.json`, using JSON Schema draft 2020-12. Validate with:
+The bundled schema is published at `https://designsystemdocspec.org/v0.20.2/dsds.bundled.schema.json`, using JSON Schema draft 2020-12. Validate with:
 
 ```bash
 npx dsds-validate <files-or-globs>
@@ -117,15 +127,15 @@ Fetch these pages when authoring specific pieces:
 
 | Topic | Reference |
 | --- | --- |
-| Component (sourceFiles, imports, traits, combos) | https://designsystemdocspec.org/entries-component |
-| Token | https://designsystemdocspec.org/entries-token |
-| Theme | https://designsystemdocspec.org/entries-theme |
-| System | https://designsystemdocspec.org/entries-system |
-| Definitions section | https://designsystemdocspec.org/sections-definitions |
-| Guidelines section | https://designsystemdocspec.org/sections-guidelines |
-| Steps section | https://designsystemdocspec.org/sections-steps |
-| The one pointer type | https://designsystemdocspec.org/common-ref |
-| Metadata | https://designsystemdocspec.org/metadata-entry-metadata |
+| Component (sourceFiles, imports, traits, combos) | https://designsystemdocspec.org/schema/entries-component.md |
+| Token | https://designsystemdocspec.org/schema/entries-token.md |
+| Theme | https://designsystemdocspec.org/schema/entries-theme.md |
+| System | https://designsystemdocspec.org/schema/entries-system.md |
+| Definitions section | https://designsystemdocspec.org/schema/sections-definitions.md |
+| Guidelines section | https://designsystemdocspec.org/schema/sections-guidelines.md |
+| Steps section | https://designsystemdocspec.org/schema/sections-steps.md |
+| The one pointer type | https://designsystemdocspec.org/schema/common-ref.md |
+| Metadata | https://designsystemdocspec.org/schema/metadata-entry-metadata.md |
 
 ## Gotchas
 

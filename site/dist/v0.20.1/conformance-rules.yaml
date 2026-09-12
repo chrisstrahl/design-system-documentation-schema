@@ -144,7 +144,7 @@
   note: >-
     Ported from origin/0.16.0's scripts/lint-docs.js, adapted to check
     sections[].items[].statement instead of the pre-0.20.0
-    documentBlocks/criteria layout.
+    documentBlocks/criteria shape.
 
 - id: DSDS-13
   name: token-description-restates-identifier
@@ -302,27 +302,25 @@
   description: >-
     Per STYLE_GUIDE.md §3, §4, §5 and §6, the fields of a `metadata` block,
     a section, a `guidelines`/`definitions`/`steps` item, a `combo` and a
-    `ref` each go in the order that thing's own schema file lists them. A
+    `ref` each go in the order that shape's own schema file lists them. A
     section is the one composition: `kind`, `for`, then the single field its
     kind adds (`framing` for guidelines, `ordered` for steps), then the rest
     of sections/section.schema.yaml's order.
   note: >-
     Reads every order out of the schema files at runtime, the way DSDS-17
     and DSDS-20 do, so this rule keeps no second copy of any order. Skips
-    `$extensions` subtrees: their contents are vendor data, not DSDS objects,
+    `$extensions` subtrees: their contents are vendor data, not DSDS shapes,
     and an object in there that happens to carry `href` is not a ref.
 
 - id: DSDS-23
   name: combo-order
   enforcement: advisory
-  title: An entry's `combos[]` don't keep one `subject` together, in `level` order.
+  title: An entry's `combos[]` aren't sorted by `subject`, then by `level`.
   description: >-
-    Per STYLE_GUIDE.md §6, every combo for one `subject` stays together in
-    `combos[]`, and within a subject they run in `level` order, so a reader
-    checking one trait or token finds all of its rules in one place.
+    Per STYLE_GUIDE.md §6, `combos[]` is sorted by `subject`, then by
+    `level` within one subject, so every rule about the same trait or token
+    sits together.
   note: >-
-    Grouping, not sorting. Which subject comes first is the author's call -
-    STYLE_GUIDE.md's global rule is "don't alphabetize", so this reports only a
-    subject that appears, stops, and appears again. `level` uses the order
+    `subject` sorts as a plain string comparison. `level` uses the order
     common/requirement-level.schema.yaml declares, the same order DSDS-19
     applies to guideline items.
