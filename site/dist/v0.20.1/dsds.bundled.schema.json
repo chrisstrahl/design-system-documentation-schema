@@ -335,7 +335,7 @@
                 }
               ],
               "description": "What kind of pointer this is, or a namespaced custom value.",
-              "$comment": "Grouped by purpose: `depends-on`, `composes`, `part-of`, `alternative-to`, `replaces`, `extends`, `implements`, and `relates-to` describe how things connect. `same-as` and `refines` describe how content is written. `lint-rule` and `test` describe how a rule is checked. `file`, `source`, `design`, `storybook`, `package`, `external-link`, and `contract` point outside this spec. `pairs-with` and `excludes` are a light note about two things combining. `see-also` is a generic \"worth reading too\" for when nothing more specific fits.\n`implements` is a real, working version of something more general. Such as a component implementing a pattern, or a platform build implementing a cross-platform one. Different from `composes` (\"built from these parts\"), and from `design`/`storybook` (which say what kind of thing this is, not why it's linked).\n`same-as` means this item repeats content declared once elsewhere, instead of restating it. Point `to` at \"<shared-id>#<item-id>\" and skip the item's own `statement`. Different from `refines` (a genuine restatement for a different reader) and `alternative-to` (one thing standing in for another, not the same thing).\n`refines` is an agent-only rule that sharpens a human-facing one; `to` names that rule's id. `lint-rule` and `test` point a rule at whatever actually checks it, usually a test file via `href`. For a stricter combination rule than `pairs-with`/`excludes` gives you, use a combo instead. `file` is also how a theme entry points at its real source file, instead of listing every token it changes.\nUse `refs` with `rel: source` for an entry's primary source file (see button.yaml's GitHub link) - every tool reading `common/ref` already understands it, unlike a custom field or `$extensions`. Exception: a component uses its own `sourceFiles` instead, since it's structured (one entry per platform) and what tooling already extracts an API from. `metadata.preview` and `examples[].ref` are for a sample, not the real source.\n`contract` points at an already-generated, machine-readable API contract document (props, slots, events, etc. in some standard, tool-readable shape) - not the source `sourceFiles` extracts from, and not any one specific format: DSDS doesn't parse or validate the target's contents, only points at it. A component uses its own `specs` for this rather than `refs`, the same way it uses `sourceFiles` instead of `rel: source`.\nNamespaced custom values (ex: \"acme.supersedes\") are allowed too.",
+              "$comment": "Grouped by purpose: `depends-on`, `composes`, `part-of`, `alternative-to`, `replaces`, `extends`, `implements`, and `relates-to` describe how things connect. `same-as` and `refines` describe how content is written. `lint-rule` and `test` describe how a rule is checked. `file`, `source`, `design`, `storybook`, `package`, `external-link`, and `contract` point outside this spec. `pairs-with` and `excludes` are a light note about two things combining. `see-also` is a generic \"worth reading too\" for when nothing more specific fits.\n`implements` is a real, working version of something more general. Such as a component implementing a pattern, or a platform build implementing a cross-platform one. Different from `composes` (\"built from these parts\"), and from `design`/`storybook` (which say what kind of thing this is, not why it's linked).\n`same-as` means this item repeats content declared once elsewhere, instead of restating it. Point `to` at \"<shared-id>#<item-id>\" and skip the item's own `statement`. Different from `refines` (a genuine restatement for a different reader) and `alternative-to` (one thing standing in for another, not the same thing).\n`refines` is an agent-only rule that sharpens a human-facing one; `to` names that rule's id. `lint-rule` and `test` point a rule at whatever actually checks it, usually a test file via `href`. For a stricter combination rule than `pairs-with`/`excludes` gives you, use a combo instead. `file` is also how a theme entry points at its real source file, instead of listing every token it changes.\nUse `refs` with `rel: source` for an entry's primary source file (see button.yaml's GitHub link) - every tool reading `common/ref` already understands it, unlike a custom field or `$extensions`. Exception: a component uses its own `sourceFiles` instead, since it's structured (one entry per platform) and what tooling already extracts an API from. `metadata.preview` and `examples[].ref` are for a sample, not the real source.\n`contract` points at an already-generated, machine-readable API contract document (props, slots, events, etc. in some standard, tool-readable format) - not the source `sourceFiles` extracts from, and not any one specific format: DSDS doesn't parse or validate the target's contents, only points at it. A component uses its own `specs` for this rather than `refs`, the same way it uses `sourceFiles` instead of `rel: source`.\nNamespaced custom values (ex: \"acme.supersedes\") are allowed too.",
               "example": "depends-on"
             },
             "role": {
@@ -517,12 +517,12 @@
             },
             "specs": {
               "$ref": "https://designsystemdocspec.org/v0.20.1/common/ref.schema.yaml#/$defs/list",
-              "description": "Machine-readable API contract(s) for this component (props, slots, events, etc.) in a standard, tool-readable shape.",
+              "description": "Machine-readable API contract(s) for this component (props, slots, events, etc.) in a standard, tool-readable format.",
               "$comment": "`specs` is different from `sourceFiles`. This points at an already-extracted contract document. It could be a a Custom Elements Manifest (https://github.com/webcomponents/custom-elements-manifest, a DS Contracts document (https://github.com/southleft/ds-contracts-poc), or your own format. The property accepts entry per platform or format, if more than one exists; use `role` to name the format when it isn't obvious from the file extension.",
               "example": [
                 {
-                  "rel": "contract",
                   "href": "./contracts/button.contract.json",
+                  "rel": "contract",
                   "role": "DS Contracts"
                 }
               ]
@@ -530,7 +530,7 @@
             "traits": {
               "type": "array",
               "description": "The component's variants and states. Each item is tagged `kind: boolean` or `kind: enum`, since the two carry genuinely different fields - an enum's own `values` list vs. a boolean's plain toggle.",
-              "$comment": "Tagged with `kind` (`anyOf`) because the two shapes genuinely differ, not just which optional fields happen to be filled in - compare `sections/steps.schema.yaml`'s and `sections/guidelines.schema.yaml`'s own items, which stay one flexible shape with no `kind` tag for exactly that reason.",
+              "$comment": "Tagged with `kind` (`anyOf`) because the two kinds genuinely differ, not just which optional fields happen to be filled in - compare `sections/steps.schema.yaml`'s and `sections/guidelines.schema.yaml`'s own items, which stay one flexible form with no `kind` tag for exactly that reason.",
               "minItems": 1,
               "items": {
                 "anyOf": [
@@ -813,7 +813,7 @@
       "$defs": {
         "dispatch": {
           "description": "Routes an entry to its own kind-specific schema by `kind` (`system`, `component`, `token`, `theme`), falling back to this open base for the generic `entry` kind or a namespaced custom kind.",
-          "$comment": "Routes an entry to its own entries/<kind>.schema.yaml by `kind`, falling back to this file (the open base) for the generic `entry` kind or a namespaced custom kind with no dedicated file. Used anywhere an entry is embedded (base.schema.yaml's own `entries`) instead of a bare $ref to this file, so the bundled schema enforces the same per-kind shape scripts/validate/validate.js does in JS.",
+          "$comment": "Routes an entry to its own entries/<kind>.schema.yaml by `kind`, falling back to this file (the open base) for the generic `entry` kind or a namespaced custom kind with no dedicated file. Used anywhere an entry is embedded (base.schema.yaml's own `entries`) instead of a bare $ref to this file, so the bundled schema enforces the same per-kind rules scripts/validate/validate.js does in JS.",
           "if": {
             "required": [
               "kind"
@@ -1087,7 +1087,7 @@
       "$defs": {
         "statusEntry": {
           "description": "One lifecycle status, optionally scoped to a single platform.",
-          "$comment": "Factored out of `status` so the single-object and one-per-platform list forms enforce exactly the same shape, including the deprecated-needs-a-notice conditional below.",
+          "$comment": "Factored out of `status` so the single-object and one-per-platform list forms enforce exactly the same rules, including the deprecated-needs-a-notice conditional below.",
           "allOf": [
             {
               "type": "object",
@@ -1574,7 +1574,7 @@
                   "$extensions": {
                     "$ref": "https://designsystemdocspec.org/v0.20.1/common/extensions.schema.yaml",
                     "description": "Escape hatch for tool data scoped to just this one guideline, keyed by namespace.",
-                    "$comment": "A custom `kind` (ex: \"acme.rule\") can add its own typed fields directly. A well-known kind like `guidelines` can't — its item shape is closed so every tool that understands `guidelines` keeps understanding it — so this is the one way to attach org-specific data (a rationale, a failure mode, an internal ticket) to a single item without forking the kind."
+                    "$comment": "A custom `kind` (ex: \"acme.rule\") can add its own typed fields directly. A well-known kind like `guidelines` can't — its items are closed so every tool that understands `guidelines` keeps understanding it — so this is the one way to attach org-specific data (a rationale, a failure mode, an internal ticket) to a single item without forking the kind."
                   }
                 },
                 "additionalProperties": false
@@ -1652,7 +1652,7 @@
         },
         "context": {
           "description": "What job this section is doing.",
-          "$comment": "Open, the same way `entry.kind`/`section.kind` are: one of the well-known values below, or a namespaced custom one (ex: \"acme.slots\"). Optional - a section with no stated `context` is just its kind's default shape. Named to match `metadata.context` (why this entry exists) - this is the same idea one level down, why this section exists. Lives on the shared base, not a single kind's file, since more than one kind can use it: a `definitions` section's anatomy table vs. glossary vs. prop list is the original case, but any section kind can be doing a distinguishable job its `title` alone doesn't make machine-readable.",
+          "$comment": "Open, the same way `entry.kind`/`section.kind` are: one of the well-known values below, or a namespaced custom one (ex: \"acme.slots\"). Optional - a section with no stated `context` is just its kind's default reading. Named to match `metadata.context` (why this entry exists) - this is the same idea one level down, why this section exists. Lives on the shared base, not a single kind's file, since more than one kind can use it: a `definitions` section's anatomy table vs. glossary vs. prop list is the original case, but any section kind can be doing a distinguishable job its `title` alone doesn't make machine-readable.",
           "oneOf": [
             {
               "type": "string",
@@ -1706,7 +1706,7 @@
       "$defs": {
         "dispatch": {
           "description": "Routes a section to its own kind-specific schema by `kind` (`definitions`, `guidelines`, `steps`), falling back to this open base for the generic `section` kind or a namespaced custom kind.",
-          "$comment": "Routes a section to its own sections/<kind>.schema.yaml by `kind`, falling back to this file (the open base) for the generic `section` kind or a namespaced custom kind with no dedicated file. Used anywhere a section is embedded (an entry's or a shared item's own `sections`) instead of a bare $ref to this file, so the bundled schema enforces the same per-kind shape scripts/validate/validate.js does in JS.",
+          "$comment": "Routes a section to its own sections/<kind>.schema.yaml by `kind`, falling back to this file (the open base) for the generic `section` kind or a namespaced custom kind with no dedicated file. Used anywhere a section is embedded (an entry's or a shared item's own `sections`) instead of a bare $ref to this file, so the bundled schema enforces the same per-kind rules scripts/validate/validate.js does in JS.",
           "if": {
             "required": [
               "kind"

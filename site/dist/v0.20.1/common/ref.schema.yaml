@@ -105,7 +105,7 @@ oneOf:
 
           `contract` points at an already-generated, machine-readable
           API contract document (props, slots, events, etc. in some
-          standard, tool-readable shape) - not the source `sourceFiles`
+          standard, tool-readable format) - not the source `sourceFiles`
           extracts from, and not any one specific format: DSDS doesn't
           parse or validate the target's contents, only points at it.
           A component uses its own `specs` for this rather than `refs`,

@@ -39,7 +39,7 @@ function loadCatalog() {
  * check implementations, exiting non-zero on drift in either direction. Two implementation
  * maps: IMPLEMENTATIONS runs once per entity via entriesIn(doc); DOCUMENT_IMPLEMENTATIONS
  * runs once per file against the raw parsed document, for rules about the document's own
- * top-level shape rather than anything inside one entry.
+ * top-level document rather than anything inside one entry.
  */
 function activeRules() {
   const catalog = loadCatalog();
@@ -134,7 +134,7 @@ const levelRank = enumRanker("common/requirement-level.schema.yaml", (d) => d);
 // STYLE_GUIDE.md §4's breadth scale has three tiers, not two: `when-to-use`, then
 // `how-to-use`, then a section that is really about one tag. The third isn't a field - it is
 // true when every item names the same tag - so unlike the other sorts it has to be read out of
-// the items rather than off the section's own shape.
+// the items rather than off the section's own fields.
 const TAG_TIER = FRAMING.values.length;
 
 // The tag a section is entirely about, or null. Two items minimum: a one-item section shares a
@@ -172,13 +172,13 @@ function describeAudience(section) {
 }
 
 // ---------------------------------------------------------------------------
-// STYLE_GUIDE.md §3/§4/§5/§6's orders, for the smaller shapes. Same approach as the entry
+// STYLE_GUIDE.md §3/§4/§5/§6's orders, for the smaller objects. Same approach as the entry
 // orders above: read out of the schema files, never transcribed.
 // ---------------------------------------------------------------------------
 
 const EXT_KEY = "$extensions";
 
-// A shape built from a shared file plus a more specific one, joined the way §1 joins an
+// An object built from a shared file plus a more specific one, joined the way §1 joins an
 // entry's: shared fields first, then the specific file's own, then `$extensions` last.
 function composedOrder(baseFile, memberFile) {
   const base = declaredProps(baseFile);
@@ -209,7 +209,7 @@ const REF_ORDER = Object.keys(
 );
 
 // §4: a section leads with `kind`, `for`, then the one field its kind adds, then the rest of
-// the shared order. The only shape whose two lists interleave rather than concatenate.
+// the shared order. The only object whose two lists interleave rather than concatenate.
 const SECTION_KIND_FIELD = { guidelines: "framing", steps: "ordered" };
 const SECTION_TAIL = declaredProps("sections/section.schema.yaml").filter(
   (k) => k !== "kind" && k !== "for",
@@ -359,11 +359,14 @@ const IMPLEMENTATIONS = {
   "section-order": (entry, emit) => {
     const sections = entry.sections;
     if (!Array.isArray(sections) || sections.length < 2) return;
+    // A section with no `kind` is read as the default its schema declares, so name that in the
+    // message instead of printing `undefined`.
+    const kindLabel = (s) => (s && s.kind !== undefined ? s.kind : `${SECTION_KIND.fallback} (defaulted)`);
     const kindInversion = firstInversion(sections, (s) => sectionKindRank(s.kind));
     if (kindInversion) {
       emit(
         "/sections",
-        `"${entry.id}" has a "${kindInversion[0].kind}" section before a "${kindInversion[1].kind}" section, out of STYLE_GUIDE.md's grouping — same-kind sections stay contiguous, ordered ${SECTION_KIND.values.join(", ")} (general to specific).`,
+        `"${entry.id}" has a "${kindLabel(kindInversion[0])}" section before a "${kindLabel(kindInversion[1])}" section, out of STYLE_GUIDE.md's grouping — same-kind sections stay contiguous, ordered ${SECTION_KIND.values.join(", ")} (general to specific).`,
       );
       return; // fix grouping first - the framing check below assumes the guidelines sections are already one contiguous run
     }
@@ -432,7 +435,7 @@ const DOCUMENT_IMPLEMENTATIONS = {
     }
   },
 
-  // STYLE_GUIDE.md §3/§4/§5/§6 - the field order of every shape nested inside an entry.
+  // STYLE_GUIDE.md §3/§4/§5/§6 - the field order of every object nested inside an entry.
   "nested-field-order": (doc, emit) => {
     const check = (label, pointer, obj, order) => {
       const present = Object.keys(obj).filter((k) => order.includes(k));
@@ -446,7 +449,7 @@ const DOCUMENT_IMPLEMENTATIONS = {
     };
 
     // Refs turn up all over an entry (`refs`, `related`, `extends`, `evidence`, `checks`,
-    // `specs`, `source`, …), so they're found by shape rather than by field name. `$extensions`
+    // `specs`, `source`, …), so they're found by what they contain rather than by field name. `$extensions`
     // is skipped: it holds vendor data, and an object in there carrying `href` is not a ref.
     const walkRefs = (node, pointer) => {
       if (!node || typeof node !== "object") return;
@@ -494,18 +497,30 @@ const DOCUMENT_IMPLEMENTATIONS = {
     for (const [entity, at] of entitiesWithPointers(doc)) {
       const combos = entity && entity.combos;
       if (!Array.isArray(combos) || combos.length < 2) continue;
+      // Contiguity, not a sort. STYLE_GUIDE.md's global rule is "don't alphabetize", and §6's
+      // reason for grouping by subject is that a reader checking one trait finds all its rules
+      // together - which a string sort is one way to achieve but not the requirement. So this
+      // only reports a subject that appears, stops, and appears again.
+      const seen = new Set();
+      for (let i = 0; i < combos.length; i++) {
+        const subject = String(combos[i] && combos[i].subject);
+        const prevSubject = i > 0 ? String(combos[i - 1].subject) : null;
+        if (subject !== prevSubject) {
+          if (seen.has(subject)) {
+            emit(
+              `${at}/combos`,
+              `subject "${subject}" appears again after another subject came in between — STYLE_GUIDE.md §6 keeps every combo for one subject together, so a reader checking one trait or token finds all of its rules in one place.`,
+            );
+            break;
+          }
+          seen.add(subject);
+        }
+      }
       for (let i = 1; i < combos.length; i++) {
         const prev = combos[i - 1];
         const next = combos[i];
-        const bySubject = String(prev && prev.subject).localeCompare(String(next && next.subject));
-        if (bySubject > 0) {
-          emit(
-            `${at}/combos`,
-            `subject "${prev.subject}" comes before "${next.subject}" — STYLE_GUIDE.md §6 sorts \`combos[]\` by \`subject\`, so every rule about one trait or token sits together.`,
-          );
-          break;
-        }
-        if (bySubject === 0 && levelRank(prev.level) > levelRank(next.level)) {
+        const sameSubject = String(prev && prev.subject) === String(next && next.subject);
+        if (sameSubject && levelRank(prev.level) > levelRank(next.level)) {
           emit(
             `${at}/combos`,
             `two combos share subject "${prev.subject}" but run level: ${prev.level} before level: ${next.level} — STYLE_GUIDE.md §6 orders them ${LEVEL.values.join(", ")} within one subject.`,
@@ -535,9 +550,21 @@ const DOCUMENT_IMPLEMENTATIONS = {
 // ---------------------------------------------------------------------------
 
 function main() {
+  // `--self-check` runs activeRules()'s catalog/implementation drift gate and stops. CI runs
+  // the findings pass under continue-on-error (they're advisory), which used to swallow this
+  // gate too - a catalog rule with no implementation only failed the build indirectly, via the
+  // prose-range guards. This mode is a separate, blocking step.
+  const selfCheckOnly = process.argv.includes("--self-check");
   const rules = activeRules();
+  if (selfCheckOnly) {
+    console.log(
+      `✓ All ${rules.length} advisory rule(s) in schema/conformance-rules.yaml have an ` +
+        `implementation in scripts/validate/lint-docs.js, and vice versa.`,
+    );
+    return;
+  }
 
-  const args = process.argv.slice(2);
+  const args = process.argv.slice(2).filter((a) => a !== "--self-check");
   const targets = args.length
     ? args.flatMap((t) => {
         const stat = fs.existsSync(t) && fs.statSync(t);

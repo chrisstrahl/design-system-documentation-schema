@@ -10,7 +10,7 @@ assignees: ""
 What can't be expressed today, or what's expressed in a way that causes
 real problems — with a concrete example of a document that needs this.
 
-**Proposed shape**
+**Proposed structure**
 A sketch of the field/rule, even a rough one. If it's a new field, which
 entry or section kind does it belong to, and why there rather than
 `$extensions`?

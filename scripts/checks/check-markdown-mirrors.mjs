@@ -37,8 +37,8 @@ function collectSchemaFiles() {
     const slug = group === "root" ? baseName : `${group}-${baseName}`;
     const title = raw.title || baseName;
 
-    // Same shape build-site.js's own discoverPages()/makePage() produces: one "def" per file
-    // (the resolved top-level shape, keyed by title) plus every local $defs entry.
+    // Same structure build-site.js's own discoverPages()/makePage() produces: one "def" per file
+    // (the resolved top-level definition, keyed by title) plus every local $defs entry.
     const defs = { [title]: resolveSchema(raw, schemaById) };
     for (const [defName, def] of Object.entries(raw.$defs || {})) {
       defs[defName] = def;

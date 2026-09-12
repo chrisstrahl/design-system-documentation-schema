@@ -13,7 +13,7 @@ DSDS is a **pre-1.0 draft**, maintained by one person, not a working group. Some
 A change is breaking if a document, tool, or workflow that worked before it ships stops working (or starts failing validation) after — not just a rename or removal. Concretely, all of the following count as breaking, even when they look like tightening rather than deleting:
 
 - Renaming, removing, or restructuring a field.
-- Adding a new required field to an existing shape.
+- Adding a new required field to something that already exists.
 - Narrowing an existing constraint — an enum losing a value, a pattern getting stricter, a type narrowing.
 - **Adding a new validator rule to `scripts/validate/validate.js`'s `DSDS-01`–`DSDS-11` catalog.** A document that validated cleanly yesterday can fail today with no schema change at all, because the new rule now runs against it. This is easy to overlook precisely because no field moved — treat a new conformance rule with the same weight as a schema change, because it has the same effect on existing documents.
 - Any change to what `npm run check` accepts that a previously-passing document, run today, would fail.
@@ -35,7 +35,7 @@ Pre-1.0, a minor release can carry a tightening or a breaking change with no dep
 
 From the point a form is scheduled for removal, DSDS commits to:
 
-1. Marking it deprecated in the schema — the standard JSON Schema `deprecated: true` annotation where the shape supports it, a `$comment` explaining the removal where it doesn't (e.g. a whole shape being replaced).
+1. Marking it deprecated in the schema — the standard JSON Schema `deprecated: true` annotation where the schema allows it, a `$comment` explaining the removal where it doesn't (e.g. a whole definition being replaced).
 2. Naming its replacement in the same schema description or `$comment` — never just "removed," always "removed, use X instead."
 3. Flagging it via `lint-docs.js` (a warning, never a build failure) so it shows up in CI before it disappears.
 4. Keeping it valid for at least one further minor release after the deprecation notice ships, before the removal that breaks it.
@@ -44,7 +44,7 @@ This is a process commitment, not yet a schema-level machine-readable one — a 
 
 ## Breaking-change windows
 
-Pre-1.0 breaking changes land batched into a named release, not trickled one field at a time across several minors — a single CHANGELOG entry and migration script to read, not several. When a breaking window is being prepared, it's announced on this page (what's changing, and the release it lands in) before that release ships, the same practice earlier 0.15.x releases followed. Each window ships with its own migration script, following `scripts/tools/migrate-to-0.20.js`'s shape: convert what can be converted automatically, preserve anything else under `$extensions["com.dsds.migration"]`, and print a warning for every case that needed a manual call.
+Pre-1.0 breaking changes land batched into a named release, not trickled one field at a time across several minors — a single CHANGELOG entry and migration script to read, not several. When a breaking window is being prepared, it's announced on this page (what's changing, and the release it lands in) before that release ships, the same practice earlier 0.15.x releases followed. Each window ships with its own migration script, following `scripts/tools/migrate-to-0.20.js`'s pattern: convert what can be converted automatically, preserve anything else under `$extensions["com.dsds.migration"]`, and print a warning for every case that needed a manual call.
 
 **No breaking window is currently open.** 0.20.0 was itself the last one — the entity/`documentBlocks` model's replacement — and the plan from here is additive releases (new optional fields, new fixtures, restored tooling) until the 1.0 criteria below are met.
 
@@ -54,7 +54,7 @@ Every schema file under `schema/` has comments explaining *why* it's shaped the 
 
 ## Migrating a 0.15.2 document
 
-`scripts/tools/migrate-to-0.20.js <files-or-dirs…> [--dry-run]` converts a 0.15.2 `.dsds.json` document (the entity/`documentBlocks` model) to a 0.20.0 `.dsds.yaml` one, following the CHANGELOG's own field-by-field mapping. It writes a new sibling file rather than overwriting the input, and it's best-effort, not a guarantee: a few 0.15.2 shapes (most notably the `api` block's inline property/event documentation) have no 0.20.0 equivalent to convert *to* — 0.20.0 points `sourceFiles` at real source instead of inlining an extracted API.
+`scripts/tools/migrate-to-0.20.js <files-or-dirs…> [--dry-run]` converts a 0.15.2 `.dsds.json` document (the entity/`documentBlocks` model) to a 0.20.0 `.dsds.yaml` one, following the CHANGELOG's own field-by-field mapping. It writes a new sibling file rather than overwriting the input, and it's best-effort, not a guarantee: a few 0.15.2 structures (most notably the `api` block's inline property/event documentation) have no 0.20.0 equivalent to convert *to* — 0.20.0 points `sourceFiles` at real source instead of inlining an extracted API.
 
 Anything the script can't place in a typed field is preserved under the migrated item's own `$extensions["com.dsds.migration"]` rather than dropped, and every such case — plus every genuinely manual decision, like an `alternatives` pointer that wasn't really id-shaped in the source, or a ref that pointed at a token-group's own id before its children flattened to top-level entries — prints as a `⚠` line in the script's own output. Run `npm run validate` on the result afterward.
 
@@ -84,7 +84,7 @@ A few fields are locked to a fixed list of values, because the number of possibl
 2. **A second independent tool exists** — at least one tool the spec authors don't maintain reads or writes DSDS documents for real.
 3. **The validator's extra rules stop changing** — `scripts/validate/validate.js`'s `DSDS-01`–`DSDS-11` (see the [rule catalog](conformance.html#rule-catalog)) stop being added or renamed release to release.
 
-Until then, the fixed lists above are the most stable part of the schema. Everything else can still change between minor versions, including the exact shape of any one `sections/*.schema.yaml` file.
+Until then, the fixed lists above are the most stable part of the schema. Everything else can still change between minor versions, including the exact fields in any one `sections/*.schema.yaml` file.
 
 ## Released versions never change
 

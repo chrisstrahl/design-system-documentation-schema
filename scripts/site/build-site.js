@@ -594,7 +594,7 @@ combos:
   metadata: {status: {status: stable}}
   items:
     - title: Note
-      body: Generic items have no fixed shape - use freeform for prose instead.
+      body: Generic items have no fixed fields - use freeform for prose instead.
   freeform:
     - title: Styles don't apply
       body: Confirm the base theme is imported before any component renders - a component's own CSS assumes the theme's custom properties already exist.
@@ -952,7 +952,7 @@ function renderDefinitionMarkdown(defName, defSchema, exampleData) {
   }
 
   // Bare string/enum def (e.g. a status vocabulary) — show the enum and stop,
-  // mirroring renderDefinition()'s early return for the same shape.
+  // mirroring renderDefinition()'s early return for the same case.
   if (defSchema.type === "string" && !defSchema.properties) {
     if (defSchema.enum) {
       lines.push("Allowed values:", "");
@@ -1548,7 +1548,7 @@ function buildManifest(pages, version) {
   const sectionPages = pages.filter((p) => p.group === "sections");
 
   // `schema` points at that kind's own split file, not the whole bundle, so a consumer wanting
-  // one kind's shape doesn't have to fetch and re-parse every other kind's too.
+  // one kind's fields doesn't have to fetch and re-parse every other kind's too.
   const entries = entryPages.map((page) => {
     const kind = page.filename.replace(/\.schema\.yaml$/, "");
     const anchor = `entries-${kind}`;
@@ -1583,7 +1583,7 @@ function buildManifest(pages, version) {
   const manifest = {
     schemaVersion: version,
     bundledSchema: `${SITE_URL}/v${version}/dsds.bundled.yaml`,
-    // dsds-mcp@0.4.0 added real 0.20.0 support (auto-detects document shape instead of
+    // dsds-mcp@0.4.0 added real 0.20.0 support (auto-detects document format instead of
     // hard-checking the renamed dsdsVersion field, which made 0.3.0 reject every valid document).
     // minVersion is the floor this repo has actually tested.
     mcp: {
@@ -1976,7 +1976,7 @@ async function build() {
   );
 
   // One small markdown file per schema file, alongside the big schema.md mirror, so a
-  // consumer wanting one kind's shape doesn't fetch the whole thing (minus the raw YAML dump).
+  // consumer wanting one kind's fields doesn't fetch the whole thing (minus the raw YAML dump).
   const perDefMarkdownDir = path.join(DIST_DIR, "schema");
   fs.mkdirSync(perDefMarkdownDir, { recursive: true });
 
@@ -2003,7 +2003,7 @@ async function build() {
 
   const schemaHeader = renderSub("header", {
     title: "Schema",
-    description_attr: ` description="${esc("Every DSDS schema definition, on one page: the base document, every entry kind, every section kind, and every shared common shape - each with a real, working example next to it.")}"`,
+    description_attr: ` description="${esc("Every DSDS schema definition, on one page: the base document, every entry kind, every section kind, and every shared building block - each with a real, working example next to it.")}"`,
     source_attr: "",
     badge: "",
   });

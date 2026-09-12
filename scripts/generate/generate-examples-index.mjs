@@ -29,7 +29,7 @@ const GROUP_BLURBS = {
   entries: "Standalone entry files, one per kind, plus the source/manifest/story files a couple of them point at.",
   quickstart: "The Quick Start guide's own snippets, one per step, building up from a bare base document to a described, related entry.",
   interop: "Worked pairs showing a DSDS entry pointing at a real DTCG token file or CEM manifest, instead of restating it.",
-  invalid: "One broken example per semantic rule (`DSDS-XX-*.yaml`) plus schema-shape fixtures (`schema-*.yaml`) — the negative-test corpus `scripts/validate/conformance-test.js` runs against.",
+  invalid: "One broken example per semantic rule (`DSDS-XX-*.yaml`) plus plain schema fixtures (`schema-*.yaml`) — the negative-test corpus `scripts/validate/conformance-test.js` runs against.",
   "anti-patterns": "Documents that validate cleanly and are still worth avoiding — the schema checks structure, not judgment. See each file's own leading comment.",
 };
 

@@ -44,13 +44,19 @@ jobs:
       # so the ordering trap is gone with it.
       - run: npm run check:all
 
+      # The advisory tier's drift gate, split out so it can block. Every advisory rule in
+      # schema/conformance-rules.yaml must have an implementation in lint-docs.js and vice
+      # versa. This used to run inside `npm run lint` below, where continue-on-error swallowed
+      # it: a catalog rule with no implementation failed the build only indirectly, if someone
+      # also happened to update a prose range. A missing implementation is a broken catalog,
+      # not a documentation warning, so it blocks.
+      - run: node scripts/validate/lint-docs.js --self-check
+
       # Advisory tier: documentation-quality warnings
       # (scripts/validate/lint-docs.js). A judgment call, not a build-blocking one -
       # it runs here so the warnings show up on every PR instead of only
       # when someone remembers, which is how the tier went missing in the
-      # first place. continue-on-error also covers lint's own
-      # catalog/implementation drift self-check, which does exit non-zero:
-      # worth seeing, not worth blocking a schema change on.
+      # first place. The drift gate above is the part that does block.
       - run: npm run lint
         continue-on-error: true
       # `npm run readability` (scripts/tools/readability-audit.mjs) is

@@ -6,7 +6,7 @@
 // enforce the same rules," not just "does mine pass on valid documents."
 //
 // The fixture contract (rejectedBy + errorAt): a fixture declares not just a rule id but *how*
-// it must fail - `# rejectedBy: schema` (a pure JSON Schema shape violation) or `# rejectedBy:
+// it must fail - `# rejectedBy: schema` (a pure JSON Schema violation) or `# rejectedBy:
 // semantic` (a hand-written DSDS-01-10 check), plus an optional `# errorAt: /json/pointer`
 // asserting *where*. Checking the rule id alone can't catch a fixture that starts failing for
 // the wrong reason - a schema change that accidentally makes an unrelated field reject the
@@ -46,8 +46,8 @@ function schemaErrors(errors) {
   return errors.filter((e) => !/^\[DSDS-\d+\]/.test(e));
 }
 
-// Every schema-shape error string follows "... schema: <instancePath> <message>" - extract
-// the instancePath back out rather than threading a structured error shape through validateDoc
+// Every schema-level error string follows "... schema: <instancePath> <message>" - extract
+// the instancePath back out rather than threading a structured error object through validateDoc
 // just for this. A fixture's `# errorAt:` comment should write the root pointer as "/", not "".
 function instancePathsIn(errors) {
   const paths = [];
@@ -117,7 +117,7 @@ for (const file of files) {
 }
 
 // Every semantic rule id the validator knows about should have at least one fixture. This
-// check only applies to DSDS-XX ids - schema-shape coverage has no finite catalog to check
+// check only applies to DSDS-XX ids - schema-level coverage has no finite catalog to check
 // against.
 const allIds = new Set(Object.values(RULES));
 const coveredIds = new Set(files.flatMap((f) => expectedIds(fs.readFileSync(path.join(FIXTURES_DIR, f), "utf8"))));

@@ -24,7 +24,7 @@ DSDS addresses that with a format that is:
 
 | Quality | What it means |
 |---|---|
-| **Structured** | Every section has a defined shape. Consumers know what to expect. |
+| **Structured** | Every section has a defined structure. Consumers know what to expect. |
 | **Machine-readable** | Tools can parse, generate, validate, and transform documentation. |
 | **Portable** | Documentation is decoupled from any specific tool or platform. |
 | **Extensible** | Vendor metadata can be added without breaking interoperability. |
@@ -57,7 +57,7 @@ Two pages on the site cover what it takes to follow the spec:
 
 If you're writing a tool, read the rules from [`schema/conformance-rules.yaml`](schema/conformance-rules.yaml) rather than from a page. `npm run check` keeps that file honest: for the semantic rules, every rule in the file has to exist in `scripts/validate/validate.js`, and every rule in the validator has to exist in the file.
 
-The last seven rules are focused on style/organization. `DSDS-17` through `DSDS-23` are suggestions on the ordering conventions in the **[Style guide](https://designsystemdocspec.org/style-guide)**, or [STYLE_GUIDE.md](STYLE_GUIDE.md) if you'd rather read it in the repo. What order an object's fields go in, and what order entries, sections, and guideline items come in. These four rules only warn. `npm run lint` prints them and still exits 0. Ignore all seven and your document still conforms.
+The last seven rules are focused on style/organization. `DSDS-17` through `DSDS-23` are suggestions on the ordering conventions in the **[Style guide](https://designsystemdocspec.org/style-guide)**, or [STYLE_GUIDE.md](STYLE_GUIDE.md) if you'd rather read it in the repo. What order an object's fields go in, and what order entries, sections, and guideline items come in. These seven rules only warn. `npm run lint` prints them and still exits 0. Ignore all seven and your document still conforms.
 
 > [!NOTE]
 > **Credit where due:** DSDS's conformance design follows thinking from the [Adobe Spectrum Design Data specification](https://opensource.adobe.com/spectrum-design-data/spec/). Props to them.

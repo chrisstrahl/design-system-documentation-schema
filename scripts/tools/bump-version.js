@@ -256,7 +256,7 @@ processFile(BUNDLE_SCRIPT, [
 // 2b. migrate-to-0.20.js's TARGET_VERSION - the `schemaVersion` it stamps onto every
 //     document it converts. It is a bare literal, not a URL, so nothing above caught it:
 //     the 0.20.1 bump left it at "0.20.0" and freshly-migrated documents claimed a version
-//     older than the spec they were migrated to. Harmless for validity (no shape change
+//     older than the spec they were migrated to. Harmless for validity (no schema change
 //     between those two) but wrong, and silently so.
 const MIGRATE_SCRIPT = path.join(ROOT, "scripts", "tools", "migrate-to-0.20.js");
 const MIGRATE_TARGET_REGEX = /(const TARGET_VERSION = ")[A-Za-z0-9.\-]+(")/;

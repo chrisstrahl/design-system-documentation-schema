@@ -37,7 +37,7 @@ const TOP_LINKS = [
 
 // Reference pages that belong to the spec but aren't part of the top nav's reading path -
 // cited constantly, read start to finish rarely, so they live in the footer instead. Same
-// shape as TOP_LINKS on purpose: check-docs-coverage.mjs asserts every page in both lists
+// fields as TOP_LINKS on purpose: check-docs-coverage.mjs asserts every page in both lists
 // actually got built, so a footer link can't rot into a 404 any more than a nav link can.
 const FOOTER_LINKS = [
   { label: "Conformance", href: "conformance.html", slug: "conformance" },

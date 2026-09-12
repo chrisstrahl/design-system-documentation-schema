@@ -17,7 +17,7 @@
       (adding a validator rule counts, even with no schema edit)
 - [ ] If this changes the document *model* (not just adds to it): I've
       enumerated every guard/fixture/skill/example that pointed at the old
-      shape and said, below, what happens to each (port or drop)
+      structure and said, below, what happens to each (port or drop)
 - [ ] I have **not** committed generated `site/dist/` output — it's
       git-ignored and rebuilt on deploy. The one exception is a release,
       which adds a new immutable `site/dist/v<version>/` directory
@@ -25,6 +25,6 @@
 ## If this changes the model
 
 <!--
-List every guard, fixture, skill, or example that referenced the old shape,
+List every guard, fixture, skill, or example that referenced the old structure,
 and what happens to it. Delete this section if not applicable.
 -->

@@ -5,8 +5,8 @@ name: Acme Design System
 entries:
   # System-wide facts (version, organization, url, license, platforms)
   # and system-wide documentation live on this entry's own metadata and
-  # sections - the same shapes every other entry uses, instead of a
-  # bespoke base-level shape.
+  # sections - the same fields every other entry uses, instead of a
+  # bespoke base-level object.
   - kind: system
     id: acme-design-system
     name: Acme Design System

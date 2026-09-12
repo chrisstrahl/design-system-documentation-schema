@@ -6,7 +6,7 @@ description: "What it means for a document to follow the DSDS spec: the four con
 
 # Conformance
 
-What it means for a document to follow the DSDS spec: every rule it enforces, and how each one is checked. For what might still change before 1.0, see [Stability](stability.html). For how the schema itself is organized — the shapes every entry, section, and reference is built from — see [How the schema is organized](schema.html#how-the-schema-is-organized).
+What it means for a document to follow the DSDS spec: every rule it enforces, and how each one is checked. For what might still change before 1.0, see [Stability](stability.html). For how the schema itself is organized — the building blocks every entry, section, and reference is built from — see [How the schema is organized](schema.html#how-the-schema-is-organized).
 
 The words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT**, and **MAY** have a specific meaning on this page and inside the DSDS schema files, as defined by [RFC 2119](https://www.rfc-editor.org/rfc/rfc2119) (updated by [RFC 8174](https://www.rfc-editor.org/rfc/rfc8174)). They only carry that meaning when written in capital letters.
 
@@ -27,7 +27,7 @@ A document that passes schema validation for the version named in its `schemaVer
 A tool or person that creates DSDS documents. A conforming producer:
 
 - MUST only create documents that follow the spec
-- MUST NOT use an outdated field or shape in new documents (old shapes are kept around only so existing documents keep working)
+- MUST NOT use an outdated field or structure in new documents (old ones are kept around only so existing documents keep working)
 - SHOULD record how a document was created, using `metadata.origin`
 
 ### Conforming consumer
@@ -43,7 +43,7 @@ A tool, renderer, or AI agent that reads DSDS documents. A conforming consumer:
 
 ### Conforming validator
 
-A tool that checks documents. A conforming validator MUST enforce both the schema itself (with format checks on) and the extra rules below (`DSDS-01`–`DSDS-11`). `scripts/validate/validate.js` is the reference implementation. Its [`examples/invalid/`](examples.html#invalid) folder holds one broken example per semantic rule (`DSDS-XX-*.yaml`) plus a set of schema-shape fixtures (`schema-*.yaml`, no rule id — a pure JSON Schema rejection) pinning constraints like enum casing, empty arrays, and `$extensions` namespacing. Every fixture declares its own contract in a leading comment — `# rejectedBy: schema|semantic`, plus `# expect: DSDS-XX` or `# errorAt: /json/pointer` as applicable — and `scripts/validate/conformance-test.js` confirms each one fails for the exact reason and at the exact layer it claims to, not just that it fails at all.
+A tool that checks documents. A conforming validator MUST enforce both the schema itself (with format checks on) and the extra rules below (`DSDS-01`–`DSDS-11`). `scripts/validate/validate.js` is the reference implementation. Its [`examples/invalid/`](examples.html#invalid) folder holds one broken example per semantic rule (`DSDS-XX-*.yaml`) plus a set of plain schema fixtures (`schema-*.yaml`, no rule id — a pure JSON Schema rejection) pinning constraints like enum casing, empty arrays, and `$extensions` namespacing. Every fixture declares its own contract in a leading comment — `# rejectedBy: schema|semantic`, plus `# expect: DSDS-XX` or `# errorAt: /json/pointer` as applicable — and `scripts/validate/conformance-test.js` confirms each one fails for the exact reason and at the exact layer it claims to, not just that it fails at all.
 
 ## Enforcement tiers
 
@@ -107,11 +107,11 @@ Versions through 0.15.2 used a three-digit catalog (`DSDS-001`–`DSDS-006` and 
 | `DSDS-20` | A base document's own top-level fields don't follow STYLE_GUIDE.md's field order. |
 | `DSDS-21` | A base document's `entries[]` aren't ordered by `kind`. |
 | `DSDS-22` | A nested object's fields don't follow the order its own schema file declares. |
-| `DSDS-23` | An entry's `combos[]` aren't sorted by `subject`, then by `level`. |
+| `DSDS-23` | An entry's `combos[]` don't keep one `subject` together, in `level` order. |
 
 {/* /dsds:rule-catalog */}
 
-`DSDS-06` and `DSDS-07` restore a cycle check the pre-0.20.0 spec had — nothing should point back at itself through a chain of `composes` or `depends-on` links. The 0.20.0 rewrite dropped it by accident; it's enforced by the validator's own code now, not the schema shape.
+`DSDS-06` and `DSDS-07` restore a cycle check the pre-0.20.0 spec had — nothing should point back at itself through a chain of `composes` or `depends-on` links. The 0.20.0 rewrite dropped it by accident; it's enforced by the validator's own code now, not the schema itself.
 
 ### Project-scope resolution
 

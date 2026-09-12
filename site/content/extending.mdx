@@ -1,7 +1,7 @@
 ---
 title: "Extending the schema — DSDS {{VERSION}}"
 slug: extending
-description: "Three ways to go beyond what the spec ships with — $extensions for tool-specific data, custom kinds for a document shape the spec doesn't have, and profiles for making an existing kind's optional fields required."
+description: "Three ways to go beyond what the spec ships with — $extensions for tool-specific data, custom kinds for a kind of document the spec doesn't have, and profiles for making an existing kind's optional fields required."
 ---
 
 # Extending the schema
@@ -11,7 +11,7 @@ DSDS ships with a fixed set of kinds, and a fixed set of fields on each. Sooner 
 | Mechanism | What it's for | Who else can read it |
 |---|---|---|
 | `$extensions` | Data a specific tool needs, attached to something the spec already models | Only the tool that owns the namespace — everyone else skips it, by design |
-| A custom kind | A document shape the spec has no name for at all | Nobody, unless you also publish the schema that defines it |
+| A custom kind | A kind of document the spec has no name for at all | Nobody, unless you also publish the schema that defines it |
 | A profile | Making an existing kind's *optional* fields required, for your own project | Everybody — the document is still fully standard DSDS |
 
 ## `$extensions`
@@ -24,7 +24,7 @@ Every top-level key under `$extensions` MUST be a dotted namespace (`com.figma`,
 
 A `guidelines` item only accepts a fixed set of fields — `statement`, `level`, `refs`, and a few others, nothing else. That's on purpose: any tool that understands the `guidelines` kind keeps understanding it, with no surprise fields to trip over. But until now, that also meant there was no way to attach a reason, or a documented failure case, to *one specific rule* — you'd either have to give up the well-known `guidelines` kind entirely (see [custom kinds](#custom-kinds) below), or wait for the spec itself to add a field that everyone else would then be stuck with too, whether they wanted it or not.
 
-`$extensions` on the item itself solves that without opening the shape up for everyone:
+`$extensions` on the item itself solves that without loosening the field for everyone:
 
 ```yaml
 sections:
@@ -54,9 +54,9 @@ name: Onboarding excerpt
 description: A short, reusable pull-quote of onboarding copy, shared across three different surfaces.
 ```
 
-A custom entry kind (`acme.excerpt` above) or a custom section kind (`acme.checklist`, say) is checked against the same **open** base every generic kind is — `entry.schema.yaml` for an entry, `section.schema.yaml` for a section. Open means genuinely open: no schema file exists for `acme.excerpt` in this repo, so nothing stops a misspelled field, or a value of the wrong type, from passing silently. If you want your custom kind to actually enforce a shape — required fields, no unexpected properties — you have to write and ship that schema file yourself, in your own copy of `scripts/validate/validate.js`'s schema folder. Neither DSDS itself, nor any other tool, will ever recognize a `kind: acme.excerpt` document as anything more than a set of open fields.
+A custom entry kind (`acme.excerpt` above) or a custom section kind (`acme.checklist`, say) is checked against the same **open** base every generic kind is — `entry.schema.yaml` for an entry, `section.schema.yaml` for a section. Open means genuinely open: no schema file exists for `acme.excerpt` in this repo, so nothing stops a misspelled field, or a value of the wrong type, from passing silently. If you want your custom kind to actually enforce anything — required fields, no unexpected properties — you have to write and ship that schema file yourself, in your own copy of `scripts/validate/validate.js`'s schema folder. Neither DSDS itself, nor any other tool, will ever recognize a `kind: acme.excerpt` document as anything more than a set of open fields.
 
-That's the tradeoff with a custom kind: total freedom over the shape, but total unfamiliarity to every other tool. It's the right choice for a document type that's genuinely yours and nobody else's. It's the wrong choice for making a kind the spec already defines stricter — for that, use a profile instead.
+That's the tradeoff with a custom kind: total freedom over the fields, but total unfamiliarity to every other tool. It's the right choice for a document type that's genuinely yours and nobody else's. It's the wrong choice for making a kind the spec already defines stricter — for that, use a profile instead.
 
 <ds-callout variant="warning" title="A custom kind isn't a lighter-weight profile:">
 
@@ -128,18 +128,18 @@ Before reaching for `$extensions`, a custom kind, or a profile, check this list 
 - **An anatomy diagram.** Anatomy is prose about parts, the same job `definitions` already does. Use a `definitions` section with `context: anatomy`.
 - **A `token-group` kind.** A group is a fact about its members, not a fourth kind. Set `metadata.group` on each token instead.
 - **Typed accessibility fields** (`wcagLevel`, ARIA facts). Treat accessibility guidance as ordinary guidance: a `guidelines` item with `evidence` pointing at the WCAG criterion, and `checks` pointing at the test that verifies it.
-- **Separate relationship/link/reference types.** One shape already covers it — `common/ref`: `to`/`href` plus `rel`.
+- **Separate relationship/link/reference types.** One type already covers it — `common/ref`: `to`/`href` plus `rel`.
 - **A migration guide.** Each schema file's own `$comment` carries the reasoning; the [`CHANGELOG`](https://github.com/somerandomdude/design-system-documentation-schema/blob/main/CHANGELOG) has the field-by-field mapping.
 
 Still missing something after checking this list? That's what the rest of this page is for:
 
 - **A rationale or failure-mode field on a guideline item** — this is exactly what item-level [`$extensions`](#extensions) is for.
-- **Anything else genuinely absent** — a custom kind, or a profile, depending on whether you're naming a new document shape or tightening an existing one.
+- **Anything else genuinely absent** — a custom kind, or a profile, depending on whether you're naming a new kind of document or tightening an existing one.
 
 ## Choosing between the three
 
 - **Attaching data a specific tool needs, to something the spec already models?** `$extensions`.
-- **Documenting something the spec has no shape for at all — and you're fine with no other tool understanding it?** A custom kind.
+- **Documenting something the spec has no place for at all — and you're fine with no other tool understanding it?** A custom kind.
 - **Making optional fields mandatory for your own project, without leaving standard DSDS?** A profile.
 
-You can combine them. A custom kind can carry its own `$extensions`. A profile can require that an `$extensions` namespace be present, the same way it requires any other field. Pick the smallest tool that solves your actual problem — reaching for a custom kind just to make one field required gives up far more (the entire fixed shape of the kind you moved away from) than it gains.
+You can combine them. A custom kind can carry its own `$extensions`. A profile can require that an `$extensions` namespace be present, the same way it requires any other field. Pick the smallest tool that solves your actual problem — reaching for a custom kind just to make one field required gives up far more (the entire fixed structure of the kind you moved away from) than it gains.

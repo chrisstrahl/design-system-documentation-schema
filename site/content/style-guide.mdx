@@ -144,9 +144,15 @@ sections:
   - kind: guidelines
     for: all
     title: Accessibility
-    items: [...]                    # every item here tagged "accessibility"
-                                    # about one tag, so it follows every
-                                    # how-to-use section regardless of `for`
+    items:                          # every item tagged "accessibility", so this
+      - level: must                 # section is about one tag: the narrowest
+        statement: Give it a name.  # tier, after every how-to-use section
+        checkedBy: assisted         # above whatever their `for` is
+        tags: [accessibility]
+      - level: must
+        statement: Keep focus visible.
+        checkedBy: assisted
+        tags: [accessibility]
 
   - kind: definitions
     context: anatomy
@@ -205,7 +211,9 @@ items:
 
 ### Combos: by subject, then level
 
-Combos sort by: **subject first, level second.** Every rule about one trait or token sits together, so a reader checking one of them finds the rest in the same place. Within one subject, `level` breaks the tie, in the order [§5](#5-section-items) uses for guideline items.
+Combos group by: **subject first, level second.** Keep every combo for one subject together, so a reader checking one trait or token finds all of its rules in one place. Within a subject, order them by `level`, as [§5](#5-section-items) does for guideline items.
+
+Which subject goes first is up to you — put the one that matters most where a reader will look first. Don't alphabetize, same as everywhere else.
 
 A combo reads as one sentence: this subject, at this strength, with these things. That's the order [`common/combo.schema.yaml`](/v{{VERSION}}/common/combo.schema.yaml) lists its fields in:
 
@@ -252,8 +260,10 @@ sections:
     items:
       - level: must
         statement: Keep label text to a single word or number.
+        checkedBy: manual
       - level: must
         statement: Pair with an accessible label when the badge conveys meaning color alone cannot.
+        checkedBy: assisted
       - level: should
         statement: Prefer the `dot` variant when the exact count isn't meaningful to the user.
 
@@ -263,6 +273,7 @@ sections:
     items:
       - level: must
         statement: Expose the badge's content to assistive technology even when visually decorative.
+        checkedBy: assisted
 
   - kind: definitions
     for: all
@@ -323,10 +334,10 @@ Every rule in this guide is checked except one, and that one can't be. The right
 | An item's own fields | [§5](#5-section-items) | `DSDS-22` |
 | Guideline items by `level` | [§5](#5-section-items) | `DSDS-19` |
 | A combo's own fields | [§6](#6-refs-and-combos) | `DSDS-22` |
-| `combos[]` sorted by subject, then level | [§6](#6-refs-and-combos) | `DSDS-23` |
+| Combos for one subject kept together, then by level | [§6](#6-refs-and-combos) | `DSDS-23` |
 | A ref's own fields | [§6](#6-refs-and-combos) | `DSDS-22` |
 | Order within one entry kind, or one `level` | [§1](#1-base-documents-and-shared-entries), [§5](#5-section-items) | can't be — it's a judgment call |
 
-**The tag tier reads the items.** Every other sort here looks at a field. `DSDS-18` decides whether a section is "about one tag" by intersecting its items' `tags`, which is the one judgment it makes from content rather than shape. It needs two items to say yes, so a section with a single tagged item is left alone.
+**The tag tier reads the items.** Every other sort here looks at a field. `DSDS-18` decides whether a section is "about one tag" by intersecting its items' `tags`, which is the one judgment it makes from what the items say rather than from the section's own fields. It needs two items to say yes, so a section with a single tagged item is left alone.
 
 **Field order has one source: the schema files.** The tables on the [Schema page](schema.html) are generated from each schema file's own order, `DSDS-17`, `DSDS-20` and `DSDS-22` read that same order when they run, and [§2](#2-entries) tells you to follow it. So you can read the authoring order off a property table, and the other way round.

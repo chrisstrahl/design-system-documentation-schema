@@ -1,6 +1,6 @@
 kind: entry
 # Was previously modeled as its own "chunk" node kind, with a bespoke
-# data.code shape (inline {code, language} or referenced {src, language}).
+# data.code form (inline {code, language} or referenced {src, language}).
 # Both turned out to duplicate things this spec already has: inline code
 # is exactly common/showcase.schema.yaml's `code` variant
 # (metadata.preview would use it), and a reference to an external file is

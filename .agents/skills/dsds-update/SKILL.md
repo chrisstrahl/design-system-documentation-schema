@@ -25,7 +25,7 @@ Modify an existing `.dsds.yaml` file.
 | New variant value | Top-level `traits` item with `kind: enum`, in its `values` array |
 | New state | Top-level `traits` item with `kind: boolean` |
 | Anatomy change | The `definitions` section titled "Anatomy" |
-| New accessibility requirement | A `guidelines` item (`context: how-to-use`), or a `definitions` section titled "Keyboard interactions" |
+| New accessibility requirement | A `guidelines` item in a `framing: how-to-use` section, or a `definitions` section titled "Keyboard interactions" |
 | Status change | `metadata.status` (always an object: `{status: "..."}`) |
 | New agent rule | A section with `for: agent` |
 
@@ -45,11 +45,11 @@ Modify an existing `.dsds.yaml` file.
   into an unreviewable diff.
 - When adding trait values, place them in logical order (not necessarily alphabetical) — the first value is implied as the default.
 - Update `metadata.status` if the change constitutes a breaking API modification.
-- If adding a new relationship, use `common/ref`'s one shape: `{to: "<id>", rel: "<depends-on|extends|alternative-to|composes|...>"}` for something in this document's own graph, or `{href: "<url>", rel: "..."}` for something outside it.
+- If adding a new relationship, use `common/ref`'s one form: `{to: "<id>", rel: "<depends-on|extends|alternative-to|composes|...>"}` for something in this document's own graph, or `{href: "<url>", rel: "..."}` for something outside it.
 
 ## Schema References
 
-When adding new sections or fields, verify the exact shape:
+When adding new sections or fields, verify the exact fields:
 
 - **Bundled schema**: `https://designsystemdocspec.org/v0.20.1/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if DSDS is installed as a dependency)
 - **Section reference**: `https://designsystemdocspec.org/sections-{kind}`

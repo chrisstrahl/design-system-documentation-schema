@@ -29,7 +29,7 @@ if (!fs.existsSync(EDGE_FN_PATH)) {
 const source = fs.readFileSync(EDGE_FN_PATH, "utf-8");
 const match = source.match(/const PAGE_MD_PATH = new Map\(\[([\s\S]*?)\]\);/);
 if (!match) {
-  console.error(`✗ Couldn't find PAGE_MD_PATH in ${path.relative(ROOT, EDGE_FN_PATH)} — has its shape changed?`);
+  console.error(`✗ Couldn't find PAGE_MD_PATH in ${path.relative(ROOT, EDGE_FN_PATH)} — has it moved or been renamed?`);
   process.exit(1);
 }
 

@@ -38,7 +38,7 @@ So treat these pointers like links in any other untrusted input. A relative path
 
 A conforming consumer MUST keep `$extensions` data it doesn't understand ([Conformance](conformance.html#conforming-consumer)). That way the data survives tools that don't know its namespace.
 
-Keeping data is not trusting it. Validation only proves the shape is well formed. It says nothing about whether the contents are safe to run, or to paste into a shell command, a prompt, or a query. Treat every `$extensions` value as untrusted data, whatever namespace it claims.
+Keeping data is not trusting it. Validation only proves a document is well formed. It says nothing about whether the contents are safe to run, or to paste into a shell command, a prompt, or a query. Treat every `$extensions` value as untrusted data, whatever namespace it claims.
 
 ## In practice
 

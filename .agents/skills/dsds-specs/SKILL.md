@@ -29,7 +29,7 @@ Key pages for field-level detail:
 
 - Entry docs: https://designsystemdocspec.org/entries-component, `/entries-token`, `/entries-theme`, `/entries-system`, `/entries-entry`
 - Section docs: https://designsystemdocspec.org/sections-definitions, `/sections-guidelines`, `/sections-steps`, `/sections-section`
-- Shared shapes: https://designsystemdocspec.org/common-ref (the one pointer type), `/common-combo`, `/common-example`
+- Shared building blocks: https://designsystemdocspec.org/common-ref (the one pointer type), `/common-combo`, `/common-example`
 
 ## Entry Kinds
 
@@ -82,7 +82,7 @@ Splitting a system across many files uses `refs` (`rel: file`) pointing at sibli
 Every entry's structured docs live in one `sections` array. Each section has a `kind` and a `for` (`human`, `agent`, or `all`, naming its audience):
 
 - **`definitions`** — term/definition pairs. Use for anatomy, naming conventions, or a prop/event list when there's no real source file to extract from.
-- **`guidelines`** — a `statement` paired with a `level` (`must`/`should`/`should-not`/`must-not`/`may`). Carries `context: when-to-use` (a fit judgment) or `how-to-use` (the default, an implementation rule).
+- **`guidelines`** — a `statement` paired with a `level` (`must`/`should`/`may`/`should-not`/`must-not`). Carries `framing: when-to-use` (a fit judgment) or `how-to-use` (the default, an implementation rule).
 - **`steps`** — an ordered procedure or unordered checklist.
 - **`section`** (generic) — for anything else, or purely `freeform` narrative prose.
 
@@ -133,4 +133,4 @@ Fetch these pages when authoring specific pieces:
 - `id` must match the filename without `.dsds.yaml` (e.g. `checkbox` → `checkbox.dsds.yaml`).
 - Requirement levels: `must`, `should`, `should-not`, `must-not`, `may` (lowercase, hyphenated — RFC 2119).
 - `metadata.status` is always an object: `{status: "stable"}`, optionally scoped with `platform`, `since`, `deprecationNotice`, `note`. There's no bare-string shorthand.
-- All pointers — dependencies, composition, citations, external links — use one shape: `common/ref` (`to` for this document's own graph, `href` for outside it, plus a `rel`). There's no separate "relationship" or "link" type.
+- All pointers — dependencies, composition, citations, external links — use one type: `common/ref` (`to` for this document's own graph, `href` for outside it, plus a `rel`). There's no separate "relationship" or "link" type.

@@ -45,14 +45,14 @@ binding.
   `/examples`), you don't have to know the `.md` URL at all: send
   `Accept: text/markdown` on the plain page URL and you get the mirror back
   directly, same URL either way.
-- **Need one kind's shape, not the whole schema?** `/schema.md` mirrors the
+- **Need one kind's fields, not the whole schema?** `/schema.md` mirrors the
   entire Schema page (~111 KB). `/schema/<kind-anchor>.md` (ex:
   `/schema/entries-component.md`, `/schema/sections-guidelines.md` — the
   same anchor manifest.json's `entries`/`sections` arrays already use) is
   the same content for that one definition alone, usually a few KB.
 - **MCP server** — `dsds-mcp` on npm wraps the schema and validation as MCP
   tools. `0.4.0` added real 0.20.0 support: `dsds_validate` auto-detects a
-  document's shape (0.20.0 YAML vs. legacy 0.15.2 JSON) rather than
+  document's format (0.20.0 YAML vs. legacy 0.15.2 JSON) rather than
   hard-checking the `dsdsVersion` field 0.20.0 renamed to `schemaVersion`,
   which is what made every earlier build reject every valid 0.20.0
   document. Run `npx dsds-mcp` (`minVersion: "0.4.0"`, per manifest.json's
@@ -73,9 +73,9 @@ Only the kind-specific fields beyond this envelope differ (a token's
 `tokenType`/`source`, a component's `sourceFiles`/`imports`/`traits`, a
 theme's `colorScheme`, and so on — see `entries/<kind>.schema.yaml` for
 exactly which fields each kind adds). Learn this envelope once and you can
-generalize across every entry kind without re-deriving its shape from
+generalize across every entry kind without re-deriving its fields from
 scratch each time. `entries/entry.schema.yaml` is the one source of truth for
-that shape and for the order the fields go in — the tooling reads both out of it
+those fields and the order they go in — the tooling reads both out of it
 instead of keeping a copy (see `declaredProps` in `scripts/lib.js`), so this is
 not a convention you have to infer from examples. `sections/section.schema.yaml` has the same
 role one level down: every section kind shares `kind`, `for`, `title`,

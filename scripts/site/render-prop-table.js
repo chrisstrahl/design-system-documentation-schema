@@ -36,7 +36,7 @@ const ENTRY_ENVELOPE = declaredProps("entries/entry.schema.yaml");
 // tables), and being unused it had silently gone stale - it was missing `context`,
 // which sections/section.schema.yaml has declared for a while. A dead constant that
 // disagrees with the schema is worse than no constant, because AGENTS.md pointed
-// readers at this file as the single source of truth for envelope shape. The schema
+// readers at this file as the single source of truth for the envelope's fields. The schema
 // file is that source; if a section-level omit list is ever needed, read it with
 // `declaredProps("sections/section.schema.yaml")` rather than re-transcribing it here.
 
@@ -101,7 +101,7 @@ function refFallbackLabel(ref) {
 }
 
 // ---------------------------------------------------------------------------
-// allOf resolution: most schema/ files declare their shape as `allOf: [{$ref: <base>}, {type:
+// allOf resolution: most schema/ files declare themselves as `allOf: [{$ref: <base>}, {type:
 // object, properties: {...}}]` rather than repeating the base's own fields. A property table
 // needs the flattened result, so this walks `allOf`, resolving `$ref` branches against the
 // schema registry and merging every branch's `properties`/`required` into one object.
@@ -242,7 +242,7 @@ function describeType(prop, defIndex = {}) {
     return parts.join(" | ");
   }
 
-  // allOf on a property (not a whole definition) - just describe it as an object shape.
+  // allOf on a property (not a whole definition) - just describe it as an object.
   if (prop.allOf) {
     return "object";
   }

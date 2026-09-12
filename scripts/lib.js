@@ -18,8 +18,13 @@ const exampleDirs = [
 // "not valid on its own yet" (the first step of a build-up that only gets a real `entries`
 // array at 03). Every other quickstart/*.yaml is standalone-valid and belongs in the sweep.
 const EXCLUDED_FROM_DEFAULT = new Set([path.join(rootDir, "examples/quickstart/01-base-document.yaml")]);
-// No docEntryDirs equivalent yet - the live site's own content isn't ported to the new schema.
-const docEntryDirs = [];
+// The repo's own dogfooding corpus: test/site-components documents this site's web components
+// as real 0.20.1 entries. `npm run check` already validates them, but they sat outside the lint
+// sweep, so a field-order regression in them was invisible to `npm run lint`.
+const docEntryDirs = [
+  path.join(rootDir, "test/site-components"),
+  path.join(rootDir, "test/site-components/components"),
+];
 
 // JSON_SCHEMA disables YAML's implicit !!timestamp type, which otherwise parses a bare
 // `2026-06-02` into a JS Date instead of the string isoDate.schema.yaml requires. Scoped to
@@ -142,13 +147,13 @@ function isBaseDoc(doc) {
 }
 
 // Every entity in a file, whether a standalone entry or a base document with several inline,
-// so callers don't need to special-case either shape. Includes `shared` alongside `entries`,
+// so callers don't need to special-case either form. Includes `shared` alongside `entries`,
 // since both share one id/refs/sections addressing space.
 function entriesIn(doc) {
   return isBaseDoc(doc) ? [...(doc.entries || []), ...(doc.shared || [])] : [doc];
 }
 
-// Finds every {to, rel} shaped object anywhere inside a value, regardless of what field it's
+// Finds every {to, rel} object anywhere inside a value, regardless of what field it's
 // under - one generic walk instead of a separate case for each place a ref can appear.
 // `combos` subjects/items (bare strings, not {to, rel} objects) are a deliberately different,
 // lighter pointer concept and aren't picked up here.

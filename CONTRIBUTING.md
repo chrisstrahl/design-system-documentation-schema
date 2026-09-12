@@ -58,7 +58,7 @@ change" section — adding a validator rule counts, even with no schema edit.
 
 This is the single question that would have caught most of what went wrong
 in the 0.20.0 rewrite: when a release changes how documents are shaped
-(not just adds to the existing shape), **enumerate every guard, fixture,
+(not just adds to what's already there), **enumerate every guard, fixture,
 skill, and example that pointed at the old model, and decide, in writing —
 in the PR description or a CHANGELOG note — whether each one ports or is
 dropped.** A dropped guard is a fine outcome. A guard nobody decided about
@@ -170,7 +170,7 @@ something fails.
 - Every schema file explains *why* it's shaped the way it is, in `$comment`,
   not just what it is — a future reader (including you, in six months)
   should be able to tell what the file replaced or why an alternative
-  shape was rejected.
+  was rejected.
 - README stays brief and current; it is not a place to duplicate content
   that belongs on the site or in the schema's own descriptions.
 - MDX content must never hardcode the current version — use `{{VERSION}}`.

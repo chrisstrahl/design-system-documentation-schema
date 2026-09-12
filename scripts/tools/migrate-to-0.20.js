@@ -67,7 +67,7 @@ function migrateMetadata(old, report, label) {
   if (!m || typeof m !== "object") return undefined;
   const out = {};
 
-  // status/since/deprecationNotice/note/platform are already a compatible shape, except
+  // status/since/deprecationNotice/note/platform are already compatible, except
   // 0.20.0 always requires the object form (no bare-string shorthand), and the per-platform
   // form handled below.
   if (typeof m.status === "string") {

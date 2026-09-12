@@ -41,7 +41,7 @@ sections:
             kind: image
             url: https://cdn.acme.example/ds/showcase/button-primary-surface.png
             alt: A toolbar with one filled primary button and two lower-emphasis secondary buttons.
-        # A guideline item's own shape is closed - not extensible the way
+        # A guideline item's own fields are closed - not extensible the way
         # an entry or a section is - so $extensions is the one way to
         # attach org-specific data (here, a rationale and a failure mode)
         # to a single rule without forking the guidelines kind itself.

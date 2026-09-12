@@ -189,8 +189,8 @@ function specUrl(relPath) {
 }
 
 // A branch is either a plain object schema or one that extends a shared base via allOf; the
-// discriminator field can live as a sibling of `allOf` (current shape) or inside one of its
-// array elements (older shape, kept as a fallback). Returns the branch's matching tag values,
+// discriminator field can live as a sibling of `allOf` (current form) or inside one of its
+// array elements (older form, kept as a fallback). Returns the branch's matching tag values,
 // or null if it has no such field.
 function branchDiscriminatorValues(branch, prop) {
   const candidates = [branch, ...(branch.allOf || [])];
@@ -310,7 +310,7 @@ function validateEntry(entry, errors, warnings, opts = {}) {
 
   if (!validate(entry)) {
     for (const err of validate.errors) {
-      // Per-trait shape errors are replaced below with discriminator-aware ones.
+      // Per-trait structure errors are replaced below with discriminator-aware ones.
       if (isComponent && err.instancePath.startsWith("/traits")) continue;
       if (NESTED_SECTION_ERROR.test(err.instancePath)) continue;
       errors.push(`entry "${entry.id}" schema: ${err.instancePath || "/"} ${err.message}`);
@@ -342,7 +342,7 @@ function validateShared(entry, errors, warnings, opts = {}) {
   validateFileRefs(entry, warnings, opts);
 }
 
-// Checks that can't be expressed as a single item's shape - they need to see across an
+// Checks that can't be expressed as a single item's own fields - they need to see across an
 // entry's sections (or its own top-level fields) at once.
 function validateSemanticRules(entry, errors) {
   const sections = entry.sections || [];
@@ -791,7 +791,7 @@ function validateDoc(doc, opts = {}) {
   const isBase = typeof doc.schemaVersion !== "undefined";
   // A root `dsdsVersion` with no `schemaVersion` is DSDS ≤0.15.2's old base-document marker
   // (renamed in 0.20.0); catch it here with a clear message instead of routing into
-  // validateEntry() and reporting confusing entry-shape errors.
+  // validateEntry() and reporting confusing entry-level errors.
   if (!isBase && doc && typeof doc === "object" && typeof doc.dsdsVersion !== "undefined") {
     errors.push(
       `this document targets DSDS ≤0.15.2; 0.20.0 renamed the root "dsdsVersion" field to "schemaVersion" (see the CHANGELOG's 0.20.0 entry for the rest of what changed). Rename the field, or run a 0.15.2-era validator against this document instead.`,

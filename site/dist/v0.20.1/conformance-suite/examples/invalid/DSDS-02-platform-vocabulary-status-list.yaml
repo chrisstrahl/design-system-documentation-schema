@@ -3,8 +3,8 @@
 #
 # The sibling DSDS-02 fixture pins the `sourceFiles` path. This one pins
 # `metadata.status`'s *list* form specifically: a status list exists to name
-# one platform per entry, so it is the shape most likely to carry a platform
-# value, and it was the one shape the rule missed — the check read
+# one platform per entry, so it is the form most likely to carry a platform
+# value, and it was the one form the rule missed — the check read
 # `.platform` straight off `metadata.status`, which only ever matched the
 # single-object form. A document exactly like this one validated clean.
 schemaVersion: "0.20.1"

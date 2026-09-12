@@ -9,7 +9,7 @@ layout: full
 
 ## What is DSDS?
 
-DSDS (Design System Doc Spec) is a YAML format for documenting design systems. It puts every piece of docs — components, tokens, themes, and anything else — in a machine-readable shape: a graph of **entries**, each carrying typed **sections**.
+DSDS (Design System Doc Spec) is a YAML format for documenting design systems. It puts every piece of docs — components, tokens, themes, and anything else — in a machine-readable form: a graph of **entries**, each carrying typed **sections**.
 
 Write your documents in YAML — every example on this site, the default `npm run check` sweep, and the tooling all assume it. The schema itself is written in [JSON Schema](https://json-schema.org/) (that's the language the *rules* are written in, a separate thing from the format your *documents* need to be in). Since YAML is a superset of JSON, a JSON document would technically still parse — but nothing in this repo discovers or exercises that path, so don't rely on it.
 
@@ -21,7 +21,7 @@ DSDS documents the *how and why* of your design system — not the token values 
 
 ### What you get
 
-- **Structured** — every section has a defined shape, no guessing
+- **Structured** — every section has a defined structure, no guessing
 - **Machine-readable** — tools can parse, generate, validate, and transform it
 - **Portable** — not locked to any docs tool or platform
 - **Extensible** — add vendor metadata without breaking compatibility

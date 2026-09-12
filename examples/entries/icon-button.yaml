@@ -6,7 +6,7 @@ kind: component
 #     doesn't exist yet, and a tool extracting props from sourceFiles
 #     has nothing to point at until there's a real file.
 #   - checkedBy: automated wired to a real, resolvable test, not just
-#     the shape of one (examples/invalid/DSDS-03-checked-by-needs-ref.yaml
+#     the form of one (examples/invalid/DSDS-03-checked-by-needs-ref.yaml
 #     shows the failure case; this is the same rule done right).
 id: icon-button
 name: Icon Button

@@ -13,7 +13,7 @@ sections:
     framing: when-to-use
     items:
       - level: should
-        statement: Use exactly once per page, as the top bar. It is deliberately flat rather than a sidebar — appropriate only while the site has a handful of top-level pages; a deeper page tree would need a different navigation shape entirely, not more nesting inside this component.
+        statement: Use exactly once per page, as the top bar. It is deliberately flat rather than a sidebar — appropriate only while the site has a handful of top-level pages; a deeper page tree would need a different navigation pattern entirely, not more nesting inside this component.
         checkedBy: manual
 
   - kind: guidelines

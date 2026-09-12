@@ -3,7 +3,7 @@
  * Generates site/content/style-guide.mdx from STYLE_GUIDE.md, so the guide is published on the
  * site without becoming a second copy of itself. STYLE_GUIDE.md stays the file people edit -
  * it's what README, the lint messages, and the rule catalog all cite - and this rewrites it
- * into the shape the site build expects.
+ * into the form the site build expects.
  *
  * Three things have to change on the way across:
  *   1. Frontmatter, which the root file has none of and every page needs.

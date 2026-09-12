@@ -6,7 +6,7 @@
 # (this directory's other token example) is the simple case, one flat token
 # with no aliasing; this is the harder one.
 #
-# 0.20.0 has no `token-group`/nested-children shape (that model flattened to
+# 0.20.0 has no `token-group`/nested-children concept (that model flattened to
 # top-level entries — see the CHANGELOG's 0.20.0 entry), so the alias
 # relationship nested-color.tokens.json's own `$value` expresses structurally
 # is restated here as an explicit `depends-on` ref between two flat token
