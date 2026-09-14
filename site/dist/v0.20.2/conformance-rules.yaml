@@ -23,9 +23,15 @@
   title: "A `checkedBy: automated` rule needs somewhere to actually run."
   description: >-
     A guideline item that claims `automated` verification must carry at
-    least one `refs` or `checks` entry with `rel: test` or `rel:
-    lint-rule`. Otherwise, "automated" is just an unverifiable label, not
-    a real connection to a check.
+    least one `refs` or `checks` entry with `rel: test`, `rel:
+    lint-rule`, or `rel: agent-test`. Otherwise, "automated" is just an
+    unverifiable label, not a real connection to a check.
+  note: >-
+    This only checks that a ref exists, not what it proves. A `rel:
+    agent-test` fixture's result is often a pass rate or a judged
+    rubric rather than a strict boolean (see common/ref.schema.yaml's
+    own note) - `checkedBy: assisted` is the more honest choice unless
+    the fixture's assertion really is deterministic pass/fail.
 
 - id: DSDS-04
   name: UNIQUE_ENTRY_ID

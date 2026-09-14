@@ -58,19 +58,19 @@ oneOf:
       rel:
         oneOf:
           - type: string
-            enum: [depends-on, composes, part-of, alternative-to, replaces, extends, implements, relates-to, same-as, refines, lint-rule, test, file, source, design, storybook, package, external-link, contract, pairs-with, excludes, see-also]
+            enum: [depends-on, composes, part-of, alternative-to, replaces, extends, implements, relates-to, same-as, refines, lint-rule, test, agent-test, file, source, design, storybook, package, external-link, contract, pairs-with, excludes, see-also]
           - $ref: https://designsystemdocspec.org/v0.20.2/common/id.schema.yaml#/$defs/namespaced
         description: What kind of pointer this is, or a namespaced custom value.
         $comment: >-
           Grouped by purpose: `depends-on`, `composes`, `part-of`,
           `alternative-to`, `replaces`, `extends`, `implements`, and
           `relates-to` describe how things connect. `same-as` and `refines`
-          describe how content is written. `lint-rule` and `test` describe
-          how a rule is checked. `file`, `source`, `design`, `storybook`,
-          `package`, `external-link`, and `contract` point outside this
-          spec. `pairs-with` and `excludes` are a light note about two
-          things combining. `see-also` is a generic "worth reading too"
-          for when nothing more specific fits.
+          describe how content is written. `lint-rule`, `test`, and
+          `agent-test` describe how a rule is checked. `file`, `source`,
+          `design`, `storybook`, `package`, `external-link`, and `contract`
+          point outside this spec. `pairs-with` and `excludes` are a light
+          note about two things combining. `see-also` is a generic "worth
+          reading too" for when nothing more specific fits.
 
           `implements` is a real, working version of something more
           general. Such as a component implementing a pattern, or a
@@ -89,10 +89,22 @@ oneOf:
           `refines` is an agent-only rule that sharpens a human-facing
           one; `to` names that rule's id. `lint-rule` and `test` point a
           rule at whatever actually checks it, usually a test file via
-          `href`. For a stricter combination rule than
-          `pairs-with`/`excludes` gives you, use a combo instead. `file`
-          is also how a theme entry points at its real source file,
-          instead of listing every token it changes.
+          `href`. `agent-test` points at a different kind of check: not a
+          test of the design system's own code, but of whether an AI
+          coding agent, given this guideline, generates output that
+          follows it - a prompt-and-assertions fixture (ex: a promptfoo
+          config, or a prompt run through a harness like
+          design-system-agent-tester), not a unit test. Its target has
+          no fixed format; DSDS only names the pointer's kind, the same
+          way `test` doesn't mandate a test framework. Its result is
+          often a pass rate across repeated runs or a judged rubric, not
+          a strict boolean, so `agent-test` more often backs
+          `checkedBy: assisted` than `automated` - reserve `automated`
+          for the narrower case where the fixture's own assertion really
+          is deterministic pass/fail. For a stricter combination rule
+          than `pairs-with`/`excludes` gives you, use a combo instead.
+          `file` is also how a theme entry points at its real source
+          file, instead of listing every token it changes.
 
           Use `refs` with `rel: source` for an entry's primary source
           file (see button.yaml's GitHub link) - every tool reading
