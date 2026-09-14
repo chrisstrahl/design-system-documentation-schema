@@ -36,8 +36,7 @@ allOf:
           properties:
             platform:
               $ref: https://designsystemdocspec.org/v0.20.2/common/id.schema.yaml
-              description: The platform or framework this interface applies to.
-              $comment: When the document declares a `metadata.platforms` list, this MUST be one of its entries.
+              description: The platform or framework this interface applies to. When the document declares a `metadata.platforms` list, this MUST be one of its entries.
               example: react
             file:
               $ref: https://designsystemdocspec.org/v0.20.2/common/ref.schema.yaml
@@ -57,8 +56,7 @@ allOf:
           properties:
             platform:
               $ref: https://designsystemdocspec.org/v0.20.2/common/id.schema.yaml
-              description: The platform this applies to.
-              $comment: When the document declares a `metadata.platforms` list, this MUST be one of its entries.
+              description: The platform this applies to. When the document declares a `metadata.platforms` list, this MUST be one of its entries.
               example: react
             code:
               type: string

@@ -1,7 +1,12 @@
 $schema: https://json-schema.org/draft/2020-12/schema
 $id: https://designsystemdocspec.org/v0.20.2/sections/guidelines.schema.yaml
 title: GuidelinesSection
-description: Rules for an entry. How to use it and when it is the right choice. Each item pairs a rule with why it exists.
+description: >-
+  Rules for an entry. When and how to use it. Each item pairs a rule with why it
+  exists. When an item carries a `level` and a ref but no `statement`, a conforming
+  consumer SHOULD show the level and the link rather than rendering it as empty
+  content. An author who expects a person to read the guideline without following
+  the link SHOULD add a `statement` instead.
 $comment: >-
   The same structure covers both a how-to-build rule and a when-to-use
   judgment. Only `framing` is different (`framing: when-to-use` for a
@@ -27,13 +32,8 @@ $comment: >-
   An `external-link` item with no `statement` (just `level` plus the
   `refs` entry) is intentional, not a gap: it says "this rule exists,
   at this strictness, tracked in another system" without restating text
-  that lives there. It's genuinely unreadable on its own - there is no
-  local summary to fall back on - so a reader who wants the actual rule
-  has to follow the link. A conforming consumer SHOULD show the level and the link
-  clearly (not hide a level-with-nothing-under-it as if it were
-  empty content), and an author who expects a person to read the
-  guideline without following the link SHOULD add a `statement` instead
-  of leaving this form as the only text.
+  that lives there. It's unreadable on its own—a reader will have to
+  follow the link to access the rule.
 
 allOf:
   - $ref: https://designsystemdocspec.org/v0.20.2/sections/section.schema.yaml
@@ -72,8 +72,8 @@ allOf:
           properties:
             id:
               $ref: https://designsystemdocspec.org/v0.20.2/common/id.schema.yaml
-              description: A stable id for this guideline, so another item, like an agent-only refinement or a checklist entry, can point at it.
-              $comment: You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule).
+              description: "A stable id for this guideline, so another item, like an agent-only refinement or a checklist entry, can point at it. `id` is optional, but a conforming consumer MUST derive one from this item's own text."
+              $comment: The derivation algorithm is in common/id.schema.yaml's own description.
             level:
               $ref: https://designsystemdocspec.org/v0.20.2/common/requirement-level.schema.yaml
             statement:
@@ -87,8 +87,8 @@ allOf:
               example: Limit each surface to one primary button.
             example:
               $ref: https://designsystemdocspec.org/v0.20.2/common/example.schema.yaml
-              description: An example illustrating this rule.
-              $comment: MUST reflect `level`. A `must-not` item's example MUST show what not to do.
+              description: "An example illustrating this rule. It MUST reflect `level`. A `must-not` item's example MUST show what not to do."
+              $comment: Matching `level` is why there's no separate pass/fail flag on an example.
             alternatives:
               $ref: https://designsystemdocspec.org/v0.20.2/common/ref.schema.yaml#/$defs/list
               description: "Pointers from this guideline to a better-suited alternative when this is a fit judgment."

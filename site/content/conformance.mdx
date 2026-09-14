@@ -205,29 +205,29 @@ A document with zero errors and zero warnings can still be bad documentation —
 
 ## Index of every normative statement
 
-Every RFC 2119 sentence (MUST, MUST NOT, SHOULD, SHOULD NOT, MAY) in the schema's own text — both `description` and `$comment` — extracted and indexed by `scripts/generate/extract-normative.mjs` directly from `schema/**/*.schema.yaml`, not hand-copied, and regenerated on every build (`npm run generate`, checked with `--check` in `generate:check`). A statement marked *(in `$comment`)* still binds, but it's in the container this spec reserves for reasoning rather than rules; those are the ones to move. Each statement's id is location-based (`<dir>/<file>§<jsonPath>.<n>`), so citing one and having the schema move underneath it is a visible, checkable break rather than a silent one.
+Every RFC 2119 sentence (MUST, MUST NOT, SHOULD, SHOULD NOT, MAY) in the schema's own text — both `description` and `$comment` — extracted and indexed by `scripts/generate/extract-normative.mjs` directly from `schema/**/*.schema.yaml`, not hand-copied, and regenerated on every build (`npm run generate`, checked with `--check` in `generate:check`). Every statement below is in a `description`, where this spec keeps its rules. `$comment` holds the reasoning beside them; a requirement that turns up there is marked *(in `$comment`)* and fails `npm run check`. Each statement's id is location-based (`<dir>/<file>§<jsonPath>.<n>`), so citing one and having the schema move underneath it is a visible, checkable break rather than a silent one.
 
 {/* dsds:normative-index */}
 
-*Generated from the v{{VERSION}} schemas by `scripts/generate/extract-normative.mjs` — do not edit by hand. 15 statements: 12 MUST, 1 MUST NOT, 2 SHOULD, 0 SHOULD NOT, 0 MAY.*
+*Generated from the v{{VERSION}} schemas by `scripts/generate/extract-normative.mjs` — do not edit by hand. 16 statements: 12 MUST, 1 MUST NOT, 3 SHOULD, 0 SHOULD NOT, 0 MAY.*
 
 ### common
 
 #### common/extensions
 
-- **MUST** — Each top-level key MUST be a dotted namespace, like `com.acme`, matching the Design Tokens Community Group's own `$extensions` convention. <small>`common/extensions§(root).1`</small> <small>(in `$comment`)</small>
+- **MUST** — Each top-level key MUST be a dotted namespace, like `com.acme`, matching the Design Tokens Community Group's own `$extensions` convention. <small>`common/extensions§(root).1`</small>
 
 #### common/id
 
-- **MUST** — A section item's own `id` is always optional to write, but a conforming consumer MUST be able to address every item. <small>`common/id§(root).1`</small> <small>(in `$comment`)</small>
-- **MUST** — When an item has no `id`, a conforming consumer MUST derive one so content has a consistent id. <small>`common/id§(root).2`</small> <small>(in `$comment`)</small>
+- **MUST** — A section item's own `id` is optional, but a conforming consumer MUST be able to address every item. <small>`common/id§(root).1`</small>
+- **MUST** — When an item has no `id`, consumers MUST derive one from the item's own text so content has a consistent id. <small>`common/id§(root).2`</small>
 
 ### entries
 
 #### entries/component
 
-- **MUST** — When the document declares a `metadata.platforms` list, this MUST be one of its entries. <small>`entries/component§[allOf][1].sourceFiles.items.platform.1`</small> <small>(in `$comment`)</small>
-- **MUST** — When the document declares a `metadata.platforms` list, this MUST be one of its entries. <small>`entries/component§[allOf][1].imports.items.platform.1`</small> <small>(in `$comment`)</small>
+- **MUST** — When the document declares a `metadata.platforms` list, this MUST be one of its entries. <small>`entries/component§[allOf][1].sourceFiles.items.platform.1`</small>
+- **MUST** — When the document declares a `metadata.platforms` list, this MUST be one of its entries. <small>`entries/component§[allOf][1].imports.items.platform.1`</small>
 
 ### metadata
 
@@ -238,27 +238,28 @@ Every RFC 2119 sentence (MUST, MUST NOT, SHOULD, SHOULD NOT, MAY) in the schema'
 
 #### metadata/system-metadata
 
-- **MUST** — When this list is present, every other `platform` value used anywhere in the document MUST match one of these. <small>`metadata/system-metadata§[allOf][1].platforms.1`</small> <small>(in `$comment`)</small>
+- **MUST** — When this list is present, every other `platform` value used anywhere in the document MUST match one of these. <small>`metadata/system-metadata§[allOf][1].platforms.1`</small>
 
 ### sections
 
 #### sections/definitions
 
-- **MUST** — You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule). <small>`sections/definitions§[allOf][1].items.items.id.1`</small> <small>(in `$comment`)</small>
+- **MUST** — `id` is optional, but a conforming consumer MUST derive one from this item's own text. <small>`sections/definitions§[allOf][1].items.items.id.1`</small>
 
 #### sections/guidelines
 
-- **SHOULD** — A conforming consumer SHOULD show the level and the link clearly (not hide a level-with-nothing-under-it as if it were empty content), and an author who expects a person to read the guideline without following the link SHOULD add a `statement` instead of leaving this form as the only text. <small>`sections/guidelines§(root).1`</small> <small>(in `$comment`)</small>
-- **MUST** — You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule). <small>`sections/guidelines§[allOf][1].items.items.id.1`</small> <small>(in `$comment`)</small>
-- **MUST** — MUST reflect `level`. <small>`sections/guidelines§[allOf][1].items.items.example.1`</small> <small>(in `$comment`)</small>
-- **MUST** — A `must-not` item's example MUST show what not to do. <small>`sections/guidelines§[allOf][1].items.items.example.2`</small> <small>(in `$comment`)</small>
+- **SHOULD** — When an item carries a `level` and a ref but no `statement`, a conforming consumer SHOULD show the level and the link rather than rendering it as empty content. <small>`sections/guidelines§(root).1`</small>
+- **SHOULD** — An author who expects a person to read the guideline without following the link SHOULD add a `statement` instead. <small>`sections/guidelines§(root).2`</small>
+- **MUST** — `id` is optional, but a conforming consumer MUST derive one from this item's own text. <small>`sections/guidelines§[allOf][1].items.items.id.1`</small>
+- **MUST** — It MUST reflect `level`. <small>`sections/guidelines§[allOf][1].items.items.example.1`</small>
+- **MUST** — A `must-not` item's example MUST show what not to do. <small>`sections/guidelines§[allOf][1].items.items.example.2`</small>
 
 #### sections/section
 
-- **MUST** — You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule). <small>`sections/section§freeformEntry.id.1`</small> <small>(in `$comment`)</small>
+- **MUST** — `id` is optional, but conforming consumer MUST derive one from this item's own text. <small>`sections/section§freeformEntry.id.1`</small>
 
 #### sections/steps
 
-- **MUST** — You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule). <small>`sections/steps§[allOf][1].items.items.id.1`</small> <small>(in `$comment`)</small>
+- **MUST** — `id` is optional, but a conforming consumer MUST derive one from this item's own text. <small>`sections/steps§[allOf][1].items.items.id.1`</small>
 
 {/* /dsds:normative-index */}

@@ -22,8 +22,7 @@ allOf:
         description: The current version of the design system.
       platforms:
         type: array
-        description: The platforms this system ships on, for example "react" or "web-component".
-        $comment: When this list is present, every other `platform` value used anywhere in the document MUST match one of these.
+        description: "The platforms this system ships on, for example \"react\" or \"web-component\". When this list is present, every other `platform` value used anywhere in the document MUST match one of these."
         minItems: 1
         uniqueItems: true
         items:

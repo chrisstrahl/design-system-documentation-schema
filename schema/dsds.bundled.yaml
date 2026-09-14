@@ -150,9 +150,9 @@ $defs:
     $id: https://designsystemdocspec.org/v0.20.2/common/extensions.schema.yaml
     title: Extensions
     type: object
-    description: Escape hatch for tool data, or for an outside id that doesn't fit this schema's own id pattern.
+    description: Escape hatch for tool data, or for an outside id that doesn't fit this schema's own id pattern. Each top-level key MUST be a dotted namespace, like `com.acme`, matching the Design Tokens Community Group's own `$extensions` convention.
     $comment: |-
-      By convention, an outside id goes under `$extensions.<namespace>.displayName`. Worth noting: nothing enforces that specific key. Each top-level key MUST be a dotted namespace, like `com.acme`, matching the Design Tokens Community Group's own `$extensions` convention. This helps tools avoid unfamiliar data.
+      The namespace requirement is what lets a consumer skip data it doesn't recognize instead of guessing at it. By convention, an outside id goes under `$extensions.<namespace>.displayName`. Worth noting: nothing enforces that specific key.
       Recommended: add a `context` key under each namespace explaining what the extension is for and how a tool should use it.
     propertyNames:
       $ref: https://designsystemdocspec.org/v0.20.2/common/id.schema.yaml#/$defs/namespaced
@@ -169,10 +169,10 @@ $defs:
     $id: https://designsystemdocspec.org/v0.20.2/common/id.schema.yaml
     title: Id
     type: string
-    description: Lowercase, dash-separated segments, optionally chained with dots.
+    description: Lowercase, dash-separated segments, optionally chained with dots. A section item's own `id` is optional, but a conforming consumer MUST be able to address every item. When an item has no `id`, consumers MUST derive one from the item's own text so content has a consistent id. The `$comment` below gives the exact derivation.
     $comment: |-
       An id from an outside tool that doesn't fit this format goes under `$extensions.<namespace>.displayName` instead.
-      A section item's own `id` is always optional to write, but a conforming consumer MUST be able to address every item. An agent citing "why did you do that" needs something to cite, and same-as/refines/checks all point at an item by id. When an item has no `id`, a conforming consumer MUST derive one so content has a consistent id. Lowercase the item's own primary text field (a definitions item's `term`, a guidelines item's `statement`, a steps item's or freeform entry's `title`), replace each run of characters outside `[a-z0-9]` with a single dash, then trim any leading or trailing dash. This is the same rule this site's own `<ds-heading>` component already uses for a page's own heading anchors - one algorithm, not a new one invented for this.
+      An agent citing "why did you do that" needs something to cite, and same-as/refines/checks all point at an item by id. To derive one: lowercase the item's own primary text field (a definitions item's `term`, a guidelines item's `statement`, a steps item's or freeform entry's `title`), replace each run of characters outside `[a-z0-9]` with a single dash, then trim any leading or trailing dash.
     pattern: ^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)*$
     example: color.action.primary
     $defs:
@@ -374,8 +374,7 @@ $defs:
               properties:
                 platform:
                   $ref: https://designsystemdocspec.org/v0.20.2/common/id.schema.yaml
-                  description: The platform or framework this interface applies to.
-                  $comment: When the document declares a `metadata.platforms` list, this MUST be one of its entries.
+                  description: The platform or framework this interface applies to. When the document declares a `metadata.platforms` list, this MUST be one of its entries.
                   example: react
                 file:
                   $ref: https://designsystemdocspec.org/v0.20.2/common/ref.schema.yaml
@@ -396,8 +395,7 @@ $defs:
               properties:
                 platform:
                   $ref: https://designsystemdocspec.org/v0.20.2/common/id.schema.yaml
-                  description: The platform this applies to.
-                  $comment: When the document declares a `metadata.platforms` list, this MUST be one of its entries.
+                  description: The platform this applies to. When the document declares a `metadata.platforms` list, this MUST be one of its entries.
                   example: react
                 code:
                   type: string
@@ -965,8 +963,7 @@ $defs:
             description: The current version of the design system.
           platforms:
             type: array
-            description: The platforms this system ships on, for example "react" or "web-component".
-            $comment: When this list is present, every other `platform` value used anywhere in the document MUST match one of these.
+            description: The platforms this system ships on, for example "react" or "web-component". When this list is present, every other `platform` value used anywhere in the document MUST match one of these.
             minItems: 1
             uniqueItems: true
             items:
@@ -1006,8 +1003,8 @@ $defs:
               properties:
                 id:
                   $ref: https://designsystemdocspec.org/v0.20.2/common/id.schema.yaml
-                  description: An optional stable id, so a ref or a same-as pointer can address this term directly.
-                  $comment: You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule).
+                  description: An optional stable id, so a ref or a same-as pointer can address this term directly. `id` is optional, but a conforming consumer MUST derive one from this item's own text.
+                  $comment: The derivation algorithm is in common/id.schema.yaml's own description.
                 term:
                   type: string
                   description: The subject of the definition.
@@ -1037,13 +1034,13 @@ $defs:
     $schema: https://json-schema.org/draft/2020-12/schema
     $id: https://designsystemdocspec.org/v0.20.2/sections/guidelines.schema.yaml
     title: GuidelinesSection
-    description: Rules for an entry. How to use it and when it is the right choice. Each item pairs a rule with why it exists.
+    description: Rules for an entry. When and how to use it. Each item pairs a rule with why it exists. When an item carries a `level` and a ref but no `statement`, a conforming consumer SHOULD show the level and the link rather than rendering it as empty content. An author who expects a person to read the guideline without following the link SHOULD add a `statement` instead.
     $comment: |-
       The same structure covers both a how-to-build rule and a when-to-use judgment. Only `framing` is different (`framing: when-to-use` for a judgment). Named `framing`, not `context`, to stay clear of section.schema.yaml's own `context` field (what job this section is doing) - this one is narrower, just how-to-use vs. when-to-use.
       `statement` is required unless the item points somewhere else instead. Use `same-as` for a statement already declared once elsewhere (usually a shared item), or `external-link` for a rule tracked in another system, like a ticket. Both always go in `refs`.
       `alternatives`, `evidence`, `related`, and `checks` are `refs` lists with a specific name, so a tool can ask "what backs up this guideline" without checking every `refs` entry's `rel`. `refs` itself is the catch-all for anything that doesn't fit those four.
       `checkedBy` says what type of verification is used, not what does the checking. Point `checks` (rel: test or lint-rule) at the actual test or lint rule. `example` always matches `level`, so there's no need for a separate pass/fail flag.
-      An `external-link` item with no `statement` (just `level` plus the `refs` entry) is intentional, not a gap: it says "this rule exists, at this strictness, tracked in another system" without restating text that lives there. It's genuinely unreadable on its own - there is no local summary to fall back on - so a reader who wants the actual rule has to follow the link. A conforming consumer SHOULD show the level and the link clearly (not hide a level-with-nothing-under-it as if it were empty content), and an author who expects a person to read the guideline without following the link SHOULD add a `statement` instead of leaving this form as the only text.
+      An `external-link` item with no `statement` (just `level` plus the `refs` entry) is intentional, not a gap: it says "this rule exists, at this strictness, tracked in another system" without restating text that lives there. It's unreadable on its own—a reader will have to follow the link to access the rule.
     allOf:
       - $ref: https://designsystemdocspec.org/v0.20.2/sections/section.schema.yaml
       - type: object
@@ -1086,8 +1083,8 @@ $defs:
               properties:
                 id:
                   $ref: https://designsystemdocspec.org/v0.20.2/common/id.schema.yaml
-                  description: A stable id for this guideline, so another item, like an agent-only refinement or a checklist entry, can point at it.
-                  $comment: You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule).
+                  description: A stable id for this guideline, so another item, like an agent-only refinement or a checklist entry, can point at it. `id` is optional, but a conforming consumer MUST derive one from this item's own text.
+                  $comment: The derivation algorithm is in common/id.schema.yaml's own description.
                 level:
                   $ref: https://designsystemdocspec.org/v0.20.2/common/requirement-level.schema.yaml
                 statement:
@@ -1097,8 +1094,8 @@ $defs:
                   example: Limit each surface to one primary button.
                 example:
                   $ref: https://designsystemdocspec.org/v0.20.2/common/example.schema.yaml
-                  description: An example illustrating this rule.
-                  $comment: MUST reflect `level`. A `must-not` item's example MUST show what not to do.
+                  description: An example illustrating this rule. It MUST reflect `level`. A `must-not` item's example MUST show what not to do.
+                  $comment: Matching `level` is why there's no separate pass/fail flag on an example.
                 alternatives:
                   $ref: https://designsystemdocspec.org/v0.20.2/common/ref.schema.yaml#/$defs/list
                   description: Pointers from this guideline to a better-suited alternative when this is a fit judgment.
@@ -1281,8 +1278,8 @@ $defs:
         properties:
           id:
             $ref: https://designsystemdocspec.org/v0.20.2/common/id.schema.yaml
-            description: A stable id for linking to this entry directly, unique within the section.
-            $comment: You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule).
+            description: A stable id for linking to this entry directly, unique within the section. `id` is optional, but conforming consumer MUST derive one from this item's own text.
+            $comment: The derivation algorithm is in common/id.schema.yaml's own description.
             example: install
           title:
             type: string
@@ -1339,8 +1336,8 @@ $defs:
               properties:
                 id:
                   $ref: https://designsystemdocspec.org/v0.20.2/common/id.schema.yaml
-                  description: An optional stable id, so a ref or a same-as pointer can address this step directly.
-                  $comment: You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule).
+                  description: An optional stable id, so a ref or a same-as pointer can address this step directly. `id` is optional, but a conforming consumer MUST derive one from this item's own text.
+                  $comment: The derivation algorithm is in common/id.schema.yaml's own description.
                 optional:
                   type: boolean
                   default: false

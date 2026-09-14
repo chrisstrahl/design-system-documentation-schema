@@ -175,8 +175,29 @@ function renderIndex({ groups, counts }) {
 }
 
 function main() {
+// Placement gate. `description` is the spec text and `$comment` the reasoning beside it; a
+// requirement in the wrong one is invisible to anyone reading the rules and, until this index
+// learned to read both, invisible to the index too. 14 of 16 were in `$comment` when this was
+// added. Reported always, fatal under --check so it can't drift back.
+function reportMisplaced(groups) {
+  const misplaced = [];
+  for (const [rel, statements] of groups) {
+    for (const s of statements) if (s.container === "$comment") misplaced.push({ rel, s });
+  }
+  if (!misplaced.length) return true;
+  for (const { rel, s } of misplaced) {
+    console.error(
+      `✗ ${rel}: a ${s.level} statement is in \`$comment\`, which is for reasoning — move it to ` +
+        `\`description\`, where the rules live: "${s.sentence.slice(0, 80)}…"`,
+    );
+  }
+  return false;
+}
+
   const check = process.argv.includes("--check");
-  const rendered = renderIndex(extract());
+  const extracted = extract();
+  const placementOk = reportMisplaced(extracted.groups);
+  const rendered = renderIndex(extracted);
   const total = rendered.split("\n- **").length - 1;
   syncRegion({
     file: PAGE,
@@ -185,6 +206,9 @@ function main() {
     check,
     label: `Normative-statements index (${total} statements)`,
   });
+  // A misplaced requirement is a real defect, not a formatting nit, so it fails the build the
+  // same way a stale index does.
+  if (!placementOk && check) process.exit(1);
 }
 
 main();

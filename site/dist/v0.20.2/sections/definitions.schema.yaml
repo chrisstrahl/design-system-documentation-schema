@@ -32,8 +32,8 @@ allOf:
           properties:
             id:
               $ref: https://designsystemdocspec.org/v0.20.2/common/id.schema.yaml
-              description: An optional stable id, so a ref or a same-as pointer can address this term directly.
-              $comment: You can leave this out - a conforming consumer MUST derive one from this item's own text (see common/id.schema.yaml's own $comment for the rule).
+              description: "An optional stable id, so a ref or a same-as pointer can address this term directly. `id` is optional, but a conforming consumer MUST derive one from this item's own text."
+              $comment: The derivation algorithm is in common/id.schema.yaml's own description.
             term:
               type: string
               description: The subject of the definition.
