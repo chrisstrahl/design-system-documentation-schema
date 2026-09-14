@@ -25,9 +25,9 @@ $comment: >-
   is the catch-all for anything that doesn't fit those four.
 
   `checkedBy` says what type of verification is used, not what does the
-  checking. Point `checks` (rel: test or lint-rule) at the actual test
-  or lint rule. `example` always matches `level`, so there's no need
-  for a separate pass/fail flag.
+  checking. Point `checks` (rel: test, lint-rule, or agent-test) at the
+  actual test, lint rule, or agent eval. `example` always matches
+  `level`, so there's no need for a separate pass/fail flag.
 
   An `external-link` item with no `statement` (just `level` plus the
   `refs` entry) is intentional, not a gap: it says "this rule exists,
@@ -103,18 +103,19 @@ allOf:
                   rel: external-link
             checks:
               $ref: https://designsystemdocspec.org/v0.20.2/common/ref.schema.yaml#/$defs/list
-              description: "Pointers from this guideline to the lint rule or test that proves it (rel: test, rel: lint-rule)."
+              description: "Pointers from this guideline to the lint rule, test, or agent eval that proves it (rel: test, rel: lint-rule, rel: agent-test - ex: a promptfoo config)."
               example:
                 - href: ./tests/button.a11y.test.ts
                   rel: test
             checkedBy:
               type: string
               enum: [automated, assisted, manual]
-              description: How strict this rule's own verification is.
+              description: How this rule is own verified.
               $comment: >-
                 `automated`: a tool checks this on its own. Point
-                `checks` (rel: test, lint-rule) at the real tool that's
-                doing the checking.
+                `checks` (rel: test, lint-rule, agent-test - ex: a
+                promptfoo config) at the real tool that's doing the
+                checking.
 
                 `assisted`: a tool flags likely cases, but a person
                 makes the call.

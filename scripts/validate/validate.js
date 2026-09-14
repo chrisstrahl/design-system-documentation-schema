@@ -347,16 +347,16 @@ function validateShared(entry, errors, warnings, opts = {}) {
 function validateSemanticRules(entry, errors) {
   const sections = entry.sections || [];
 
-  // checkedBy: automated needs a refs/checks entry (rel: test/lint-rule) pointing at what runs it,
-  // so it isn't just an unverifiable label - doesn't require the target to actually resolve.
+  // checkedBy: automated needs a refs/checks entry (rel: test/lint-rule/agent-test) pointing at
+  // what runs it, so it isn't just an unverifiable label - doesn't require the target to resolve.
   for (const section of sections) {
     if (section.kind !== "guidelines") continue;
     for (const [i, item] of (section.items || []).entries()) {
       if (item.checkedBy !== "automated") continue;
-      const hasCheckRef = [...(item.refs || []), ...(item.checks || [])].some((r) => r.rel === "test" || r.rel === "lint-rule");
+      const hasCheckRef = [...(item.refs || []), ...(item.checks || [])].some((r) => r.rel === "test" || r.rel === "lint-rule" || r.rel === "agent-test");
       if (!hasCheckRef) {
         errors.push(
-          err(RULES.CHECKED_BY_NEEDS_REF, `entry "${entry.id}" ${section.kind} item[${i}] declares checkedBy: automated but has no refs/checks entry (rel: test, lint-rule) pointing at what actually runs the check`)
+          err(RULES.CHECKED_BY_NEEDS_REF, `entry "${entry.id}" ${section.kind} item[${i}] declares checkedBy: automated but has no refs/checks entry (rel: test, lint-rule, agent-test) pointing at what actually runs the check`)
         );
       }
     }
