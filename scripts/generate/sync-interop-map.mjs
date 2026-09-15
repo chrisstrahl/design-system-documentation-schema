@@ -23,10 +23,11 @@ import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
 import fs from "node:fs";
 
-import { syncRegion } from "./regions.mjs";
+import { syncRegion } from "./regions.mjs"
 
 const require = createRequire(import.meta.url);
 const yaml = require("js-yaml");
+const { validateConfig } = require("../config-schema.js");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..", "..");
@@ -53,20 +54,14 @@ const SURFACES = [
 ];
 
 function loadRows() {
-  const rows = yaml.load(fs.readFileSync(SOURCE, "utf-8"));
-  if (!Array.isArray(rows) || rows.length === 0) {
-    console.error(`✗ ${path.relative(ROOT, SOURCE)} has no rows.`);
-    process.exit(1);
-  }
-  for (const [i, row] of rows.entries()) {
-    for (const cell of ["layer", "format", "field"]) {
-      if (typeof row[cell] !== "string" || row[cell].trim() === "") {
-        console.error(`✗ ${path.relative(ROOT, SOURCE)} row ${i + 1} has no \`${cell}\`.`);
-        process.exit(1);
-      }
-    }
-  }
-  return rows;
+  // Shape, required keys and unexpected keys all come from
+  // scripts/config-schemas/interop-map.schema.json rather than a loop that only covers what
+  // someone remembered to check.
+  return validateConfig(
+    "interop-map",
+    yaml.load(fs.readFileSync(SOURCE, "utf-8")),
+    path.relative(ROOT, SOURCE)
+  );
 }
 
 // A cell can legitimately contain a pipe only if it's escaped; catching it here beats shipping

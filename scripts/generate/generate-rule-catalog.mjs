@@ -17,6 +17,7 @@ import { syncRegion } from "./regions.mjs";
 
 const require = createRequire(import.meta.url);
 const yaml = require("js-yaml");
+const { validateConfig } = require("../config-schema.js");
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..", "..");
@@ -40,7 +41,11 @@ function main() {
     console.error(`✗ ${path.relative(ROOT, CATALOG_PATH)} not found.`);
     process.exit(1);
   }
-  const rules = yaml.load(fs.readFileSync(CATALOG_PATH, "utf-8"));
+  const rules = validateConfig(
+    "conformance-rules",
+    yaml.load(fs.readFileSync(CATALOG_PATH, "utf-8")),
+    "schema/conformance-rules.yaml"
+  );
   if (!Array.isArray(rules) || rules.length === 0) {
     console.error(`✗ ${path.relative(ROOT, CATALOG_PATH)} has no rules.`);
     process.exit(1);

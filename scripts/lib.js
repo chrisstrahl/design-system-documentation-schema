@@ -11,13 +11,28 @@ const schemaDir = path.join(rootDir, "schema");
 const exampleDirs = [
   path.join(rootDir, "examples/entries"),
   path.join(rootDir, "examples/base"),
+  path.join(rootDir, "examples/base/starter-kit-fragments"),
   path.join(rootDir, "examples/quickstart"),
+  path.join(rootDir, "examples/quickstart/components"),
+  path.join(rootDir, "examples/anti-patterns"),
 ];
 
+// Files that are deliberately not standalone documents. Everything else under exampleDirs is,
+// and belongs in the sweep.
+//
 // 01-base-document.yaml is deliberately incomplete - the Quick Start page itself labels it
 // "not valid on its own yet" (the first step of a build-up that only gets a real `entries`
-// array at 03). Every other quickstart/*.yaml is standalone-valid and belongs in the sweep.
-const EXCLUDED_FROM_DEFAULT = new Set([path.join(rootDir, "examples/quickstart/01-base-document.yaml")]);
+// array at 03).
+//
+// The two starter-kit fragments are entry lists with no base-document wrapper: they exist to be
+// joined by scripts/tools/compose.js, and the composed result IS validated - see
+// check-composed-fragments.mjs. 00-system.dsds.yaml carries the wrapper and does validate alone,
+// so it stays in the sweep.
+const EXCLUDED_FROM_DEFAULT = new Set([
+  path.join(rootDir, "examples/quickstart/01-base-document.yaml"),
+  path.join(rootDir, "examples/base/starter-kit-fragments/01-tokens-and-themes.dsds.yaml"),
+  path.join(rootDir, "examples/base/starter-kit-fragments/02-components.dsds.yaml"),
+]);
 // The repo's own dogfooding corpus: test/site-components documents this site's web components
 // as real 0.20.1 entries. `npm run check` already validates them, but they sat outside the lint
 // sweep, so a field-order regression in them was invisible to `npm run lint`.

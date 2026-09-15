@@ -13,13 +13,22 @@
 const fs = require("fs");
 const path = require("path");
 const { rootDir, loadYaml } = require("../lib");
+const { validateConfig, assertUniqueBy } = require("../config-schema.js");
 
 const CATALOG_PATH = path.join(rootDir, "schema/conformance-rules.yaml");
 const VALIDATE_PATH = path.join(rootDir, "scripts/validate/validate.js");
 
 const ENFORCEMENT_VALUES = new Set(["structural", "semantic", "advisory", "none"]);
 
-const catalog = loadYaml(CATALOG_PATH);
+// Shape first. Nothing checked that a rule has a `title` or a well-formed `id`, so a rule
+// missing one rendered as `| \`DSDS-99\` | undefined |` on the published Conformance page while
+// the build stayed green.
+const catalog = assertUniqueBy(
+  validateConfig("conformance-rules", loadYaml(CATALOG_PATH), "schema/conformance-rules.yaml"),
+  "id",
+  "schema/conformance-rules.yaml"
+);
+assertUniqueBy(catalog, "name", "schema/conformance-rules.yaml");
 let ok = true;
 
 for (const rule of catalog) {

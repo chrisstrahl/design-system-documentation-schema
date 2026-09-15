@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DSDS rule catalog (repo config, not part of the published spec)",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "name",
+      "enforcement",
+      "title",
+      "description"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "pattern": "^DSDS-[0-9]{2}$",
+        "description": "Catalog id. Two digits, so DSDS-9 and DSDS-099 are both rejected."
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Implementation key. Casing follows the tier - see the allOf below."
+      },
+      "enforcement": {
+        "enum": [
+          "structural",
+          "semantic",
+          "advisory",
+          "none"
+        ]
+      },
+      "title": {
+        "type": "string",
+        "minLength": 1,
+        "description": "One line, rendered into the Conformance page's catalog table."
+      },
+      "description": {
+        "type": "string",
+        "minLength": 1
+      },
+      "note": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "enforcement": {
+              "const": "semantic"
+            }
+          },
+          "required": [
+            "enforcement"
+          ]
+        },
+        "then": {
+          "properties": {
+            "name": {
+              "pattern": "^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$",
+              "description": "A RULES.<NAME> key in scripts/validate/validate.js."
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "enforcement": {
+              "const": "advisory"
+            }
+          },
+          "required": [
+            "enforcement"
+          ]
+        },
+        "then": {
+          "properties": {
+            "name": {
+              "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+              "description": "An implementation key in scripts/validate/lint-docs.js."
+            }
+          }
+        }
+      }
+    ]
+  }
+}
