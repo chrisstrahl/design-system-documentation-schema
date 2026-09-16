@@ -42,7 +42,7 @@ imports:
       </ds-spec-nav>
 
 traits:
-  - kind: boolean
+  - traitType: state
+    kind: boolean
     id: open
     description: Whether the mobile links dropdown (a native popover, at ≤900px) is expanded. The bar itself never hides; only the links row changes presentation.
-    setBy: component

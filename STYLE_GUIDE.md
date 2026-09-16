@@ -68,6 +68,12 @@ Follow the high-level order:
 
 If a document is ordered differently, the `DSDS-17` warning prints the whole order it expected.
 
+### A trait's own fields
+
+A component's `traits` lead with `traitType`, then `kind`, then the rest of the order [`entries/component.schema.yaml`](schema/entries/component.schema.yaml) declares. `traitType` goes first because it answers the question a reader has: is this a variant the caller configures, or a state the component can be in? `kind` follows, saying whether the value is a `boolean` toggle or an `enum` with named `values`. The two are independent — `hover` is a boolean state, `size` an enum variant.
+
+`DSDS-22` checks this, along with the order of each value inside an `enum` trait. It reads both orders out of `entries/component.schema.yaml` at runtime, so this guide holds no second copy of either.
+
 ---
 
 ## 3. `metadata`
@@ -82,7 +88,7 @@ A `metadata` block joins two lists the same way an entry does: the fields every 
 
 A section leads with the fields that say what it is: `kind`, then `for`, then the one field its kind adds — `framing` for `guidelines`, `ordered` for `steps`. The rest follow in the order [`sections/section.schema.yaml`](schema/sections/section.schema.yaml) lists them.
 
-That's the same reason `kind` leads everywhere. These fields tell a reader what they're looking at before they read any of it, so they sit at the top where the reader already is.
+That's the same reason the identifying field leads everywhere. On an entry or a section that field is `kind`. On a component trait it's `traitType`, because there `kind` only says whether the value is a boolean or an enum, not what sort of trait you're reading. Either way the field tells a reader what they're looking at before they read any of it, so it sits at the top where the reader already is.
 
 ### Keep each kind together
 
@@ -107,7 +113,7 @@ Guidelines should lead with when to use, then describe how to use it. That's the
 
 1. **`framing: when-to-use`:** Does it make sense to use?
 2. **`framing: how-to-use`:** If so, how do you use it? Leaving `framing` out means this — it's the default that file declares.
-3. **Tagged guidelines:** A section counts as tagged when it has two or more items and every one of them names the same tag — the accessibility rules, say, or the mobile-only ones. Narrow instruction should follow general information, so these come last whatever their `framing` is. Two items are the minimum because one item always shares a tag with itself.
+3. **Tagged guidelines:** A section that declares `tags` — the accessibility rules, say, or the mobile-only ones. Narrow instruction should follow general information, so these come last whatever their `framing` is. The first tag is the scope; any others are just keywords.
 
 Sections in the same breadth tier are then ordered by how broad the audience is. The order [`sections/section.schema.yaml`](schema/sections/section.schema.yaml) lists its `for` values in:
 
@@ -135,10 +141,11 @@ sections:
   - kind: guidelines
     for: all
     title: Accessibility
-    items:                          # every item tagged "accessibility", so this
-      - level: must                 # section is about one tag: the narrowest
-        statement: Give it a name.  # tier, after every how-to-use section
-        checkedBy: assisted         # above whatever their `for` is
+    tags: [accessibility]
+    items:                          # `tags` above puts this in the narrowest
+      - level: must                 # tier: after every how-to-use section
+        statement: Give it a name.  # above, whatever their `for` is
+        checkedBy: assisted
         tags: [accessibility]
       - level: must
         statement: Keep focus visible.
@@ -286,7 +293,8 @@ specs:
   - href: ./contracts/badge.contract.json
     rel: contract
 traits:
-  - kind: enum
+  - traitType: variant
+    kind: enum
     id: variant
     description: Which visual form the badge takes.
     values:
@@ -317,6 +325,8 @@ Every rule in this guide is checked except one, and that one can't be. The right
 | A `shared` entry's own fields | [§1](#1-base-documents-and-shared-entries) | `DSDS-17` |
 | Entry order inside `entries[]` | [§1](#1-base-documents-and-shared-entries) | `DSDS-21` |
 | An entry's own fields | [§2](#2-entries) | `DSDS-17` |
+| A trait's own fields | [§2](#2-entries) | `DSDS-22` |
+| A trait value's own fields | [§2](#2-entries) | `DSDS-22` |
 | A `metadata` block's fields | [§3](#3-metadata) | `DSDS-22` |
 | A section's own fields | [§4](#4-sections) | `DSDS-22` |
 | Same-kind sections kept together | [§4](#4-sections) | `DSDS-18` |
@@ -329,6 +339,6 @@ Every rule in this guide is checked except one, and that one can't be. The right
 | A ref's own fields | [§6](#6-refs-and-combos) | `DSDS-22` |
 | Order within one entry kind, or one `level` | [§1](#1-base-documents-and-shared-entries), [§5](#5-section-items) | can't be — it's a judgment call |
 
-**The tag tier reads the items.** Every other sort here looks at a field. `DSDS-18` decides whether a section is "about one tag" by intersecting its items' `tags`, which is the one judgment it makes from what the items say rather than from the section's own fields. It needs two items to say yes, so a section with a single tagged item is left alone.
+**Every sort reads a field.** `DSDS-18` used to decide whether a section was "about one tag" by intersecting its items' `tags` — the one judgment it made from what the items said rather than from the section's own fields. It reads the section's own `tags` now, so adding a rule to a section no longer changes where the section has to sit.
 
 **Field order has one source: the schema files.** The tables on the [Schema page](https://designsystemdocspec.org/schema) are generated from each schema file's own order, `DSDS-17`, `DSDS-20` and `DSDS-22` read that same order when they run, and [§2](#2-entries) tells you to follow it. So you can read the authoring order off a property table, and the other way round.

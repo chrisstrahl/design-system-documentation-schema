@@ -48,14 +48,14 @@ imports:
       </ds-prop-table>
 
 traits:
-  - kind: boolean
+  - traitType: variant
+    kind: boolean
     id: required
     description: Marks a property row as required. Adds a plain-text "required" status next to the name — a fact about the field, not a colored badge.
-    setBy: consumer
-  - kind: boolean
+  - traitType: variant
+    kind: boolean
     id: conditional
     description: Marks a property row as conditionally required. Renders an "at least 1 required" badge (see ds-badge's experimental variant) instead of the plain "required" text.
-    setBy: consumer
 
 combos:
   - subject: required

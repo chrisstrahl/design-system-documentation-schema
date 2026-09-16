@@ -45,14 +45,14 @@ sourceFiles:
 
 imports:
   - platform: web-component
-    code: '<ds-code language="yaml">schemaVersion: "0.20.2"</ds-code>'
+    code: '<ds-code language="yaml">schemaVersion: "0.21.0"</ds-code>'
 
 traits:
-  - kind: boolean
+  - traitType: variant
+    kind: boolean
     id: inline
     description: Renders as an inline `<code>` span instead of a block, for short code references inside a sentence.
-    setBy: consumer
-  - kind: boolean
+  - traitType: variant
+    kind: boolean
     id: wrap
     description: Wraps long lines (white-space:pre-wrap) instead of the default horizontal-scrolling single-line-per-line layout.
-    setBy: consumer

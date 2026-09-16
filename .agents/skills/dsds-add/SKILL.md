@@ -2,7 +2,7 @@
 name: dsds-add
 description: Author a new Design System Doc Spec (DSDS) spec from component implementation, Figma design, or written requirements. Triggers on "add spec", "create spec", "new spec", "author spec", "spec from component", "spec from Figma".
 metadata:
-  version: 0.20.2
+  version: 0.21.0
 ---
 
 # Add a DSDS Spec
@@ -73,7 +73,7 @@ Include at minimum: a `guidelines` section (`framing: how-to-use`, the default) 
 
 ## Extraction Guidelines
 
-- **From code**: Point `sourceFiles` at the real file instead of hand-typing props — that's the whole point of the field. Map variant/state props → `traits` (`kind: enum` or `kind: boolean`). Map CSS parts or named sub-elements → a `definitions` section titled "Anatomy".
+- **From code**: Point `sourceFiles` at the real file instead of hand-typing props — that's the whole point of the field. Map variant/state props → `traits`, each tagged `traitType: variant` or `traitType: state`, with `kind: enum` or `kind: boolean` for the form its value takes. Map CSS parts or named sub-elements → a `definitions` section titled "Anatomy".
 - **From Figma**: Map component properties → `traits`, layer structure → a `definitions` section, variable bindings → token `refs`.
 - **From requirements**: Map acceptance criteria → `guidelines` items (`level` from RFC 2119: `must`/`should`/`should-not`/`must-not`/`may`), interaction requirements → a `definitions` section titled "Keyboard interactions" (term = key, definition = action).
 
@@ -81,7 +81,7 @@ Include at minimum: a `guidelines` section (`framing: how-to-use`, the default) 
 
 When unsure about fields or required properties, consult:
 
-- **Bundled schema**: `https://designsystemdocspec.org/v0.20.2/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if DSDS is installed as a dependency)
+- **Bundled schema**: `https://designsystemdocspec.org/v0.21.0/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if DSDS is installed as a dependency)
 - **One entry kind's fields**: `/schema/entries-<kind>.md` on this site — a few KB of field
   names, types, requiredness and descriptions for that kind alone, in the order the schema
   declares them. Prefer it over the whole bundle when you need one shape:

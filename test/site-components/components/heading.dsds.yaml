@@ -38,11 +38,11 @@ imports:
     code: <ds-heading level="3">Conformance classes</ds-heading>
 
 traits:
-  - kind: enum
+  - traitType: variant
+    kind: enum
     id: level
     name: Level
     description: Which native heading level (h1–h6) to render.
-    setBy: consumer
     values:
       - id: "1"
         description: Page title. Reserved for ds-header's own h1 — a page should have exactly one.

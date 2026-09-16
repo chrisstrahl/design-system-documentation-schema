@@ -137,25 +137,31 @@ const levelRank = enumRanker("common/requirement-level.schema.yaml", (d) => d);
 // the items rather than off the section's own fields.
 const TAG_TIER = FRAMING.values.length;
 
-// The tag a section is entirely about, or null. Two items minimum: a one-item section shares a
-// tag with itself no matter what, and treating that as "about one tag" would sort every single
-// tagged item to the end of the run for a reason no reader would recognize.
-function sharedTag(section) {
-  const items = section.items;
-  if (!Array.isArray(items) || items.length < 2) return null;
-  if (!items.every((it) => it && Array.isArray(it.tags) && it.tags.length)) return null;
-  const shared = items
-    .map((it) => new Set(it.tags))
-    .reduce((a, b) => new Set([...a].filter((tag) => b.has(tag))));
-  return shared.size ? [...shared].sort()[0] : null;
+// The tag a section declares itself to be about, or null.
+//
+// This used to be inferred: a section counted as tag-scoped when it had two or more items and
+// every one of them named the same tag. That read the author's intent off the data, and got it
+// wrong in three ways. Two sections with one accessibility rule each sat mid-run while
+// twenty-eight with two or more sat last, all of them correct and none of it inferable from the
+// corpus. Adding a second rule to a section silently moved it. And a section could hold ten
+// tagged items and still not qualify, because the intersection across them was empty - tier
+// depending on set intersection is not something an author will predict.
+//
+// `tags` on a section says it outright. The first tag is the scope, matching `metadata.tags`'s
+// own convention, and the two-item rule is gone with the inference that needed it.
+function sectionTag(section) {
+  const tags = section.tags;
+  if (!Array.isArray(tags) || tags.length === 0) return null;
+  const first = tags[0];
+  return typeof first === "string" && first.trim() !== "" ? first : null;
 }
 
 // A tag-scoped section is the narrowest tier whatever its `framing`, so this replaces the
 // framing rank rather than composing with it.
-const breadthRank = (section) => (sharedTag(section) ? TAG_TIER : framingRank(section.framing));
+const breadthRank = (section) => (sectionTag(section) ? TAG_TIER : framingRank(section.framing));
 
 function describeBreadth(section) {
-  const tag = sharedTag(section);
+  const tag = sectionTag(section);
   return tag
     ? `a section about one tag (\`${tag}\`)`
     : `a \`framing: ${section.framing || FRAMING.fallback}\` section`;
@@ -217,6 +223,32 @@ const SECTION_TAIL = declaredProps("sections/section.schema.yaml").filter(
 function sectionFieldOrder(kind) {
   const own = SECTION_KIND_FIELD[kind];
   return ["kind", "for", ...(own ? [own] : []), ...SECTION_TAIL];
+}
+
+// §2: a trait leads with the two tags that identify it - `traitType`, then `kind` - then the
+// fields every trait shares, then whatever else its own branch adds. Interleaves the same way
+// a section does, so like a section the two-field lead is stated here and both lists are read
+// out of the schema. declaredProps() can't be used: a trait's shared fields live in a `$defs`
+// entry the branches `$ref`, not in a file's own `properties`.
+const TRAIT_LEAD = ["traitType", "kind"];
+const COMPONENT_SCHEMA = loadYaml(path.join(schemaDir, "entries", "component.schema.yaml"));
+const TRAIT_BRANCHES =
+  COMPONENT_SCHEMA.allOf.find((m) => m.properties).properties.traits.items.anyOf;
+const TRAIT_VALUE_PROPS = Object.keys(COMPONENT_SCHEMA.$defs.traitValue.properties);
+// A trait's `values[]` are traitValues with `refs` added.
+const TRAIT_VALUE_ORDER = [...TRAIT_VALUE_PROPS, "refs"];
+
+const branchProps = (branch) => Object.keys((branch.allOf || []).find((m) => m.properties)?.properties || {});
+
+function traitFieldOrder(kind) {
+  const branch = TRAIT_BRANCHES.find((b) => branchProps(b).includes("kind") &&
+    (b.allOf.find((m) => m.properties).properties.kind || {}).const === kind);
+  // An unknown or missing `kind` still has the shared fields to order; the branch-only tail
+  // is simply unknown, so it contributes nothing rather than guessing a branch.
+  const tail = branch
+    ? branchProps(branch).filter((k) => !TRAIT_LEAD.includes(k) && !TRAIT_VALUE_PROPS.includes(k))
+    : [];
+  return [...TRAIT_LEAD, ...TRAIT_VALUE_PROPS, ...tail];
 }
 
 // Every entity in a document, with a JSON pointer to it. A standalone entry file is its own
@@ -472,6 +504,16 @@ const DOCUMENT_IMPLEMENTATIONS = {
       }
       (entity.combos || []).forEach((combo, ci) => {
         if (combo && typeof combo === "object") check("a `combo`", `${at}/combos/${ci}`, combo, COMBO_ORDER);
+      });
+      (entity.traits || []).forEach((trait, ti) => {
+        if (!trait || typeof trait !== "object") return;
+        const traitAt = `${at}/traits/${ti}`;
+        check("a trait", traitAt, trait, traitFieldOrder(trait.kind));
+        (trait.values || []).forEach((value, vi) => {
+          if (value && typeof value === "object") {
+            check("a trait value", `${traitAt}/values/${vi}`, value, TRAIT_VALUE_ORDER);
+          }
+        });
       });
       (entity.sections || []).forEach((section, si) => {
         if (!section || typeof section !== "object") return;

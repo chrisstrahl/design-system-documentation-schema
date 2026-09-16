@@ -3,7 +3,8 @@
  * Cuts a new versioned DSDS spec build. There's no single version field - every
  * schema/**\/*.schema.yaml file's own `$id`/`$ref` independently encodes the version as a
  * `designsystemdocspec.org/v<version>/` URL segment, alongside bundle.js's two hardcoded
- * literals, every example/test document's `schemaVersion`, README's $schema URL suggestion,
+ * literals, every example/test document's `schemaVersion`, README's $schema URL suggestion
+ * and its "currently DSDS <version>" line,
  * and package.json#version. This script finds and rewrites all of them in one pass. MDX
  * content pages are NOT rewritten - they use the {{VERSION}} token, substituted at build time.
  *
@@ -278,9 +279,14 @@ for (const file of dsdsDocFiles) {
   processFile(file, [rewriteSchemaVersionValue, rewriteUrlsInText]);
 }
 
-// 4. README.md's hardcoded $schema URL suggestion (and any other stray version URL).
+// 4. README.md's hardcoded $schema URL suggestion (and any other stray version URL), plus
+// the prose "currently DSDS <version>" line, which carries a bare version with no URL around
+// it and so is invisible to rewriteUrlsInText.
+function rewriteProseVersion(text) {
+  return text.split(`currently DSDS ${CURRENT_VERSION}`).join(`currently DSDS ${NEW_VERSION}`);
+}
 if (!SCHEMAS_ONLY && fs.existsSync(README)) {
-  processFile(README, [rewriteUrlsInText]);
+  processFile(README, [rewriteUrlsInText, rewriteProseVersion]);
 }
 
 // 5. package.json#version.

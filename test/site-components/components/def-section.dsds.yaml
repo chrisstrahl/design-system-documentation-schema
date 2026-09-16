@@ -66,8 +66,8 @@ imports:
       </ds-def-section>
 
 traits:
-  - kind: boolean
+  - traitType: variant
+    kind: boolean
     id: layout-split
     name: Split layout
     description: Renders description/props and the worked example as two side-by-side columns instead of stacking the example below the content. Set via layout="split".
-    setBy: consumer

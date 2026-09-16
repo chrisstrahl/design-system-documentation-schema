@@ -18,7 +18,7 @@ const fs = require("fs");
 const path = require("path");
 const yaml = require("js-yaml");
 
-const TARGET_VERSION = "0.20.2";
+const TARGET_VERSION = "0.21.0";
 // common/id.schema.yaml's own base pattern, used to sanity-check a value that's supposed to
 // be an id before emitting a `to:` ref from it - some 0.15.2 fields were authored as free text.
 const ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*(\.[a-z0-9]+(-[a-z0-9]+)*)*$/;
@@ -243,13 +243,14 @@ function migrateBlock(block, sections, traits, entry, report, label, forAudience
       for (const dim of block.entries || block.items || []) {
         const trait = {
           kind: "enum",
+          traitType: "variant",
           id: dim.identifier,
           name: dim.name,
           description: dim.description || "",
           values: (dim.values || []).map((v) => ({ id: v.identifier, name: v.name, description: v.description || "" })),
         };
         if (dim.type === "flag" || !Array.isArray(dim.values) || !dim.values.length) {
-          traits.push({ kind: "boolean", id: dim.identifier, name: dim.name, description: dim.description || "" });
+          traits.push({ kind: "boolean", traitType: "variant", id: dim.identifier, name: dim.name, description: dim.description || "" });
         } else {
           traits.push(trait);
         }
@@ -258,7 +259,7 @@ function migrateBlock(block, sections, traits, entry, report, label, forAudience
     }
     case "states": {
       for (const st of block.entries || block.items || []) {
-        traits.push({ kind: "boolean", id: st.identifier, name: st.name, description: st.description || "", setBy: "component" });
+        traits.push({ kind: "boolean", traitType: "state", id: st.identifier, name: st.name, description: st.description || "" });
       }
       return;
     }

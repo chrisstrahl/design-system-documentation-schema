@@ -111,7 +111,7 @@ section kind shares:
 <!-- dsds:section-envelope -->
 
 ```
-kind, for, title, description, context, metadata, items, freeform, $extensions
+kind, for, title, description, context, tags, metadata, items, freeform, $extensions
 ```
 
 <!-- /dsds:section-envelope -->

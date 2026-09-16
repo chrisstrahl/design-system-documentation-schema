@@ -35,10 +35,10 @@ imports:
       </ds-callout>
 
 traits:
-  - kind: enum
+  - traitType: variant
+    kind: enum
     id: variant
     description: Which accent color the title bar renders in.
-    setBy: consumer
     values:
       - id: info
         description: Default — title bar on the text color.
@@ -46,7 +46,7 @@ traits:
         description: Title bar on the "encouraged" accent color.
       - id: warning
         description: Title bar on the warning color.
-  - kind: boolean
+  - traitType: variant
+    kind: boolean
     id: titled
     description: Whether a title attribute was set. With no title, the title bar collapses entirely (display:none) and only the content box renders.
-    setBy: consumer

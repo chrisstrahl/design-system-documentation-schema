@@ -2,7 +2,7 @@
 name: dsds-update
 description: Update an existing DSDS spec based on implementation changes, Figma updates, or written instructions. Triggers on "update spec", "modify spec", "add prop to spec", "sync spec", "spec drift".
 metadata:
-  version: 0.20.2
+  version: 0.21.0
 ---
 
 # Update a DSDS Spec
@@ -22,8 +22,8 @@ Modify an existing `.dsds.yaml` file.
 | Change | Location in the document |
 | --- | --- |
 | New prop | `sourceFiles` already points at the real file — no edit needed, unless there's no source file, in which case update the `definitions` section titled "Props" |
-| New variant value | Top-level `traits` item with `kind: enum`, in its `values` array |
-| New state | Top-level `traits` item with `kind: boolean` |
+| New variant value | Top-level `traits` item with `traitType: variant` and `kind: enum`, in its `values` array |
+| New state | Top-level `traits` item with `traitType: state` |
 | Anatomy change | The `definitions` section titled "Anatomy" |
 | New accessibility requirement | A `guidelines` item in a `framing: how-to-use` section, or a `definitions` section titled "Keyboard interactions" |
 | Status change | `metadata.status` (always an object: `{status: "..."}`) |
@@ -51,7 +51,7 @@ Modify an existing `.dsds.yaml` file.
 
 When adding new sections or fields, verify the exact fields:
 
-- **Bundled schema**: `https://designsystemdocspec.org/v0.20.2/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if DSDS is installed as a dependency)
+- **Bundled schema**: `https://designsystemdocspec.org/v0.21.0/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if DSDS is installed as a dependency)
 - **Section reference**: `/schema/sections-<kind>.md` on this site — for example
   [sections-guidelines.md](https://designsystemdocspec.org/schema/sections-guidelines.md)
 - **Entry reference**: `/schema/entries-<kind>.md` — for example

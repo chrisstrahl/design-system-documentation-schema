@@ -4,10 +4,14 @@ All notable changes to the DSDS specification are documented in this file.
 
 ---
 
-## [0.20.2] — 2026-09-12
+## [0.21.0] — 2026-09-15
 
-Documentation, tooling and vocabulary — no schema shape change; a 0.20.1 document is a valid 0.20.2 document.
+Minor release — component traits change twice, plus documentation, tooling and vocabulary. Pre-1.0, a minor may carry a breaking change with no deprecation window first; see [Stability](https://designsystemdocspec.org/stability). Run `node scripts/tools/migrate-to-0.21.js` over a 0.20.x document to bring it forward — it adds the new field and removes the old one in a single pass.
 
+- **`traitType` on every component trait, required** — `variant` for a dimension the caller configures (`size`), `state` for a condition the component can be in (`hover`, `loading`, `disabled`). This is the classification readers actually want, and it is not the same question as the existing optional `setBy`: `disabled` and `loading` are states the *consumer* sets, so neither field can be derived from the other. `kind` is unchanged and still means `boolean` or `enum` — the form the value takes, not what sort of trait it is.
+- **`DSDS-22` now covers traits.** A trait's fields and an `enum` trait's `values` are checked against the order `entries/component.schema.yaml` declares, the way the rule already checked `metadata`, sections, items, combos and refs. A trait leads with `traitType`, then `kind` — on a trait it's `traitType` that says what you're reading, where `kind` only says whether the value is a boolean or an enum.
+- **`setBy` removed from a trait.** It answered who sets a trait's value, `consumer` or `component`. `traitType` answers the question people were actually reaching for, and carrying both invited the two to drift. A leftover `setBy` is now a hard error, not a warning — both trait branches set `unevaluatedProperties: false` — so it has to come out, and the migration script takes it out. Note the loss: nothing in the format now distinguishes a state the caller switches on (`disabled`) from one the component enters by itself (`hover`), which is the signal code generation used to decide what becomes a prop. Put it under `$extensions` if you need it.
+- **`tags` on a section**, and `DSDS-18` reads it. A section declaring `tags` sorts after the broader sections, where the tier was previously inferred from the items — which made it depend on how many items a section had and whether their tags intersected. Optional: an undeclared section is simply not tag-scoped.
 - **[Style guide page](https://designsystemdocspec.org/style-guide)**, generated from STYLE_GUIDE.md.
 - **`DSDS-21`–`DSDS-23`** — advisory: entry order in `entries[]`, field order inside a nested shape, and `combos[]` grouped by subject then ordered by level.
 - **`dsds-lint`** — the advisory tier now ships in the published package, so a consumer gets documentation-quality feedback and not just pass/fail.
@@ -15,7 +19,7 @@ Documentation, tooling and vocabulary — no schema shape change; a 0.20.1 docum
 - **Every schema definition is now routed to.** All 23 per-definition markdown mirrors are listed in `manifest.json` and `llms.txt`; previously 9 were and 14 were reachable from nothing.
 - **"Index of every normative statement" now holds every one** (2 → 15). It read `description` only; 14 statements lived in `$comment`.
 - Normative sentences name a declared conformance class instead of an undeclared "tool" or "renderer".
-- Schema `$id`s move to `/v0.20.2/`. `/v0.20.0/` and `/v0.20.1/` stay frozen at the bytes they shipped with.
+- Schema `$id`s move to `/v0.21.0/`. `/v0.20.0/` and `/v0.20.1/` stay frozen at the bytes they shipped with.
 
 ---
 

@@ -11,7 +11,7 @@ DSDS defines a YAML-based format for documenting a design system as a graph of *
 - **System:** The design system as a whole.
 - **Tokens:** Documents the purpose, guidelines, and organization of a design token. Values and types live in the DTCG source file each token entry points at.
 - **Themes:** A named set of token overrides, pointing at its own DTCG source file.
-- **Components:** Reusable UI elements, with their own `sourceFiles`/`imports` (pointing at real source instead of hand-typing an interface), `traits` (variants and states, boolean or enum), and `combos` (pairing rules).
+- **Components:** Reusable UI elements, with their own `sourceFiles`/`imports` (pointing at real source instead of hand-typing an interface), `traits` (variants and states, each tagged `traitType`), and `combos` (pairing rules).
 - **Entries:** An open kind for anything else. Link a foundation, pattern, or guide. Custom kinds can also be namespaced (ex: `acme.icon-library`) for teams that want recognizable custom entries.
 
 Every entry's structured documentation lives in a **sections** array. Each section is a typed object with a `kind` tag (`definitions`, `guidelines`, `steps`, or the generic `section`). Sections also include `freeform` for nestable content that sits alongside its own structured `items`. Any entry kind can use any section kind. A section also carries a `for` field (`human`, `agent`, or `all`) naming its audience, so audience-specific content can be displayed when appropriate.
@@ -134,7 +134,7 @@ node scripts/validate/validate.js my-system.dsds.yaml
 
 If your system is split across files via `rel: file`, cross-file `to:` refs are resolved automatically, bounded to the directory of the file you validate (and its subdirectories — not a parent or cousin directory). An otherwise-unresolved target reports as a warning, not a hard failure — add `--strict` (`npm run validate -- --strict`) to promote those to failures once your project is clean.
 
-Reference `https://designsystemdocspec.org/v0.20.2/dsds.bundled.yaml` from your DSDS files via the `$schema` keyword for editor autocompletion and inline validation.
+Reference `https://designsystemdocspec.org/v0.21.0/dsds.bundled.yaml` from your DSDS files via the `$schema` keyword for editor autocompletion and inline validation.
 
 For document structure, composing hand-split fragments (`scripts/tools/compose.js`), and authoring narrative pages with schema-driven property tables, see the **[Quick Start docs page](https://designsystemdocspec.org/quickstart.html)** and [How the schema is organized](https://designsystemdocspec.org/schema.html#how-the-schema-is-organized).
 
@@ -177,7 +177,7 @@ For a documentation-only edit (no schema/example changes), just commit the `site
 
 ## Contributing
 
-This is an early-stage specification (currently DSDS 0.20.2). Feedback and contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for what a rule, example, or schema change needs to land, and [SECURITY.md](SECURITY.md) to report a vulnerability.
+This is an early-stage specification (currently DSDS 0.21.0). Feedback and contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for what a rule, example, or schema change needs to land, and [SECURITY.md](SECURITY.md) to report a vulnerability.
 
 ### Contributors
 

@@ -57,6 +57,7 @@ sections:
   - kind: guidelines
     for: all
     title: Accessibility
+    tags: [accessibility]
     items:
       - level: must
         statement: Give an icon-only button an accessible name that matches its visible tooltip.
@@ -131,15 +132,15 @@ specs:
 # chooses (boolean, enum) and conditions that happen at runtime (also
 # boolean - `description` says which).
 traits:
-  - kind: boolean
+  - traitType: state
+    kind: boolean
     id: loading
     description: Shows a spinner in place of the label and blocks interaction while active.
     purpose: Prevents duplicate submissions while an action is in flight.
-    setBy: consumer
-  - kind: enum
+  - traitType: variant
+    kind: enum
     id: size
     description: Controls the button's overall scale.
-    setBy: consumer
     values:
       - id: small
         description: Compact size for dense layouts (e.g. toolbars).
@@ -147,10 +148,10 @@ traits:
         description: The default size for most surfaces.
       - id: large
         description: Larger touch target for primary calls-to-action.
-  - kind: enum
+  - traitType: variant
+    kind: enum
     id: variant
     description: Which visual style to render.
-    setBy: consumer
     values:
       - id: primary
         description: The default, high-emphasis style for the main action on a surface.
@@ -158,17 +159,17 @@ traits:
         description: Lower-emphasis alternative for secondary actions alongside a primary button.
       - id: danger
         description: Destructive actions only (delete, revoke access, etc.).
-  # hover is setBy: component, not consumer - unlike loading/disabled below,
-  # it isn't a prop the consumer passes in; it happens on its own whenever
-  # the pointer is over the button.
-  - kind: boolean
+  # hover, loading and disabled are all states, but only hover happens on its
+  # own - the other two are turned on by the caller. `traitType` says what a
+  # trait is, not who switches it.
+  - traitType: state
+    kind: boolean
     id: hover
     description: Background darkens slightly when the pointer is over the button.
-    setBy: component
-  - kind: boolean
+  - traitType: state
+    kind: boolean
     id: disabled
     description: Dimmed and non-interactive; triggered by the `disabled` prop.
-    setBy: consumer
 combos:
   - subject: loading
     level: must-not

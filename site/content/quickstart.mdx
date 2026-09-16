@@ -247,7 +247,7 @@ Unlike sections, a few facts about a component live directly on the entry, not i
 
 - **`sourceFiles`** — one entry per platform, pointing at the real source file a tool can extract the component's API from. Replaces hand-typed prop tables.
 - **`imports`** — one entry per platform, with the install package and the exact import statement.
-- **`traits`** — every way the component can vary: a `kind: enum` dimension (like `size: sm | md | lg`) or a `kind: boolean` toggle (like `hover` or `loading`). A trait's own optional `setBy` (`consumer` or `component`) says whether it's a value the consumer sets, or a condition the component sets on its own — `kind` alone doesn't tell you that, since a boolean trait can be either (`disabled` is usually a prop the consumer passes in; `hover` never is).
+- **`traits`** — every way the component can vary. Each trait declares `traitType`: `variant` for a dimension the caller configures (like `size: sm | md | lg`), or `state` for a condition the component can be in (like `hover` or `loading`). It also carries a `kind` — `enum` if it has named `values`, `boolean` if it's a plain toggle. The two are independent: `hover` is a boolean state, `size` an enum variant.
 - **`combos`** — pairing rules between traits, tokens, or entries (e.g. "loading and disabled must not both be set").
 
 Here's `sourceFiles`, `traits`, and `combos` together:
@@ -259,24 +259,24 @@ sourceFiles:
 
 traits:
   - id: tone
+    traitType: variant
     kind: enum
     name: Tone
-    setBy: consumer
     values:
       - id: default
         description: Neutral. General-purpose actions.
       - id: critical
         description: Destructive or irreversible actions only.
   - id: loading
+    traitType: state
     kind: boolean
     name: Loading
     description: An async operation triggered by the button is in progress.
-    setBy: consumer
   - id: hover
+    traitType: state
     kind: boolean
     name: Hover
     description: Background darkens slightly when the pointer is over the button.
-    setBy: component
 
 combos:
   - subject: loading

@@ -2,7 +2,7 @@
 name: dsds-specs
 description: Everything about Design System Doc Spec (DSDS) — entry kinds, sections, schema structure, and how it fits into the ecosystem. Use when authoring, reviewing, or reasoning about DSDS specs and `*.dsds.yaml` files.
 metadata:
-  version: 0.20.2
+  version: 0.21.0
 ---
 
 # Design System Doc Spec (DSDS)
@@ -15,7 +15,7 @@ DSDS documents a graph of **entries** (a system, a component, a token, a theme, 
 
 When you need precise field-level details beyond this skill, consult these in order:
 
-1. **Bundled schema**: `https://designsystemdocspec.org/v0.20.2/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if installed as a dependency)
+1. **Bundled schema**: `https://designsystemdocspec.org/v0.21.0/dsds.bundled.schema.json` (or `node_modules/design-system-documentation-schema/schema/dsds.bundled.schema.json` if installed as a dependency)
 2. **Schema architecture reference**: https://designsystemdocspec.org/schema#how-the-schema-is-organized (and [Conformance](https://designsystemdocspec.org/conformance) for conformance classes and the full rule catalog)
 3. **Quick start with examples**: https://designsystemdocspec.org/quickstart
    — and [STYLE_GUIDE.md](https://github.com/somerandomdude/design-system-documentation-schema/blob/main/STYLE_GUIDE.md)
@@ -67,7 +67,7 @@ description: A styled checkbox input for boolean or indeterminate selection.
 A **base document** (the root `index.dsds.yaml`, or any file meant to hold more than one entry) requires `schemaVersion`, `name`, and a non-empty `entries` array. System-wide facts live on that list's own `kind: system` entry:
 
 ```yaml
-schemaVersion: "0.20.2"
+schemaVersion: "0.21.0"
 name: Acme Design System
 
 entries:
@@ -104,7 +104,7 @@ Not sections — facts about the component as a build artifact:
 
 - **`sourceFiles`** — one entry per platform, pointing a tool at the real file to extract the API from. Prefer this over hand-typing props in a `definitions` section.
 - **`imports`** — one entry per platform: install package + import statement.
-- **`traits`** — every variant (`kind: enum`) and state (`kind: boolean`) the component can be in.
+- **`traits`** — every variant and state the component has. Each one declares `traitType: variant` (a dimension the caller configures, like `size`) or `traitType: state` (a condition the component can be in, like `hover`). Separately, `kind` says whether its value is a `boolean` toggle or an `enum` with named `values` — either `traitType` can be either `kind`.
 - **`combos`** — pairing rules between traits, tokens, or entries (e.g. "loading and disabled must not both be set").
 
 ## Agent-Only Sections
@@ -113,7 +113,7 @@ Mark a section `for: agent` for firm, ready-to-act notes a person wouldn't need 
 
 ## Schema Validation
 
-The bundled schema is published at `https://designsystemdocspec.org/v0.20.2/dsds.bundled.schema.json`, using JSON Schema draft 2020-12. Validate with:
+The bundled schema is published at `https://designsystemdocspec.org/v0.21.0/dsds.bundled.schema.json`, using JSON Schema draft 2020-12. Validate with:
 
 ```bash
 npx dsds-validate <files-or-globs>

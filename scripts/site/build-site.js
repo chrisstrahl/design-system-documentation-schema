@@ -421,10 +421,10 @@ imports:
   - platform: react
     package: "@acme/ui"
 traits:
-  - kind: boolean
+  - traitType: state
+    kind: boolean
     id: loading
     description: Shows a spinner in place of the label and blocks interaction while active.
-    setBy: consumer
 combos:
   - subject: loading
     level: must-not

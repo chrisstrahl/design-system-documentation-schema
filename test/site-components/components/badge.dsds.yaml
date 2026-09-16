@@ -47,10 +47,10 @@ imports:
     code: <ds-badge variant="experimental">Experimental</ds-badge>
 
 traits:
-  - kind: enum
+  - traitType: variant
+    kind: enum
     id: variant
     description: Which icon and accent color to show.
-    setBy: consumer
     values:
       - id: neutral
         description: Default chip — a dot icon on the accent color.
