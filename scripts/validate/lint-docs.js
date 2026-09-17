@@ -275,20 +275,6 @@ const IMPLEMENTATIONS = {
     }
   },
 
-  // A hard-requirement guideline (level: must/must-not) with no checkedBy at all is invisible
-  // to any dashboard built off it. DSDS-03 already blocks the narrower case (checkedBy:
-  // automated with no checks ref); this flags checkedBy left out entirely.
-  "guideline-missing-checkedby": (entry, emit) => {
-    eachGuidelineItem(entry, (item, p) => {
-      if ((item.level === "must" || item.level === "must-not") && !item.checkedBy) {
-        emit(
-          `${p}/checkedBy`,
-          `guideline in "${entry.id}" is a hard requirement (level: ${item.level}) with no checkedBy — declare 'automated', 'assisted', or 'manual' so a tool can tell whether this rule is verifiable at all.`,
-        );
-      }
-    });
-  },
-
   "component-missing-when-to-use": (entry, emit) => {
     if (entry.kind !== "component") return;
     const hasWhenToUse = (entry.sections || []).some(
@@ -414,9 +400,79 @@ const IMPLEMENTATIONS = {
   },
 };
 
+// Every item id declared anywhere on an entity, keyed to the item object - mirrors
+// validate.js's collectItemsById, which DSDS-10's same-as level check (validateSameAsLevels)
+// already uses to resolve a same-as ref's target. Reimplemented locally rather than shared:
+// lint-docs.js and validate.js only share lib.js's document-shape helpers (entriesIn,
+// findRefs, …), not resolution logic, and this is small enough that adding a new shared
+// module for one caller each would be more indirection than the fix needs.
+function collectItemsById(entity) {
+  const byId = new Map();
+  function walk(item) {
+    if (!item || typeof item !== "object") return;
+    if (typeof item.id === "string") byId.set(item.id, item);
+    for (const value of Object.values(item)) {
+      if (Array.isArray(value)) {
+        for (const child of value) walk(child);
+      }
+    }
+  }
+  for (const section of entity.sections || []) {
+    for (const item of section.items || []) walk(item);
+    for (const item of section.freeform || []) walk(item);
+  }
+  for (const trait of entity.traits || []) walk(trait);
+  return byId;
+}
+
 // Document-scoped rules run once per file, against the raw parsed document, instead of once
 // per entity - see activeRules()'s own comment.
 const DOCUMENT_IMPLEMENTATIONS = {
+  // A hard-requirement guideline (level: must/must-not) with no checkedBy at all is invisible
+  // to any dashboard built off it. DSDS-03 already blocks the narrower case (checkedBy:
+  // automated with no checks ref); this flags checkedBy left out entirely - unless the item
+  // borrows its content via a same-as ref (DSDS-10's rel) whose target declares checkedBy, in
+  // which case it inherits that too and isn't actually invisible to tooling.
+  //
+  // This has to be document-scoped rather than entity-scoped: a same-as ref commonly points at
+  // a canonical item on a *different* top-level entry in the same document (e.g. several
+  // components' guideline items pointing at one shared-a11y entry's canonical rules), and
+  // IMPLEMENTATIONS' checks only ever see one entity via entriesIn(doc) - never its siblings.
+  // Moving here gives the check the whole parsed document, the same way validateSameAsLevels
+  // (DSDS-10, validate.js) resolves same-as targets. Only resolves within this document, like
+  // validateSameAsLevels's local pass - a same-as ref to another file (resolveWiderScope's
+  // wider-scope case) is out of scope here too, matching the actual bug found (a single
+  // document with a shared entry) and keeping this fix from growing beyond it.
+  "guideline-missing-checkedby": (doc, emit) => {
+    const entities = entitiesWithPointers(doc);
+    const itemsByEntityId = new Map(entities.map(([entity]) => [entity.id, collectItemsById(entity)]));
+
+    // True if some same-as ref on this item resolves (within this document) to a target item
+    // that itself declares checkedBy. A same-as ref to a target with no checkedBy either still
+    // leaves the item unresolved, so it's correctly flagged.
+    function inheritsCheckedBy(item) {
+      return (item.refs || []).some((ref) => {
+        if (!ref || ref.rel !== "same-as" || typeof ref.to !== "string") return false;
+        const hashIdx = ref.to.indexOf("#");
+        if (hashIdx === -1) return false;
+        const targetItems = itemsByEntityId.get(ref.to.slice(0, hashIdx));
+        const targetItem = targetItems && targetItems.get(ref.to.slice(hashIdx + 1));
+        return Boolean(targetItem && targetItem.checkedBy);
+      });
+    }
+
+    for (const [entity, at] of entities) {
+      eachGuidelineItem(entity, (item, p) => {
+        if ((item.level === "must" || item.level === "must-not") && !item.checkedBy && !inheritsCheckedBy(item)) {
+          emit(
+            `${at}${p}/checkedBy`,
+            `guideline in "${entity.id}" is a hard requirement (level: ${item.level}) with no checkedBy, and no same-as target in this document that declares one — declare 'automated', 'assisted', or 'manual' so a tool can tell whether this rule is verifiable at all.`,
+          );
+        }
+      });
+    }
+  },
+
   // STYLE_GUIDE.md §1 - entries[] runs system, token, theme, component, entry, then any
   // namespaced custom kind. Order within one kind is not checked: the guide asks for
   // "whatever order reads best" there, which is a judgment, not a computation.
