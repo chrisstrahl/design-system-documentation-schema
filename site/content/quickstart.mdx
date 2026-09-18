@@ -57,7 +57,7 @@ A DSDS document starts with a **base**: `schemaVersion`, a `name`, and a list of
 
 ### The bare minimum
 
-This is valid YAML, but not it's not a valid DSDS document yet. `entries` still need to be added:
+This is valid YAML, but it's not a valid DSDS document yet. `entries` still need to be added:
 
 <ds-example file="quickstart/01-base-document.yaml" slot="example" />
 
@@ -92,9 +92,9 @@ Every entry kind shares one open base — `id`, `kind`, `name`, `description`, p
 
 ### Splitting across files with `refs`
 
-It's cool to add all your content into one DSDS YAML file. But that's going to get big really fast. Most of will want to break content up by entry—and the good news is that's easy.
+It's cool to add all your content into one DSDS YAML file. But that's going to get big really fast. Most of you will want to break content up by entry—and the good news is that's easy.
 
-DSDS has a `refs` property which allows you to point to other files. This lets the base DSDS document be a list of links all your DSDS YAML files. It also gives you the freedom to file-structure of documents however you want.
+DSDS has a `refs` property which allows you to point to other files. This lets the base DSDS document be a list of links to all of your DSDS YAML files. It also gives you the freedom to organize your documents however you want.
 
 <ds-example file="quickstart/04-base-document-refs.yaml" slot="example" />
 
@@ -110,9 +110,8 @@ A few of the more common ones:
 * `owner`: An RFC 5322 mailbox for the responsible team
 * `tags`: Keywords for search and grouping. The schema treats the first tag as a category
 * `since`: The version this entry was introduced
-* `group` A way to tie related entries together, like `color` on a family of tokens.
-
-`status` carries the most structure. It's always an object, never a bare string. A component-wide status:
+* `group`: A way to tie related entries together, like `color.action` on a family of tokens.
+* `status`: Defines where an entry is in the system lifecycle (ex: beta, available, deprecated). 
 
 See [common/metadata](schema.html#metadata-metadata) for the complete field list.
 
@@ -143,11 +142,11 @@ Every section also carries a `for` field (`human`, `agent`, or `all`) naming its
 * `when-to-use`: Describes when and when not to use the entry 
 * `how-to-use` (default): Explains how to use the entry correctly
 
-A fully-defined guideline acts as both guidance and a reference to test against. But it can also be as simple as a `statement` with a `level`. That's all you need to make a guideline. You can optionally add `alternatives` to point towards a better options for use cases, `evidence` to back up a statement, or a `checkedBy`/`checks` verification pair for testing purposes. 
+A fully-defined guideline acts as both guidance and a reference to test against. But it can also be as simple as a `statement` with a `level`. That's all you need to make a guideline. You can optionally add `alternatives` to point towards a better option for use cases, `evidence` to back up a statement, or a `checkedBy`/`checks` verification pair for testing purposes. 
 
 <ds-example file="quickstart/06-button-described.yaml" slot="example" />
 
-The `level` field's values are lowercase kebab-case, like every DSDS vocabulary: `must`, `should`, `should-not`, `must-not`, `may`. Agents treat `must`/`must-not` items as hard limits.
+The `level` field's values are lowercase kebab-case, like every DSDS vocabulary: `must`, `should`, `may`, `should-not`, `must-not`. Agents treat `must`/`must-not` items as hard limits.
 
 </ds-guide-section>
 
@@ -215,7 +214,7 @@ sections:
 
 ## A component's own top-level fields
 
-A component is an opinionated kind of section. And with that, it comes with specific properties to document a component. Here's the special properties it contains:
+A component is an opinionated kind of entry. And with that, it comes with specific properties to document a component. Here are the special properties it contains:
 
 - **`sourceFiles`**: Points to the component's source file. This pointer can be used for tools to extract the component's API. One entry per platform. 
 - **`imports`**: A code sample showing how to import the component. One entry per platform.
@@ -265,7 +264,7 @@ combos:
 
 ### `$extensions`
 
-`$extensions` allow you to structure your own date at the document, entry, or section level. Keys MUST use a namespace (e.g. `com.figma`) so a tool integration never collides with a future field the spec adds. Here, linking a component to its Figma source:
+`$extensions` allow you to structure your own data at the document, entry, or section level. Keys MUST use a namespace (e.g. `com.figma`) so a tool integration never collides with a future field the spec adds. Here, linking a component to its Figma source:
 
 <ds-example file="quickstart/07-button-custom.yaml" slot="example" />
 
